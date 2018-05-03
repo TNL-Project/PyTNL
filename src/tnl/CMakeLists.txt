@@ -2,7 +2,7 @@ set( sources
       Grid1D.cpp
       Grid2D.cpp
       Grid3D.cpp
-#      Mesh.cpp
+      Mesh.cpp
       Object.cpp
       SparseMatrix.cpp
       String.cpp

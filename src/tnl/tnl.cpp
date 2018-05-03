@@ -13,7 +13,7 @@ void export_String( py::module & m );
 void export_Grid1D( py::module & m );
 void export_Grid2D( py::module & m );
 void export_Grid3D( py::module & m );
-//void export_Meshes( py::module & m );
+void export_Meshes( py::module & m );
 void export_SparseMatrices( py::module & m );
 
 template< typename T >
@@ -41,7 +41,7 @@ PYBIND11_MODULE(tnl, m)
     export_Grid2D(m);
     export_Grid3D(m);
 
-//    export_Meshes(m);
+    export_Meshes(m);
 
     export_SparseMatrices(m);
 }
