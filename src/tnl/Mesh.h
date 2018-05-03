@@ -8,7 +8,8 @@ namespace py = pybind11;
 #include "EntityTypes.h"
 
 #include <TNL/String.h>
-#include "../../lib_general/mesh_helpers.h"
+#include <TNL/Meshes/Geometry/getEntityCenter.h>
+#include <TNL/Meshes/Geometry/getEntityMeasure.h>
 
 #include <type_traits>
 
