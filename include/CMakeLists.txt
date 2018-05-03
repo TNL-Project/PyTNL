@@ -10,4 +10,4 @@ set( headers
          typedefs.h
 )
 
-install( FILES ${headers} DESTINATION "pytnl" )
+install( FILES ${headers} DESTINATION "include/pytnl" )
