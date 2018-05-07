@@ -68,7 +68,7 @@ void tnl_slice_indexing( Scope & scope )
             if (!slice.compute(a.getSize(), &start, &stop, &step, &slicelength))
                 throw py::error_already_set();
 
-            if (slicelength != value.getSize())
+            if (slicelength != (size_t) value.getSize())
                 throw std::runtime_error("Left and right hand size of slice assignment have different sizes!");
 
             for (size_t i = 0; i < slicelength; ++i) {
