@@ -9,15 +9,15 @@ template< typename Array, typename Scope >
 void tnl_indexing( Scope & scope )
 {
     using Index = typename Array::IndexType;
-    using Element = typename Array::ElementType;
+    using Value = typename Array::ValueType;
 
     scope.def("__len__", &Array::getSize);
 
     scope.def("__iter__",
         []( Array& array ) {
             return py::make_iterator(
-                        RawIterator<Element>(array.getData()),
-                        RawIterator<Element>(array.getData() + array.getSize()) );
+                        RawIterator<Value>(array.getData()),
+                        RawIterator<Value>(array.getData() + array.getSize()) );
         },
         py::keep_alive<0, 1>()  // keep array alive while iterator is used
     );
@@ -31,7 +31,7 @@ void tnl_indexing( Scope & scope )
     );
 
     scope.def("__setitem__",
-        [](Array &a, Index i, const Element& e) {
+        [](Array &a, Index i, const Value& e) {
             if (i >= a.getSize())
                 throw py::index_error();
             a[i] = e;
