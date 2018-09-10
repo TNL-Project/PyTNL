@@ -51,6 +51,8 @@ void export_Matrix( py::module & m, const char* name )
 
     using VectorType = TNL::Containers::Vector< typename Matrix::RealType, typename Matrix::DeviceType, typename Matrix::IndexType >;
 
+    void (Matrix::* _getCompressedRowLengths)(typename Matrix::CompressedRowLengthsVector&) const = &Matrix::getCompressedRowLengths;
+
     auto matrix = py::class_< Matrix, TNL::Object >( m, name )
         .def(py::init<>())
         // overloads (defined in Object)
@@ -69,7 +71,7 @@ void export_Matrix( py::module & m, const char* name )
         .def("setDimensions",           &Matrix::setDimensions)
         .def("setCompressedRowLengths", &Matrix::setCompressedRowLengths)
         .def("getRowLength",            &Matrix::getRowLength)
-        .def("getCompressedRowLengths", &Matrix::getCompressedRowLengths)
+        .def("getCompressedRowLengths", _getCompressedRowLengths)
         // TODO: export for more types
         .def("setLike",                 &Matrix::template setLike< typename Matrix::RealType, typename Matrix::DeviceType, typename Matrix::IndexType >)
         .def("getNumberOfMatrixElements", &Matrix::getNumberOfMatrixElements)
