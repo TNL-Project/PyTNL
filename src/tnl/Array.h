@@ -45,15 +45,15 @@ void export_Array(py::module & m, const char* name)
                 // Pointer to buffer
                 a.getData(),
                 // Size of one scalar
-                sizeof( typename ArrayType::ElementType ),
+                sizeof( typename ArrayType::ValueType ),
                 // Python struct-style format descriptor
-                py::format_descriptor< typename ArrayType::ElementType >::format(),
+                py::format_descriptor< typename ArrayType::ValueType >::format(),
                 // Number of dimensions
                 1,
                 // Buffer dimensions
                 { a.getSize() },
                 // Strides (in bytes) for each index
-                { sizeof( typename ArrayType::ElementType ) }
+                { sizeof( typename ArrayType::ValueType ) }
             );
         })
     ;
