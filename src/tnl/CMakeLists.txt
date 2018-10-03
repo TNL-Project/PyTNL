@@ -1,3 +1,6 @@
+# enable C++14 for pytnl (due to py::overload_cast)
+set(PYBIND11_CPP_STANDARD -std=c++14)
+
 set( sources
       Grid1D.cpp
       Grid2D.cpp
