@@ -13,9 +13,6 @@ set( sources
 )
 pybind11_add_module( pytnl ${sources} )
 
-# link against tnl.so
-target_link_libraries( pytnl PRIVATE tnl )
-
 # rename the shared library to tnl.cpython-XXm-x86_64-linux-gnu.so
 set_target_properties( pytnl PROPERTIES LIBRARY_OUTPUT_NAME tnl )
 
