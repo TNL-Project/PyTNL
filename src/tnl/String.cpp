@@ -10,11 +10,6 @@ namespace py = pybind11;
 
 void export_String( py::module & m )
 {
-    // function pointers for overloaded methods
-//    const char* (TNL::String::* _String_getString)() const = &TNL::String::getString;
-    bool (TNL::String::* _String_save)(TNL::File &) const = &TNL::String::save;
-    bool (TNL::String::* _String_load)(TNL::File &)       = &TNL::String::load;
-
     py::class_<TNL::String>(m, "String")
         .def(py::init<const char*>())
         .def(py::init<const char*, int>())
@@ -35,7 +30,7 @@ void export_String( py::module & m )
         .def("__len__", &TNL::String::getLength)
         // FIXME
 //        .def("replace", &TNL::String::replace)
-        .def("save", _String_save)
-        .def("load", _String_load)
+        .def("save", []( const TNL::String& str, TNL::File& file ){ file << str; } )
+        .def("load", []( TNL::String& str, TNL::File& file ){ file >> str; } )
     ;
 }
