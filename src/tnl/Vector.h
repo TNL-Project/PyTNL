@@ -46,7 +46,7 @@ void export_Vector(py::module & m, const char* name)
         .def("differenceLpNorm", &VectorType::template differenceLpNorm<double, VectorType, double>)
         .def("differenceSum", &VectorType::template differenceSum<double, VectorType>)
         .def("scalarProduct", &VectorType::template scalarProduct<VectorType>)
-        .def("addVector", &VectorType::template addVector<VectorType>)
-        .def("addVectors", &VectorType::template addVectors<VectorType>)
+        .def("addVector", &VectorType::template addVector<VectorType, double, double>)
+        .def("addVectors", &VectorType::template addVectors<VectorType, VectorType, double, double, double>)
     ;
 }
