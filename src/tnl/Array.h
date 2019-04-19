@@ -11,7 +11,8 @@ namespace py = pybind11;
 template< typename ArrayType >
 void export_Array(py::module & m, const char* name)
 {
-    auto array = py::class_<ArrayType, TNL::Object>(m, name, py::buffer_protocol())
+//    auto array = py::class_<ArrayType, TNL::Object>(m, name, py::buffer_protocol())
+    auto array = py::class_<ArrayType>(m, name, py::buffer_protocol())
         .def(py::init<>())
         .def(py::init<int>())
         .def_static("getType",              &ArrayType::getType)
