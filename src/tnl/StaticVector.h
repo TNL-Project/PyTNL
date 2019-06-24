@@ -6,20 +6,20 @@ namespace py = pybind11;
 
 #include "../tnl_indexing.h"
 
-// needed for discovery of operator<< for tnlStaticArray
-#include <TNL/Containers/StaticArray.h>
-
 template< typename VectorType, typename Scope >
 void export_StaticVector( Scope & scope, const char* name )
 {
     using RealType = typename VectorType::RealType;
 
     auto vector = py::class_<VectorType>(scope, name)
-        .def(py::init< typename VectorType::RealType >())
+        .def(py::init< RealType >())
         .def(py::init< VectorType >())
         .def_static("getType", &VectorType::getType)
         .def("getSize", &VectorType::getSize)
-        .def("assign", &VectorType::operator=)
+        // operator=
+        .def("assign", []( VectorType& vector, const VectorType& other ) -> VectorType& {
+                return vector = other;
+            })
         .def(py::self == py::self)
         .def(py::self != py::self)
         .def("setValue", &VectorType::setValue)
@@ -28,10 +28,11 @@ void export_StaticVector( Scope & scope, const char* name )
 //        .def(py::self_ns::str(py::self))
         .def(py::self += py::self)
         .def(py::self -= py::self)
-        .def(py::self *= typename VectorType::RealType())
+        .def(py::self *= RealType())
+        .def(py::self /= RealType())
         .def(py::self + py::self)
         .def(py::self - py::self)
-        .def(py::self * typename VectorType::RealType())
+        .def(py::self * RealType())
         .def(py::self * py::self)
         .def(py::self < py::self)
         .def(py::self > py::self)
