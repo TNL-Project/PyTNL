@@ -13,14 +13,14 @@ namespace pybind11 { namespace detail {
     struct _tnl_tuple_caster
     {
         using Value = typename std::remove_reference< decltype(ArrayType()[0]) >::type;
-        using StdArray = std::array< Value, ArrayType::size >;
+        using StdArray = std::array< Value, ArrayType::getSize() >;
         using StdArrayCaster = type_caster< StdArray >;
 //        StdArrayCaster _caster;
 		using value_conv = make_caster<Value>;
 
     public:
 //        PYBIND11_TYPE_CASTER(ArrayType, StdArrayCaster::name);
-        PYBIND11_TYPE_CASTER(ArrayType, _("Tuple[") + value_conv::name + _<false>(_(""), _("[") + _<ArrayType::size>() + _("]")) + _("]"));
+        PYBIND11_TYPE_CASTER(ArrayType, _("Tuple[") + value_conv::name + _<false>(_(""), _("[") + _<ArrayType::getSize()>() + _("]")) + _("]"));
 
         /**
          * Conversion part 1 (Python -> C++): convert a PyObject into an ArrayType
@@ -33,14 +33,14 @@ namespace pybind11 { namespace detail {
 //            if( ! _caster.load(src, implicit) )
 //                return false;
 //            const StdArray& arr = (StdArray&) _caster;
-//            for( int i = 0; i < ArrayType::size; i++ )
+//            for( int i = 0; i < ArrayType::getSize(); i++ )
 //                value[ i ] = arr[ i ];
 //            return true;
 
 			if (!isinstance<tuple>(src))
 			    return false;
 			auto t = reinterpret_borrow<tuple>(src);
-			if (t.size() != ArrayType::size)
+			if (t.size() != ArrayType::getSize())
 			    return false;
 			size_t ctr = 0;
 			for (auto it : t) {
@@ -62,7 +62,7 @@ namespace pybind11 { namespace detail {
         static handle cast(const ArrayType& src, return_value_policy policy, handle parent)
         {
             StdArray arr;
-            for( int i = 0; i < ArrayType::size; i++ )
+            for( int i = 0; i < ArrayType::getSize(); i++ )
                 arr[ i ] = src[ i ];
             return StdArrayCaster::cast( arr, policy, parent );
         }
