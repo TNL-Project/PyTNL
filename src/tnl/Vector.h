@@ -9,14 +9,7 @@ namespace py = pybind11;
 template< typename ArrayType, typename VectorType >
 void export_Vector(py::module & m, const char* name)
 {
-    // function pointers for overloaded methods
-    void (VectorType::* _addElement1)(const typename VectorType::IndexType,
-                                      const typename VectorType::RealType &)
-        = &VectorType::addElement;
-    void (VectorType::* _addElement2)(const typename VectorType::IndexType,
-                                      const typename VectorType::RealType &,
-                                      const typename VectorType::RealType &)
-        = &VectorType::addElement;
+    using RealType = typename VectorType::RealType;
 
     py::class_<VectorType, ArrayType>(m, name)
         .def(py::init<>())
@@ -25,15 +18,27 @@ void export_Vector(py::module & m, const char* name)
         .def("getTypeVirtual",              &VectorType::getTypeVirtual)
         .def_static("getSerializationType", &VectorType::getSerializationType)
         .def("getSerializationTypeVirtual", &VectorType::getSerializationTypeVirtual)
-        .def("addElement", _addElement1)
-        .def("addElement", _addElement2)
         .def(py::self == py::self)
         .def(py::self != py::self)
         .def(py::self += py::self)
         .def(py::self -= py::self)
-        .def(py::self *= typename VectorType::RealType())
-        .def(py::self /= typename VectorType::RealType())
-        .def("addVector", &VectorType::template addVector<VectorType, double, double>)
-        .def("addVectors", &VectorType::template addVectors<VectorType, VectorType, double, double, double>)
+        .def(py::self *= py::self)
+        .def(py::self /= py::self)
+        .def(py::self += RealType())
+        .def(py::self -= RealType())
+        .def(py::self *= RealType())
+        .def(py::self /= RealType())
+        .def(py::self + py::self)
+        .def(py::self - py::self)
+        .def(py::self * py::self)
+        .def(py::self / py::self)
+        .def(py::self + RealType())
+        .def(py::self - RealType())
+        .def(py::self * RealType())
+        .def(py::self / RealType())
+        .def(py::self < py::self)
+        .def(py::self > py::self)
+        .def(py::self <= py::self)
+        .def(py::self >= py::self)
     ;
 }
