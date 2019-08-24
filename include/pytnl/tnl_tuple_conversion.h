@@ -37,19 +37,19 @@ namespace pybind11 { namespace detail {
 //                value[ i ] = arr[ i ];
 //            return true;
 
-			if (!isinstance<tuple>(src))
-			    return false;
-			auto t = reinterpret_borrow<tuple>(src);
-			if (t.size() != ArrayType::getSize())
-			    return false;
-			size_t ctr = 0;
-			for (auto it : t) {
-			    value_conv conv;
-			    if (!conv.load(it, implicit))
-			        return false;
-			    value[ctr++] = cast_op<Value &&>(std::move(conv));
-			}
-			return true;
+            if (!isinstance<tuple>(src))
+               return false;
+            auto t = reinterpret_borrow<tuple>(src);
+            if (t.size() != (std::size_t) ArrayType::getSize())
+               return false;
+            std::size_t ctr = 0;
+            for (auto it : t) {
+               value_conv conv;
+               if (!conv.load(it, implicit))
+                  return false;
+               value[ctr++] = cast_op<Value &&>(std::move(conv));
+            }
+            return true;
         }
 
         /**
