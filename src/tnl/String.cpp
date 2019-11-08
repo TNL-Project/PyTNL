@@ -16,7 +16,6 @@ void export_String( py::module & m )
         .def(py::init<const char*, int, int>())
         .def(py::init([](int v){ return TNL::convertToString(v); }))
         .def(py::init([](double v){ return TNL::convertToString(v); }))
-        .def_static("getType", &TNL::String::getType)
         // __str__ (uses operator<<)
         // explicit namespace resolution is necessary, see http://stackoverflow.com/a/3084341/4180822
 //        .def(py::self_ns::str(py::self_ns::self))

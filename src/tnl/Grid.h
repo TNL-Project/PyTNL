@@ -59,8 +59,6 @@ void export_Grid( py::module & m, const char* name )
     auto grid = py::class_<Grid, TNL::Object>( m, name )
         .def(py::init<>())
         .def_static("getMeshDimension", &Grid::getMeshDimension)
-        .def_static("getType",              &Grid::getType)
-        .def("getTypeVirtual",              &Grid::getTypeVirtual)
         .def_static("getSerializationType", &Grid::getSerializationType)
         .def("getSerializationTypeVirtual", &Grid::getSerializationTypeVirtual)
         // FIXME: number of parameters depends on the grid dimension

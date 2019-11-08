@@ -14,7 +14,6 @@ void export_StaticVector( Scope & scope, const char* name )
     auto vector = py::class_<VectorType>(scope, name)
         .def(py::init< RealType >())
         .def(py::init< VectorType >())
-        .def_static("getType", &VectorType::getType)
         .def("getSize", &VectorType::getSize)
         // operator=
         .def("assign", []( VectorType& vector, const VectorType& other ) -> VectorType& {
