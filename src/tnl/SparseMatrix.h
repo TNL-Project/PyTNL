@@ -5,7 +5,7 @@ namespace py = pybind11;
 
 #include <TNL/String.h>
 #include <TNL/Containers/Vector.h>
-#include <TNL/Matrices/CSR.h>
+#include <TNL/Matrices/Legacy/CSR.h>
 
 template< typename Matrix >
 struct SpecificExports

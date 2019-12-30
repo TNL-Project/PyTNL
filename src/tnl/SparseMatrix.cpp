@@ -3,9 +3,9 @@
 
 #include "SparseMatrix.h"
 
-#include <TNL/Matrices/CSR.h>
-#include <TNL/Matrices/Ellpack.h>
-#include <TNL/Matrices/SlicedEllpack.h>
+#include <TNL/Matrices/Legacy/CSR.h>
+#include <TNL/Matrices/Legacy/Ellpack.h>
+#include <TNL/Matrices/Legacy/SlicedEllpack.h>
 
 using CSR_host = TNL::Matrices::CSR< double, TNL::Devices::Host, int >;
 using CSR_cuda = TNL::Matrices::CSR< double, TNL::Devices::Cuda, int >;
