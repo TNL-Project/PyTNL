@@ -30,7 +30,10 @@ void export_Array(py::module & m, const char* name)
             })
         .def(py::self == py::self)
         .def(py::self != py::self)
-        .def("setValue", &ArrayType::setValue)
+        .def("setValue", &ArrayType::setValue, py::arg("v"), py::arg("begin") = 0, py::arg("end") = 0)
+        // TODO: better structuring
+        .def("save", &ArrayType::save)
+        .def("load", &ArrayType::load)
 
         .def("__str__", []( ArrayType & a ) {
                 std::stringstream ss;
