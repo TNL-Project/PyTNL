@@ -72,7 +72,7 @@ void export_Matrix( py::module & m, const char* name )
         .def("getCompressedRowLengths", _getCompressedRowLengths)
         // TODO: export for more types
         .def("setLike",                 &Matrix::template setLike< typename Matrix::RealType, typename Matrix::DeviceType, typename Matrix::IndexType >)
-        .def("getNumberOfMatrixElements", &Matrix::getNumberOfMatrixElements)
+        .def("getAllocatedElementsCount", &Matrix::getAllocatedElementsCount)
         .def("getNumberOfNonzeroMatrixElements", &Matrix::getNumberOfNonzeroMatrixElements)
         .def("reset",                   &Matrix::reset)
         .def("getRows",                 &Matrix::getRows)
