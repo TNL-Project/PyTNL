@@ -51,7 +51,7 @@ void export_Matrix( py::module & m, const char* name )
 
     using VectorType = TNL::Containers::Vector< typename Matrix::RealType, typename Matrix::DeviceType, typename Matrix::IndexType >;
 
-    void (Matrix::* _getCompressedRowLengths)(typename Matrix::CompressedRowLengthsVector&) const = &Matrix::getCompressedRowLengths;
+    void (Matrix::* _getCompressedRowLengths)(typename Matrix::CompressedRowLengthsVectorView) const = &Matrix::getCompressedRowLengths;
 
     auto matrix = py::class_< Matrix, TNL::Object >( m, name )
         .def(py::init<>())
