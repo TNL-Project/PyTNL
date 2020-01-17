@@ -16,6 +16,16 @@ pybind11_add_module( pytnl ${sources} )
 # rename the shared library to tnl.cpython-XXm-x86_64-linux-gnu.so
 set_target_properties( pytnl PROPERTIES LIBRARY_OUTPUT_NAME tnl )
 
+# Skip -march=native -mtune=native for pytnl - optimizing python bindings for
+# a specific architecture is not very useful and prevents using Python tools on
+# hybrid clusters.
+get_target_property( pytnl_COMPILE_OPTIONS pytnl COMPILE_OPTIONS )
+if( pytnl_COMPILE_OPTIONS )
+   string( REPLACE "-march=native" "" pytnl_COMPILE_OPTIONS "${pytnl_COMPILE_OPTIONS}" )
+   string( REPLACE "-mtune=native" "" pytnl_COMPILE_OPTIONS "${pytnl_COMPILE_OPTIONS}" )
+   set_target_properties( pytnl PROPERTIES COMPILE_OPTIONS "${pytnl_COMPILE_OPTIONS}" )
+endif()
+
 # We have bindings for unsafe objects (e.g. Array::operator[]) where assertion
 # is the only safeguard, so we need to translate the TNL::AssertionError to
 # Python's AssertionError.
