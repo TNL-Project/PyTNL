@@ -5,7 +5,7 @@ namespace py = pybind11;
 
 #include <TNL/String.h>
 #include <TNL/Containers/Vector.h>
-#include <TNL/Matrices/CSR.h>
+#include <TNL/Matrices/Legacy/CSR.h>
 
 template< typename Matrix >
 struct SpecificExports
@@ -51,7 +51,7 @@ void export_Matrix( py::module & m, const char* name )
 
     using VectorType = TNL::Containers::Vector< typename Matrix::RealType, typename Matrix::DeviceType, typename Matrix::IndexType >;
 
-    void (Matrix::* _getCompressedRowLengths)(typename Matrix::CompressedRowLengthsVector&) const = &Matrix::getCompressedRowLengths;
+    void (Matrix::* _getCompressedRowLengths)(typename Matrix::CompressedRowLengthsVectorView) const = &Matrix::getCompressedRowLengths;
 
     auto matrix = py::class_< Matrix, TNL::Object >( m, name )
         .def(py::init<>())
@@ -72,7 +72,7 @@ void export_Matrix( py::module & m, const char* name )
         .def("getCompressedRowLengths", _getCompressedRowLengths)
         // TODO: export for more types
         .def("setLike",                 &Matrix::template setLike< typename Matrix::RealType, typename Matrix::DeviceType, typename Matrix::IndexType >)
-        .def("getNumberOfMatrixElements", &Matrix::getNumberOfMatrixElements)
+        .def("getAllocatedElementsCount", &Matrix::getAllocatedElementsCount)
         .def("getNumberOfNonzeroMatrixElements", &Matrix::getNumberOfNonzeroMatrixElements)
         .def("reset",                   &Matrix::reset)
         .def("getRows",                 &Matrix::getRows)
