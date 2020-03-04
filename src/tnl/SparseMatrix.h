@@ -15,12 +15,12 @@ struct SpecificExports
 };
 
 template< typename Real, typename Device, typename Index >
-struct SpecificExports< TNL::Matrices::CSR< Real, Device, Index > >
+struct SpecificExports< TNL::Matrices::Legacy::CSR< Real, Device, Index > >
 {
     template< typename Scope >
     static void exec( Scope & s )
     {
-        using Matrix = TNL::Matrices::CSR< Real, Device, Index >;
+        using Matrix = TNL::Matrices::Legacy::CSR< Real, Device, Index >;
 
         s.def("getRowPointers",   py::overload_cast<>(&Matrix::getRowPointers),   py::return_value_policy::reference_internal);
         s.def("getColumnIndexes", py::overload_cast<>(&Matrix::getColumnIndexes), py::return_value_policy::reference_internal);
