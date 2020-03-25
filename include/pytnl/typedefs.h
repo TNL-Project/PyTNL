@@ -24,19 +24,16 @@ using MeshOfEdges = TNL::Meshes::Mesh< TNL::Meshes::DefaultConfig<
                             EdgeTopology::dimension,
                             RealType,
                             IndexType,
-                            LocalIndexType,
-                            IndexType > >;
+                            LocalIndexType > >;
 using MeshOfTriangles = TNL::Meshes::Mesh< TNL::Meshes::DefaultConfig<
                             TriangleTopology,
                             TriangleTopology::dimension,
                             RealType,
                             IndexType,
-                            LocalIndexType,
-                            IndexType > >;
+                            LocalIndexType > >;
 using MeshOfTetrahedrons = TNL::Meshes::Mesh< TNL::Meshes::DefaultConfig<
                             TetrahedronTopology,
                             TetrahedronTopology::dimension,
                             RealType,
                             IndexType,
-                            LocalIndexType,
-                            IndexType > >;
+                            LocalIndexType > >;
