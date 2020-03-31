@@ -16,14 +16,15 @@ using SE_cuda = TNL::Matrices::Legacy::SlicedEllpack< double, TNL::Devices::Cuda
 
 void export_SparseMatrices( py::module & m )
 {
-    export_Matrix< CSR_host >( m, "CSR" );
+    // TODO: This stop working after adding template parameter KernelType to Legacy::CSR
+    //export_Matrix< CSR_host >( m, "CSR" );
     export_Matrix< E_host   >( m, "Ellpack" );
     export_Matrix< SE_host  >( m, "SlicedEllpack" );
 
-    m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_host, E_host >);
-    m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_host, CSR_host >);
-    m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_host, SE_host >);
-    m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, CSR_host >);
+    //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_host, E_host >);
+    //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_host, CSR_host >);
+    //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_host, SE_host >);
+    //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, CSR_host >);
     m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_host, SE_host >);
     m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, E_host >);
 }
