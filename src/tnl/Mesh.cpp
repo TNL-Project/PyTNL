@@ -13,7 +13,7 @@ void export_Meshes( py::module & m )
     using Reader = TNL::Meshes::Readers::VTKReader;
 
     py::class_< Reader >( m, "VTKReader" )
-        .def(py::init<>())
+        .def(py::init<std::string>())
         .def("readMesh", &Reader::template readMesh< MeshOfEdges >)
         .def("readMesh", &Reader::template readMesh< MeshOfTriangles >)
         .def("readMesh", &Reader::template readMesh< MeshOfTetrahedrons >)
