@@ -21,10 +21,11 @@ void export_SparseMatrices( py::module & m )
     export_Matrix< E_host   >( m, "Ellpack" );
     export_Matrix< SE_host  >( m, "SlicedEllpack" );
 
+    // TODO: copySparseMatrix does not work with Legacy matrices anymore
     //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_host, E_host >);
     //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_host, CSR_host >);
     //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_host, SE_host >);
     //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, CSR_host >);
-    m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_host, SE_host >);
-    m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, E_host >);
+    //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_host, SE_host >);
+    //m.def("copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, E_host >);
 }
