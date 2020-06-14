@@ -33,4 +33,12 @@ endif()
 # per-target, so we need to undefine it by passing -U NDEBUG.
 target_compile_options( pytnl PRIVATE -U NDEBUG -D TNL_THROW_ASSERTION_ERROR )
 
+# disable errors due to -Wunused-value coming from pybind11
+if( ${WITH_CI_FLAGS} )
+   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      target_compile_options( pytnl PRIVATE -Wno-error=unused-value )
+   endif()
+endif()
+
+
 install( TARGETS pytnl DESTINATION ${PYTHON_SITE_PACKAGES_DIR} )
