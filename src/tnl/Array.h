@@ -4,24 +4,13 @@
 #include <pybind11/operators.h>
 namespace py = pybind11;
 
+// including pybind11/numpy.h is needed for the specializations of py::format_descriptor
+// for enum types, see https://github.com/pybind/pybind11/issues/2135
+#include <pybind11/numpy.h>
+
 #include "../tnl_indexing.h"
 
 #include <TNL/Containers/Array.h>
-
-
-// pybind11 should actually take care of this inside py::format_descriptor, but apparently it does not work...
-// see https://github.com/pybind/pybind11/issues/2135
-template< typename T, typename = void >
-struct underlying_type
-{
-   using type = T;
-};
-template< typename T >
-struct underlying_type< T, std::enable_if_t< std::is_enum< T >::value > >
-{
-   using type = std::underlying_type_t< T >;
-};
-
 
 template< typename ArrayType >
 void export_Array(py::module & m, const char* name)
@@ -64,9 +53,7 @@ void export_Array(py::module & m, const char* name)
                 // Size of one scalar
                 sizeof( typename ArrayType::ValueType ),
                 // Python struct-style format descriptor
-                py::format_descriptor<
-                     typename underlying_type< typename ArrayType::ValueType >::type
-                >::format(),
+                py::format_descriptor< typename ArrayType::ValueType >::format(),
                 // Number of dimensions
                 1,
                 // Buffer dimensions
