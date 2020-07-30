@@ -13,18 +13,18 @@ void export_Meshes( py::module & m )
     using Reader = TNL::Meshes::Readers::VTKReader;
 
     py::class_< Reader >( m, "VTKReader" )
-        .def(py::init<>())
-        .def("readMesh", &Reader::template readMesh< MeshOfEdges >)
-        .def("readMesh", &Reader::template readMesh< MeshOfTriangles >)
-        .def("readMesh", &Reader::template readMesh< MeshOfTetrahedrons >)
-//        .def("readMesh", []( Reader& reader, const std::string& name, MeshOfEdges & mesh ) {
-//                return reader.readMesh( name.c_str(), mesh );
+        .def(py::init<std::string>())
+        .def("loadMesh", &Reader::template loadMesh< MeshOfEdges >)
+        .def("loadMesh", &Reader::template loadMesh< MeshOfTriangles >)
+        .def("loadMesh", &Reader::template loadMesh< MeshOfTetrahedrons >)
+//        .def("loadMesh", []( Reader& reader, const std::string& name, MeshOfEdges & mesh ) {
+//                return reader.loadMesh( name.c_str(), mesh );
 //            } )
-//        .def("readMesh", []( Reader& reader, const std::string& name, MeshOfTriangles & mesh ) {
-//                return reader.readMesh( name.c_str(), mesh );
+//        .def("loadMesh", []( Reader& reader, const std::string& name, MeshOfTriangles & mesh ) {
+//                return reader.loadMesh( name.c_str(), mesh );
 //            } )
-//        .def("readMesh", []( Reader& reader, const std::string& name, MeshOfTetrahedrons & mesh ) {
-//                return reader.readMesh( name.c_str(), mesh );
+//        .def("loadMesh", []( Reader& reader, const std::string& name, MeshOfTetrahedrons & mesh ) {
+//                return reader.loadMesh( name.c_str(), mesh );
 //            } )
     ;
 }
