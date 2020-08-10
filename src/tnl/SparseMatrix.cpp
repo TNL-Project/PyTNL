@@ -4,8 +4,8 @@
 #include "SparseMatrix.h"
 
 #include <TNL/Matrices/Legacy/CSR.h>
-#include <TNL/Matrices/Legacy/Ellpack.h>
-#include <TNL/Matrices/Legacy/SlicedEllpack.h>
+#include <Benchmarks/SpMV/ReferenceFormats/Legacy/Ellpack.h>
+#include <Benchmarks/SpMV/ReferenceFormats/Legacy/SlicedEllpack.h>
 
 using CSR_host = TNL::Matrices::Legacy::CSR< double, TNL::Devices::Host, int >;
 using CSR_cuda = TNL::Matrices::Legacy::CSR< double, TNL::Devices::Cuda, int >;
