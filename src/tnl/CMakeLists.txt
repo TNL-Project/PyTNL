@@ -41,4 +41,19 @@ if( ${WITH_CI_FLAGS} )
 endif()
 
 
+# enable zlib and tinyxml2 (used by VTUReader)
+find_package( ZLIB )
+if( ZLIB_FOUND )
+   target_compile_definitions(pytnl PUBLIC "-DHAVE_ZLIB")
+   target_include_directories(pytnl PUBLIC ${ZLIB_INCLUDE_DIRS})
+   target_link_libraries(pytnl PUBLIC ${ZLIB_LIBRARIES})
+endif()
+
+find_package( tinyxml2 QUIET )
+if( tinyxml2_FOUND )
+   target_compile_definitions(pytnl PUBLIC "-DHAVE_TINYXML2")
+   target_link_libraries(pytnl PUBLIC tinyxml2::tinyxml2)
+endif()
+
+
 install( TARGETS pytnl DESTINATION ${PYTHON_SITE_PACKAGES_DIR} )
