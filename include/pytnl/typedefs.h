@@ -2,6 +2,7 @@
 
 #include <TNL/Meshes/Grid.h>
 #include <TNL/Meshes/Mesh.h>
+#include <TNL/Meshes/DistributedMeshes/DistributedMesh.h>
 #include <TNL/Meshes/DefaultConfig.h>
 #include <TNL/Meshes/Topologies/Edge.h>
 #include <TNL/Meshes/Topologies/Triangle.h>
@@ -37,3 +38,7 @@ using MeshOfTetrahedrons = TNL::Meshes::Mesh< TNL::Meshes::DefaultConfig<
                             RealType,
                             IndexType,
                             LocalIndexType > >;
+
+using DistributedMeshOfEdges = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfEdges >;
+using DistributedMeshOfTriangles = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfTriangles >;
+using DistributedMeshOfTetrahedrons = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfTetrahedrons >;

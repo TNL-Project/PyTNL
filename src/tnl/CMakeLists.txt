@@ -6,6 +6,7 @@ set( sources
       Grid2D.cpp
       Grid3D.cpp
       Mesh.cpp
+      MeshReaders.cpp
       Object.cpp
       SparseMatrix.cpp
       String.cpp
