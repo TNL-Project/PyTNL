@@ -10,6 +10,7 @@ set( sources
       Object.cpp
       SparseMatrix.cpp
       String.cpp
+      VTKTraits.cpp
       tnl.cpp
 )
 pybind11_add_module( pytnl ${sources} )
