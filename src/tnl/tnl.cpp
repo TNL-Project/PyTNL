@@ -16,6 +16,7 @@ void export_Grid3D( py::module & m );
 void export_VTKTraits( py::module & m );
 void export_Meshes( py::module & m );
 void export_MeshReaders( py::module & m );
+void export_MeshWriters( py::module & m );
 void export_SparseMatrices( py::module & m );
 
 template< typename T >
@@ -47,6 +48,7 @@ PYBIND11_MODULE(PYTNL_MODULE_NAME(tnl), m)
 
     export_Meshes(m);
     export_MeshReaders(m);
+    export_MeshWriters(m);
 
     export_SparseMatrices(m);
 }
