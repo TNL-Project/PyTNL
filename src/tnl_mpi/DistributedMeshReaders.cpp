@@ -12,7 +12,7 @@ void export_DistributedMeshReaders( py::module & m )
     using PVTUReader = TNL::Meshes::Readers::PVTUReader;
 
     // make sure that bindings for the parent class are available
-    py::module_::import("tnl");
+    py::module_::import(PYTNL_STRINGIFY(PYTNL_MODULE_NAME(tnl)));
 
     py::class_< PVTUReader, XMLVTK >( m, "PVTUReader" )
         .def(py::init<std::string>())

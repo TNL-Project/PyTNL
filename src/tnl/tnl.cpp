@@ -24,7 +24,7 @@ template< typename T >
 using _vector = TNL::Containers::Vector< T, TNL::Devices::Host, IndexType >;
 
 // Python module definition
-PYBIND11_MODULE(tnl, m)
+PYBIND11_MODULE(PYTNL_MODULE_NAME(tnl), m)
 {
     register_exceptions(m);
 

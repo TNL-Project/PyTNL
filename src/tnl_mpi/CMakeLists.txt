@@ -9,7 +9,12 @@ set( sources
 pybind11_add_module( pytnl_mpi ${sources} )
 
 # rename the shared library to tnl_mpi.cpython-XXm-x86_64-linux-gnu.so
-set_target_properties( pytnl_mpi PROPERTIES LIBRARY_OUTPUT_NAME tnl_mpi )
+set_target_properties( pytnl_mpi PROPERTIES LIBRARY_OUTPUT_NAME tnl_mpi DEBUG_POSTFIX "_dbg" )
+
+# indicate the postfix to the target so that the pybind11 module name can be set accordingly
+if( CMAKE_BUILD_TYPE STREQUAL "Debug")
+   target_compile_options( pytnl_mpi PRIVATE -DPYTNL_MODULE_POSTFIX=_dbg )
+endif()
 
 # Skip -march=native -mtune=native for pytnl_mpi - optimizing python bindings for
 # a specific architecture is not very useful and prevents using Python tools on
