@@ -7,6 +7,7 @@
 // external functions
 void export_DistributedMeshes( py::module & m );
 void export_DistributedMeshReaders( py::module & m );
+void export_DistributedMeshWriters( py::module & m );
 
 #include <TNL/Meshes/DistributedMeshes/distributeSubentities.h>
 
@@ -32,6 +33,7 @@ PYBIND11_MODULE(PYTNL_MODULE_NAME(tnl_mpi), m)
     // bindings for distributed data structures
     export_DistributedMeshes(m);
     export_DistributedMeshReaders(m);
+    export_DistributedMeshWriters(m);
 
     // bindings for functions
     using TNL::Meshes::DistributedMeshes::distributeSubentities;

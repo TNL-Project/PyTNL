@@ -4,6 +4,7 @@ set(PYBIND11_CPP_STANDARD -std=c++14)
 set( sources
       DistributedMesh.cpp
       DistributedMeshReaders.cpp
+      DistributedMeshWriters.cpp
       tnl_mpi.cpp
 )
 pybind11_add_module( pytnl_mpi ${sources} )
