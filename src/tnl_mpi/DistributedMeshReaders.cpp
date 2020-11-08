@@ -20,7 +20,5 @@ void export_DistributedMeshReaders( py::module & m )
         .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfEdges >)
         .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTriangles >)
         .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTetrahedrons >)
-        .def("readLocalPointData", &PVTUReader::readLocalPointData)
-        .def("readLocalCellData", &PVTUReader::readLocalCellData)
     ;
 }
