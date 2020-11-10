@@ -5,7 +5,7 @@ namespace py = pybind11;
 
 #include "StaticVector.h"
 #include "Grid_getSpaceStepsProducts.h"
-#include "EntityTypes.h"
+#include "mesh_getters.h"
 
 #include <type_traits>
 
@@ -54,8 +54,6 @@ void export_Grid( py::module & m, const char* name )
 //    void (Grid::* _setDimensions1)(const IndexType) = &Grid::setDimensions;
     void (Grid::* _setDimensions2)(const typename Grid::CoordinatesType &) = &Grid::setDimensions;
 
-    export_EntityTypes(m);
-
     auto grid = py::class_<Grid, TNL::Object>( m, name )
         .def(py::init<>())
         .def_static("getMeshDimension", &Grid::getMeshDimension)
@@ -68,11 +66,13 @@ void export_Grid( py::module & m, const char* name )
         .def("setDomain", &Grid::setDomain)
         .def("getOrigin", &Grid::getOrigin, py::return_value_policy::reference_internal)
         .def("getProportions", &Grid::getProportions, py::return_value_policy::reference_internal)
-        .def("getEntitiesCount", &mesh_getEntitiesCount< Grid >)
-        // TODO: if combined, the return type would depend on the runtime parameter (entity)
-        .def("getEntity_cell", &Grid::template getEntity<typename Grid::Cell>)
-        .def("getEntity_face", &Grid::template getEntity<typename Grid::Face>)
-        .def("getEntity_vertex", &Grid::template getEntity<typename Grid::Vertex>)
+        .def("getEntitiesCount", &mesh_getEntitiesCount< Grid, typename Grid::Cell >)
+        .def("getEntitiesCount", &mesh_getEntitiesCount< Grid, typename Grid::Face >)
+        .def("getEntitiesCount", &mesh_getEntitiesCount< Grid, typename Grid::Vertex >)
+        // NOTE: if combined into getEntity, the return type would depend on the runtime parameter (entity)
+        .def("getCell", &Grid::template getEntity<typename Grid::Cell>)
+        .def("getFace", &Grid::template getEntity<typename Grid::Face>)
+        .def("getVertex", &Grid::template getEntity<typename Grid::Vertex>)
         .def("getEntityIndex", &Grid::template getEntityIndex<typename Grid::Cell>)
         .def("getEntityIndex", &Grid::template getEntityIndex<typename Grid::Face>)
         .def("getEntityIndex", &Grid::template getEntityIndex<typename Grid::Vertex>)
