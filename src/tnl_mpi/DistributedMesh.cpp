@@ -12,7 +12,9 @@ void export_DistributedMeshes( py::module & m )
 
     export_DistributedMesh< DistributedMeshOfEdges >( m, "DistributedMeshOfEdges" );
     export_DistributedMesh< DistributedMeshOfTriangles >( m, "DistributedMeshOfTriangles" );
+    export_DistributedMesh< DistributedMeshOfQuadrangles >( m, "DistributedMeshOfQuadrangles" );
     export_DistributedMesh< DistributedMeshOfTetrahedrons >( m, "DistributedMeshOfTetrahedrons" );
+    export_DistributedMesh< DistributedMeshOfHexahedrons >( m, "DistributedMeshOfHexahedrons" );
 
     // export VTKTypesArrayType
     using VTKTypesArrayType = typename DistributedMeshOfEdges::VTKTypesArrayType;

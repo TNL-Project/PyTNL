@@ -39,6 +39,10 @@ PYBIND11_MODULE(PYTNL_MODULE_NAME(tnl_mpi), m)
     using TNL::Meshes::DistributedMeshes::distributeSubentities;
     m.def("distributeFaces", []( DistributedMeshOfTriangles& mesh ) {
           distributeSubentities< 1 >( mesh ); });
+    m.def("distributeFaces", []( DistributedMeshOfQuadrangles& mesh ) {
+          distributeSubentities< 1 >( mesh ); });
     m.def("distributeFaces", []( DistributedMeshOfTetrahedrons& mesh ) {
+          distributeSubentities< 2 >( mesh ); });
+    m.def("distributeFaces", []( DistributedMeshOfHexahedrons& mesh ) {
           distributeSubentities< 2 >( mesh ); });
 }

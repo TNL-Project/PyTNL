@@ -17,7 +17,9 @@ void export_MeshReaders( py::module & m )
         .def("detectMesh", &MeshReader::detectMesh)
         .def("loadMesh", &MeshReader::template loadMesh< MeshOfEdges >)
         .def("loadMesh", &MeshReader::template loadMesh< MeshOfTriangles >)
+        .def("loadMesh", &MeshReader::template loadMesh< MeshOfQuadrangles >)
         .def("loadMesh", &MeshReader::template loadMesh< MeshOfTetrahedrons >)
+        .def("loadMesh", &MeshReader::template loadMesh< MeshOfHexahedrons >)
     ;
 
     py::class_< TNL::Meshes::Readers::VTKReader, MeshReader >( m, "VTKReader" )

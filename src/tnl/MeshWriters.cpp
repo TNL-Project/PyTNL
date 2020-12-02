@@ -83,6 +83,10 @@ void export_MeshWriters( py::module & m )
     export_MeshWriter< TNL::Meshes::Writers::VTUWriter< MeshOfEdges >,        TNL::Meshes::VTK::FileFormat::zlib_compressed >( m, "VTUWriter_MeshOfEdges" );
     export_MeshWriter< TNL::Meshes::Writers::VTKWriter< MeshOfTriangles >,    TNL::Meshes::VTK::FileFormat::binary          >( m, "VTKWriter_MeshOfTriangles" );
     export_MeshWriter< TNL::Meshes::Writers::VTUWriter< MeshOfTriangles >,    TNL::Meshes::VTK::FileFormat::zlib_compressed >( m, "VTUWriter_MeshOfTriangles" );
+    export_MeshWriter< TNL::Meshes::Writers::VTKWriter< MeshOfQuadrangles >,  TNL::Meshes::VTK::FileFormat::binary          >( m, "VTKWriter_MeshOfQuadrangles" );
+    export_MeshWriter< TNL::Meshes::Writers::VTUWriter< MeshOfQuadrangles >,  TNL::Meshes::VTK::FileFormat::zlib_compressed >( m, "VTUWriter_MeshOfQuadrangles" );
     export_MeshWriter< TNL::Meshes::Writers::VTKWriter< MeshOfTetrahedrons >, TNL::Meshes::VTK::FileFormat::binary          >( m, "VTKWriter_MeshOfTetrahedrons" );
     export_MeshWriter< TNL::Meshes::Writers::VTUWriter< MeshOfTetrahedrons >, TNL::Meshes::VTK::FileFormat::zlib_compressed >( m, "VTUWriter_MeshOfTetrahedrons" );
+    export_MeshWriter< TNL::Meshes::Writers::VTKWriter< MeshOfHexahedrons >,  TNL::Meshes::VTK::FileFormat::binary          >( m, "VTKWriter_MeshOfHexahedrons" );
+    export_MeshWriter< TNL::Meshes::Writers::VTUWriter< MeshOfHexahedrons >,  TNL::Meshes::VTK::FileFormat::zlib_compressed >( m, "VTUWriter_MeshOfHexahedrons" );
 }

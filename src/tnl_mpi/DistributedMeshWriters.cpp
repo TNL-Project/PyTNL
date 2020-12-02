@@ -90,5 +90,7 @@ void export_DistributedMeshWriters( py::module & m )
     constexpr TNL::Meshes::VTK::FileFormat default_format = TNL::Meshes::VTK::FileFormat::zlib_compressed;
     export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfEdges,        default_format >( m, "PVTUWriter_MeshOfEdges" );
     export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfTriangles,    default_format >( m, "PVTUWriter_MeshOfTriangles" );
+    export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfQuadrangles,    default_format >( m, "PVTUWriter_MeshOfQuadrangles" );
     export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfTetrahedrons, default_format >( m, "PVTUWriter_MeshOfTetrahedrons" );
+    export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfHexahedrons, default_format >( m, "PVTUWriter_MeshOfHexahedrons" );
 }

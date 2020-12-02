@@ -19,6 +19,8 @@ void export_DistributedMeshReaders( py::module & m )
         // loadMesh is not virtual in PVTUReader
         .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfEdges >)
         .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTriangles >)
+        .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfQuadrangles >)
         .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTetrahedrons >)
+        .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfHexahedrons >)
     ;
 }
