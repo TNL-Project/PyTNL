@@ -79,6 +79,13 @@ void export_MeshWriter( py::module & m, const char* name )
 
 void export_MeshWriters( py::module & m )
 {
+    export_MeshWriter< TNL::Meshes::Writers::VTKWriter< Grid1D >, TNL::Meshes::VTK::FileFormat::binary          >( m, "VTKWriter_Grid1D" );
+    export_MeshWriter< TNL::Meshes::Writers::VTUWriter< Grid1D >, TNL::Meshes::VTK::FileFormat::zlib_compressed >( m, "VTUWriter_Grid1D" );
+    export_MeshWriter< TNL::Meshes::Writers::VTKWriter< Grid2D >, TNL::Meshes::VTK::FileFormat::binary          >( m, "VTKWriter_Grid2D" );
+    export_MeshWriter< TNL::Meshes::Writers::VTUWriter< Grid2D >, TNL::Meshes::VTK::FileFormat::zlib_compressed >( m, "VTUWriter_Grid2D" );
+    export_MeshWriter< TNL::Meshes::Writers::VTKWriter< Grid3D >, TNL::Meshes::VTK::FileFormat::binary          >( m, "VTKWriter_Grid3D" );
+    export_MeshWriter< TNL::Meshes::Writers::VTUWriter< Grid3D >, TNL::Meshes::VTK::FileFormat::zlib_compressed >( m, "VTUWriter_Grid3D" );
+
     export_MeshWriter< TNL::Meshes::Writers::VTKWriter< MeshOfEdges >,        TNL::Meshes::VTK::FileFormat::binary          >( m, "VTKWriter_MeshOfEdges" );
     export_MeshWriter< TNL::Meshes::Writers::VTUWriter< MeshOfEdges >,        TNL::Meshes::VTK::FileFormat::zlib_compressed >( m, "VTUWriter_MeshOfEdges" );
     export_MeshWriter< TNL::Meshes::Writers::VTKWriter< MeshOfTriangles >,    TNL::Meshes::VTK::FileFormat::binary          >( m, "VTKWriter_MeshOfTriangles" );
