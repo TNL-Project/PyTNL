@@ -78,8 +78,7 @@ void export_DistributedMeshWriter( py::module & m, const char* name )
             },
             py::arg("array"), py::arg("name"), py::arg("numberOfComponents") = 1)
         // NOTE: only the overload intended for sequential writing is exported, because we don't
-        // have type casters for Communicators::MpiCommunicator::CommunicationGroup
-        // (ideally, the communication group would be compatible with the mpi4py objects)
+        // have type casters for MPI_Comm (ideally, it would be compatible with the mpi4py objects)
         .def("addPiece", static_cast< std::string (Writer::*)(const TNL::String&, unsigned) >( &Writer::addPiece ),
               py::arg("mainFileName"), py::arg("subdomainIndex"))
     ;

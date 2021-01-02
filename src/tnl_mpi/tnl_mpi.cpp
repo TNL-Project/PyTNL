@@ -3,6 +3,7 @@
 
 // conversions have to be registered for each object file
 #include "../tnl_conversions.h"
+#include "TNL/MPI/Wrappers.h"
 
 // external functions
 void export_DistributedMeshes( py::module & m );
@@ -18,15 +19,15 @@ PYBIND11_MODULE(PYTNL_MODULE_NAME(tnl_mpi), m)
 
     // MPI initialization and finalization
     // https://stackoverflow.com/q/64647846
-    if( ! TNL::Communicators::MpiCommunicator::IsInitialized() ) {
+    if( ! TNL::MPI::Initialized() ) {
         int argc = 0;
         char** argv = nullptr;
-        TNL::Communicators::MpiCommunicator::Init( argc, argv );
+        TNL::MPI::Init( argc, argv );
     }
     // https://pybind11.readthedocs.io/en/stable/advanced/misc.html#module-destructors
     auto cleanup_callback = []() {
-        if( TNL::Communicators::MpiCommunicator::IsInitialized() )
-            TNL::Communicators::MpiCommunicator::Finalize();
+        if( TNL::MPI::Initialized() && ! TNL::MPI::Finalized() )
+            TNL::MPI::Finalize();
     };
     m.add_object("_cleanup", py::capsule(cleanup_callback));
 
