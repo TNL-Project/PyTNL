@@ -7,12 +7,12 @@
 #include <Benchmarks/SpMV/ReferenceFormats/Legacy/Ellpack.h>
 #include <Benchmarks/SpMV/ReferenceFormats/Legacy/SlicedEllpack.h>
 
-using CSR_host = TNL::Matrices::Legacy::CSR< double, TNL::Devices::Host, int >;
-using CSR_cuda = TNL::Matrices::Legacy::CSR< double, TNL::Devices::Cuda, int >;
-using E_host = TNL::Matrices::Legacy::Ellpack< double, TNL::Devices::Host, int >;
-using E_cuda = TNL::Matrices::Legacy::Ellpack< double, TNL::Devices::Cuda, int >;
-using SE_host = TNL::Matrices::Legacy::SlicedEllpack< double, TNL::Devices::Host, int >;
-using SE_cuda = TNL::Matrices::Legacy::SlicedEllpack< double, TNL::Devices::Cuda, int >;
+using CSR_host = TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::CSR< double, TNL::Devices::Host, int >;
+using CSR_cuda = TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::CSR< double, TNL::Devices::Cuda, int >;
+using E_host = TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::Ellpack< double, TNL::Devices::Host, int >;
+using E_cuda = TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::Ellpack< double, TNL::Devices::Cuda, int >;
+using SE_host = TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::SlicedEllpack< double, TNL::Devices::Host, int >;
+using SE_cuda = TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::SlicedEllpack< double, TNL::Devices::Cuda, int >;
 
 void export_SparseMatrices( py::module & m )
 {
