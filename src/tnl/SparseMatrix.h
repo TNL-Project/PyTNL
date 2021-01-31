@@ -15,7 +15,7 @@ struct SpecificExports
 };
 
 template< typename Real, typename Device, typename Index >
-struct SpecificExports< TNL::Matrices::Legacy::CSR< Real, Device, Index > >
+struct SpecificExports< TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::CSR< Real, Device, Index > >
 {
     template< typename Scope >
     static void exec( Scope & s )
