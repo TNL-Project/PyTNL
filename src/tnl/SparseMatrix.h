@@ -5,7 +5,7 @@ namespace py = pybind11;
 
 #include <TNL/String.h>
 #include <TNL/Containers/Vector.h>
-#include <TNL/Matrices/Legacy/CSR.h>
+#include <Benchmarks/SpMV/ReferenceFormats/Legacy/CSR.h>
 
 template< typename Matrix >
 struct SpecificExports
@@ -15,12 +15,12 @@ struct SpecificExports
 };
 
 template< typename Real, typename Device, typename Index >
-struct SpecificExports< TNL::Matrices::Legacy::CSR< Real, Device, Index > >
+struct SpecificExports< TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::CSR< Real, Device, Index > >
 {
     template< typename Scope >
     static void exec( Scope & s )
     {
-        using Matrix = TNL::Matrices::Legacy::CSR< Real, Device, Index >;
+        using Matrix = TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::CSR< Real, Device, Index >;
 
         s.def("getRowPointers",   py::overload_cast<>(&Matrix::getRowPointers),   py::return_value_policy::reference_internal);
         s.def("getColumnIndexes", py::overload_cast<>(&Matrix::getColumnIndexes), py::return_value_policy::reference_internal);
@@ -51,7 +51,7 @@ void export_Matrix( py::module & m, const char* name )
 
     using VectorType = TNL::Containers::Vector< typename Matrix::RealType, typename Matrix::DeviceType, typename Matrix::IndexType >;
 
-    void (Matrix::* _getCompressedRowLengths)(typename Matrix::CompressedRowLengthsVectorView) const = &Matrix::getCompressedRowLengths;
+    void (Matrix::* _getCompressedRowLengths)(typename Matrix::RowsCapacitiesTypeView) const = &Matrix::getCompressedRowLengths;
 
     auto matrix = py::class_< Matrix, TNL::Object >( m, name )
         .def(py::init<>())
