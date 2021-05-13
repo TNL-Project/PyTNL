@@ -20,6 +20,8 @@ void export_MeshReaders( py::module & m )
         .def("loadMesh", &MeshReader::template loadMesh< MeshOfQuadrangles >)
         .def("loadMesh", &MeshReader::template loadMesh< MeshOfTetrahedrons >)
         .def("loadMesh", &MeshReader::template loadMesh< MeshOfHexahedrons >)
+        .def("readPointData", &MeshReader::readPointData)
+        .def("readCellData", &MeshReader::readCellData)
     ;
 
     py::class_< TNL::Meshes::Readers::VTKReader, MeshReader >( m, "VTKReader" )
@@ -29,8 +31,6 @@ void export_MeshReaders( py::module & m )
     // base class for VTUReader and PVTUReader
     py::class_< XMLVTK, PyXMLVTK, MeshReader >( m, "XMLVTK" )
         .def(py::init<std::string>())
-        .def("readPointData", &XMLVTK::readPointData)
-        .def("readCellData", &XMLVTK::readCellData)
    ;
 
     py::class_< TNL::Meshes::Readers::VTUReader, XMLVTK >( m, "VTUReader" )
