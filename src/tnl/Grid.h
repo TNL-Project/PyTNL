@@ -54,11 +54,9 @@ void export_Grid( py::module & m, const char* name )
 //    void (Grid::* _setDimensions1)(const IndexType) = &Grid::setDimensions;
     void (Grid::* _setDimensions2)(const typename Grid::CoordinatesType &) = &Grid::setDimensions;
 
-    auto grid = py::class_<Grid, TNL::Object>( m, name )
+    auto grid = py::class_<Grid>( m, name )
         .def(py::init<>())
         .def_static("getMeshDimension", &Grid::getMeshDimension)
-        .def_static("getSerializationType", &Grid::getSerializationType)
-        .def("getSerializationTypeVirtual", &Grid::getSerializationTypeVirtual)
         // FIXME: number of parameters depends on the grid dimension
 //        .def("setDimensions", _setDimensions1)
         .def("setDimensions", _setDimensions2)
