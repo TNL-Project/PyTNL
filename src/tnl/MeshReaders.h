@@ -1,5 +1,6 @@
 #include <TNL/Meshes/Readers/VTKReader.h>
 #include <TNL/Meshes/Readers/VTUReader.h>
+#include <TNL/Meshes/Readers/VTIReader.h>
 
 // trampoline classes needed for overriding virtual methods
 // https://pybind11.readthedocs.io/en/stable/advanced/classes.html
