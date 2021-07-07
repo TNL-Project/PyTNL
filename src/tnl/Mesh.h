@@ -98,11 +98,9 @@ void export_MeshEntity( Scope & scope, const char* name )
 template< typename Mesh >
 void export_Mesh( py::module & m, const char* name )
 {
-    auto mesh = py::class_< Mesh, TNL::Object >( m, name )
+    auto mesh = py::class_< Mesh >( m, name )
         .def(py::init<>())
         .def_static("getMeshDimension", &Mesh::getMeshDimension)
-        .def_static("getSerializationType", &Mesh::getSerializationType)
-        .def("getSerializationTypeVirtual", &Mesh::getSerializationTypeVirtual)
         .def("getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Cell >)
         .def("getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Face >)
         .def("getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Vertex >)

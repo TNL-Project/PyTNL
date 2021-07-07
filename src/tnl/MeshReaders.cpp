@@ -15,6 +15,9 @@ void export_MeshReaders( py::module & m )
         // bindings against the actual class, NOT the trampoline
         .def("reset", &MeshReader::reset)
         .def("detectMesh", &MeshReader::detectMesh)
+        .def("loadMesh", &MeshReader::template loadMesh< Grid1D >)
+        .def("loadMesh", &MeshReader::template loadMesh< Grid2D >)
+        .def("loadMesh", &MeshReader::template loadMesh< Grid3D >)
         .def("loadMesh", &MeshReader::template loadMesh< MeshOfEdges >)
         .def("loadMesh", &MeshReader::template loadMesh< MeshOfTriangles >)
         .def("loadMesh", &MeshReader::template loadMesh< MeshOfQuadrangles >)
@@ -28,12 +31,16 @@ void export_MeshReaders( py::module & m )
         .def(py::init<std::string>())
     ;
 
-    // base class for VTUReader and PVTUReader
+    // base class for VTUReader, VTIReader and PVTUReader
     py::class_< XMLVTK, PyXMLVTK, MeshReader >( m, "XMLVTK" )
         .def(py::init<std::string>())
    ;
 
     py::class_< TNL::Meshes::Readers::VTUReader, XMLVTK >( m, "VTUReader" )
+        .def(py::init<std::string>())
+    ;
+
+    py::class_< TNL::Meshes::Readers::VTIReader, XMLVTK >( m, "VTIReader" )
         .def(py::init<std::string>())
     ;
 }
