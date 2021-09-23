@@ -71,7 +71,9 @@ void export_Matrix( py::module & m, const char* name )
         .def("getRowLength",            &Matrix::getRowLength)
         .def("getCompressedRowLengths", _getCompressedRowLengths)
         // TODO: export for more types
-        .def("setLike",                 &Matrix::template setLike< typename Matrix::RealType, typename Matrix::DeviceType, typename Matrix::IndexType >)
+        .def("setLike", []( Matrix& matrix, const Matrix& other ) -> void {
+                matrix.setLike( other );
+            })
         .def("getAllocatedElementsCount", &Matrix::getAllocatedElementsCount)
         .def("getNumberOfNonzeroMatrixElements", &Matrix::getNumberOfNonzeroMatrixElements)
         .def("reset",                   &Matrix::reset)
@@ -84,7 +86,7 @@ void export_Matrix( py::module & m, const char* name )
         //.def("addRow",                  &Matrix::addRow)
         .def("getElement",              &Matrix::getElement)
         // TODO: operator== and operator!= are general and very slow
-        
+
         // Sparse
         .def("getMaxRowLength",     &Matrix::getMaxRowLength)
         .def("getPaddingIndex",     &Matrix::getPaddingIndex)

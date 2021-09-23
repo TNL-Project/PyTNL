@@ -16,8 +16,7 @@ using SE_cuda = TNL::Benchmarks::SpMV::ReferenceFormats::Legacy::SlicedEllpack< 
 
 void export_SparseMatrices( py::module & m )
 {
-    // TODO: This stop working after adding template parameter KernelType to Legacy::CSR
-    //export_Matrix< CSR_host >( m, "CSR" );
+    export_Matrix< CSR_host >( m, "CSR" );
     export_Matrix< E_host   >( m, "Ellpack" );
     export_Matrix< SE_host  >( m, "SlicedEllpack" );
 
