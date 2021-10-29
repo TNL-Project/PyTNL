@@ -67,7 +67,7 @@ struct export_CSR< Segments, typename TNL::enable_if_type< decltype(Segments{}.g
    static void e( Scope & s )
    {
       s
-         .def("getOffsets", []( const Segments& segments ) -> const typename Segments::OffsetsHolder& {
+         .def("getOffsets", []( const Segments& segments ) -> const typename Segments::OffsetsContainer& {
                   return segments.getOffsets();
             }, py::return_value_policy::reference_internal)
       ;
