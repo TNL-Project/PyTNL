@@ -149,7 +149,7 @@ void export_Matrix( py::module & m, const char* name )
       // TODO: these two don't work
       //.def("addMatrix",           &Matrix::addMatrix)
       //.def("getTransposition",    &Matrix::getTransposition)
-      .def("performSORIteration", &Matrix::template performSORIteration< VectorType, VectorType >)
+      //.def("performSORIteration", &Matrix::template performSORIteration< VectorType, VectorType >)
       // TODO: export for more types
       .def("assign", []( Matrix& matrix, const Matrix& other ) -> Matrix& {
                return matrix = other;
