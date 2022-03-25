@@ -3,7 +3,9 @@
 
 // conversions have to be registered for each object file
 #include "../tnl_conversions.h"
-#include "TNL/MPI/Wrappers.h"
+
+#include <TNL/MPI/Wrappers.h>
+#include <TNL/MPI/ScopedInitializer.h>
 
 // external functions
 void export_DistributedMeshes( py::module & m );
