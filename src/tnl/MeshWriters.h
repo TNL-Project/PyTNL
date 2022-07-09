@@ -1,4 +1,4 @@
-#include "../iostream_caster.h"
+#include <pytnl/iostream_caster.h>
 #include <TNL/Meshes/VTKTraits.h>
 
 // helper struct is needed to ensure correct initialization order in the PyWriter constructor

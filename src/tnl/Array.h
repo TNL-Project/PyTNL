@@ -8,7 +8,7 @@ namespace py = pybind11;
 // for enum types, see https://github.com/pybind/pybind11/issues/2135
 #include <pybind11/numpy.h>
 
-#include "../tnl_indexing.h"
+#include <pytnl/tnl_indexing.h>
 
 #include <TNL/Containers/Array.h>
 

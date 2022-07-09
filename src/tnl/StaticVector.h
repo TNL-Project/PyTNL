@@ -4,7 +4,7 @@
 #include <pybind11/operators.h>
 namespace py = pybind11;
 
-#include "../tnl_indexing.h"
+#include <pytnl/tnl_indexing.h>
 
 template< typename VectorType, typename Scope >
 void export_StaticVector( Scope & scope, const char* name )

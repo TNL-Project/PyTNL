@@ -1,8 +1,8 @@
-#include "../exceptions.h"
-#include "../typedefs.h"
+#include <pytnl/exceptions.h>
+#include <pytnl/typedefs.h>
 
 // conversions have to be registered for each object file
-#include "../tnl_conversions.h"
+#include <pytnl/tnl_conversions.h>
 
 #include "Array.h"
 #include "Vector.h"

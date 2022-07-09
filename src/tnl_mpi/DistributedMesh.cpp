@@ -1,7 +1,7 @@
 // conversions have to be registered for each object file
-#include "../tnl_conversions.h"
+#include <pytnl/tnl_conversions.h>
 
-#include "../typedefs.h"
+#include <pytnl/typedefs.h>
 #include "DistributedMesh.h"
 #include "../tnl/Array.h"
 

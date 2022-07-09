@@ -1,8 +1,8 @@
 // conversions have to be registered for each object file
-#include "../tnl_conversions.h"
+#include <pytnl/tnl_conversions.h>
 
 #include "MeshReaders.h"
-#include "../typedefs.h"
+#include <pytnl/typedefs.h>
 
 void export_MeshReaders( py::module & m )
 {

@@ -3,7 +3,7 @@
 namespace py = pybind11;
 
 // conversions have to be registered for each object file
-#include "../tnl_conversions.h"
+#include <pytnl/tnl_conversions.h>
 
 #include <TNL/String.h>
 #include <TNL/File.h>

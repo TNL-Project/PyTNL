@@ -3,7 +3,7 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
-#include "../typedefs.h"
+#include <pytnl/typedefs.h>
 #include "StaticVector.h"
 #include "mesh_getters.h"
 
