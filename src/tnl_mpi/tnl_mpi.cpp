@@ -15,7 +15,7 @@ void export_DistributedMeshWriters( py::module & m );
 #include <TNL/Meshes/DistributedMeshes/distributeSubentities.h>
 
 // Python module definition
-PYBIND11_MODULE(PYTNL_MODULE_NAME(tnl_mpi), m)
+PYBIND11_MODULE(tnl_mpi, m)
 {
     register_exceptions(m);
 

@@ -1,19 +1,5 @@
 #pragma once
 
-// helper macros (the _NX variants are needed to expand macros in the arguments)
-#define PYTNL_STRINGIFY(U) PYTNL_STRINGIFY_NX(U)
-#define PYTNL_STRINGIFY_NX(U) #U
-
-#define PYTNL_PPCAT(A, B) PYTNL_PPCAT_NX(A, B)
-#define PYTNL_PPCAT_NX(A, B) A ## B
-
-// the Python module name depends on the build type, this macro can be used to concatenate with the correct suffix
-#ifdef PYTNL_MODULE_POSTFIX
-   #define PYTNL_MODULE_NAME(name) PYTNL_PPCAT(name, PYTNL_MODULE_POSTFIX)
-#else
-   #define PYTNL_MODULE_NAME(name) name
-#endif
-
 #include <TNL/Meshes/Grid.h>
 #include <TNL/Meshes/Mesh.h>
 #include <TNL/Meshes/DistributedMeshes/DistributedMesh.h>

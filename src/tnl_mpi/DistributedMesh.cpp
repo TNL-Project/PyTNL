@@ -8,7 +8,7 @@
 void export_DistributedMeshes( py::module & m )
 {
     // make sure that bindings for the local meshes are available
-    py::module_::import(PYTNL_STRINGIFY(PYTNL_MODULE_NAME(tnl)));
+    py::module_::import("tnl");
 
     export_DistributedMesh< DistributedMeshOfEdges >( m, "DistributedMeshOfEdges" );
     export_DistributedMesh< DistributedMeshOfTriangles >( m, "DistributedMeshOfTriangles" );
