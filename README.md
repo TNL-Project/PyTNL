@@ -16,6 +16,7 @@ Python bindings for the Template Numerical Library
 
        cd pytnl
        cmake -B build -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$HOME/.local"
-       make -C build install
+       cmake --build build
+       cmake --install build
 
 4. Run `python` and import the `tnl` and/or `tnl_mpi` modules.
