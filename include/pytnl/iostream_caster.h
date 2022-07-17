@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cctbx/pystreambuf.h>
+#include <pytnl/3rdparty/cctbx/pystreambuf.h>
 
 namespace pybind11 { namespace detail {
     template <> struct type_caster<std::istream> {
