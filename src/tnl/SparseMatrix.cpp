@@ -1,7 +1,7 @@
 // conversions have to be registered for each object file
 #include <pytnl/tnl_conversions.h>
 
-#include "SparseMatrix.h"
+#include <pytnl/tnl/SparseMatrix.h>
 #include <pytnl/typedefs.h>
 
 #include <TNL/Matrices/SparseMatrix.h>

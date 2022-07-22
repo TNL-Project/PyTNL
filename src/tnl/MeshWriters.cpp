@@ -1,7 +1,7 @@
 // conversions have to be registered for each object file
 #include <pytnl/tnl_conversions.h>
 
-#include "MeshWriters.h"
+#include <pytnl/tnl/MeshWriters.h>
 #include <pytnl/typedefs.h>
 
 #include <TNL/Meshes/Readers/MeshReader.h>

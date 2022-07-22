@@ -4,8 +4,8 @@
 // conversions have to be registered for each object file
 #include <pytnl/tnl_conversions.h>
 
-#include "Array.h"
-#include "Vector.h"
+#include <pytnl/tnl/Array.h>
+#include <pytnl/tnl/Vector.h>
 
 // external functions
 void export_Object( py::module & m );

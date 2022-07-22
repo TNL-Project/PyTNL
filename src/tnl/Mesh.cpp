@@ -1,7 +1,7 @@
 // conversions have to be registered for each object file
 #include <pytnl/tnl_conversions.h>
 
-#include "Mesh.h"
+#include <pytnl/tnl/Mesh.h>
 
 void export_Meshes( py::module & m )
 {

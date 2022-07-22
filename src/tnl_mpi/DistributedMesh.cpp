@@ -2,8 +2,8 @@
 #include <pytnl/tnl_conversions.h>
 
 #include <pytnl/typedefs.h>
-#include "DistributedMesh.h"
-#include "../tnl/Array.h"
+#include <pytnl/tnl_mpi/DistributedMesh.h>
+#include <pytnl/tnl/Array.h>
 
 void export_DistributedMeshes( py::module & m )
 {
