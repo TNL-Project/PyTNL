@@ -6,8 +6,8 @@ set( sources
 )
 pybind11_add_module(tnl_mpi ${sources})
 
-# add TNL dependency
-target_link_libraries(tnl_mpi PUBLIC stdc++fs)
+# add TNL
+target_link_libraries(tnl_mpi PUBLIC TNL::TNL_CXX)
 
 # enable zlib and tinyxml2 (used by PVTUReader)
 find_package(ZLIB)

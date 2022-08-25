@@ -13,8 +13,8 @@ set( sources
 )
 pybind11_add_module(tnl ${sources})
 
-# add TNL dependency
-target_link_libraries(tnl PUBLIC stdc++fs)
+# add TNL
+target_link_libraries(tnl PUBLIC TNL::TNL_CXX)
 
 # enable zlib and tinyxml2 (used by VTUReader)
 find_package(ZLIB)

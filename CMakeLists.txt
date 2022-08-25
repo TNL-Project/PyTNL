@@ -16,16 +16,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} ${CMAKE_CXX_FLAGS_DEBUG}")
 
-# Force colorized output in continuous integration and Ninja
-if( DEFINED ENV{CI_JOB_NAME} OR ${CMAKE_GENERATOR} STREQUAL "Ninja" )
-    message(STATUS "Continuous integration or Ninja detected -- forcing compilers to produce colorized output.")
-    if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics" )
-    elseif( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color" )
-    endif()
-endif()
-
 # Enable link-time optimization
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
@@ -33,7 +23,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 include_directories(include)
 
 # Set up TNL
-include_directories(SYSTEM libs/tnl/src libs/tnl/src/3rdparty)
+add_subdirectory(libs/tnl)
 # We have bindings for unsafe objects (e.g. Array::operator[]) where assertion
 # is the only safeguard, so we need to translate the TNL::AssertionError to
 # Python's AssertionError.
