@@ -19,9 +19,19 @@ void export_GridEntity( PyGrid & scope, const char* name )
         .def( py::init< typename GridEntity::GridType >(),
               py::return_value_policy::reference_internal )
         .def( py::init< typename GridEntity::GridType,
+                        typename GridEntity::CoordinatesType >(),
+              py::return_value_policy::reference_internal )
+        .def( py::init< typename GridEntity::GridType,
                         typename GridEntity::CoordinatesType,
-                        typename GridEntity::EntityOrientationType,
-                        typename GridEntity::EntityBasisType >(),
+                        typename GridEntity::CoordinatesType >(),
+              py::return_value_policy::reference_internal )
+        .def( py::init< typename GridEntity::GridType,
+                        typename GridEntity::CoordinatesType,
+                        typename GridEntity::CoordinatesType,
+                        typename GridEntity::IndexType >(),
+              py::return_value_policy::reference_internal )
+        .def( py::init< typename GridEntity::GridType,
+                        typename GridEntity::IndexType >(),
               py::return_value_policy::reference_internal )
         .def("getEntityDimension", &GridEntity::getEntityDimension)
         .def("getMeshDimension", &GridEntity::getMeshDimension)
@@ -31,17 +41,15 @@ void export_GridEntity( PyGrid & scope, const char* name )
         .def("setCoordinates", &GridEntity::setCoordinates)
         .def("refresh", &GridEntity::refresh)
         .def("getIndex", &GridEntity::getIndex)
-        // FIXME: some templates return reference, others value
-//        .def("getOrientation", &GridEntity::getOrientation, py::return_internal_reference<>(), py::return_value_policy<py::copy_const_reference>())
+        .def("getNormals", &GridEntity::getNormals)
+        .def("setNormals", &GridEntity::setNormals)
+        .def("getOrientation", &GridEntity::getOrientation)
         .def("setOrientation", &GridEntity::setOrientation)
-        // FIXME: some templates return reference, others value
-//        .def("getBasis", &GridEntity::getBasis, py::return_internal_reference<>(), py::return_value_policy<py::copy_const_reference>())
-        .def("setBasis", &GridEntity::setBasis)
-        // TODO: getNeighbourEntities
-        .def("isBoundaryEntity", &GridEntity::isBoundaryEntity)
+        .def("getBasis", &GridEntity::getBasis)
+        // TODO: getNeighbourEntity
+        .def("isBoundary", &GridEntity::isBoundary)
         .def("getCenter", &GridEntity::getCenter)
-        // FIXME: some templates return reference, others value
-//        .def("getMeasure", &GridEntity::getMeasure, py::return_value_policy<py::copy_const_reference>())
+        .def("getMeasure", &GridEntity::getMeasure)
         .def("getMesh", &GridEntity::getMesh, py::return_value_policy::reference_internal)
     ;
 }
@@ -49,35 +57,34 @@ void export_GridEntity( PyGrid & scope, const char* name )
 template< typename Grid >
 void export_Grid( py::module & m, const char* name )
 {
-    // function pointers for overloaded methods
-// FIXME: number of parameters depends on the grid dimension
-//    void (Grid::* _setDimensions1)(const IndexType) = &Grid::setDimensions;
-    void (Grid::* _setDimensions2)(const typename Grid::CoordinatesType &) = &Grid::setDimensions;
+    void (Grid::* _setDimensions)(const typename Grid::CoordinatesType &) = &Grid::setDimensions;
+    void (Grid::* _setOrigin)(const typename Grid::PointType&) = &Grid::setOrigin;
 
     auto grid = py::class_<Grid>( m, name )
         .def(py::init<>())
         .def_static("getMeshDimension", &Grid::getMeshDimension)
-        // FIXME: number of parameters depends on the grid dimension
-//        .def("setDimensions", _setDimensions1)
-        .def("setDimensions", _setDimensions2)
+        .def("setDimensions", _setDimensions)
         .def("getDimensions", &Grid::getDimensions, py::return_value_policy::reference_internal)
         .def("setDomain", &Grid::setDomain)
+        .def("setOrigin", _setOrigin)
         .def("getOrigin", &Grid::getOrigin, py::return_value_policy::reference_internal)
         .def("getProportions", &Grid::getProportions, py::return_value_policy::reference_internal)
         .def("getEntitiesCount", &mesh_getEntitiesCount< Grid, typename Grid::Cell >)
         .def("getEntitiesCount", &mesh_getEntitiesCount< Grid, typename Grid::Face >)
         .def("getEntitiesCount", &mesh_getEntitiesCount< Grid, typename Grid::Vertex >)
         // NOTE: if combined into getEntity, the return type would depend on the runtime parameter (entity)
-        .def("getCell", &Grid::template getEntity<typename Grid::Cell>)
-        .def("getFace", &Grid::template getEntity<typename Grid::Face>)
-        .def("getVertex", &Grid::template getEntity<typename Grid::Vertex>)
+        .def("getCell", py::overload_cast< typename Grid::IndexType >( &Grid::template getEntity<typename Grid::Cell>, py::const_ ))
+        .def("getCell", py::overload_cast< const typename Grid::CoordinatesType& >( &Grid::template getEntity<typename Grid::Cell>, py::const_ ))
+        .def("getFace", py::overload_cast< typename Grid::IndexType >( &Grid::template getEntity<typename Grid::Face>, py::const_ ))
+        .def("getFace", py::overload_cast< const typename Grid::CoordinatesType& >( &Grid::template getEntity<typename Grid::Face>, py::const_ ))
+        .def("getVertex", py::overload_cast< typename Grid::IndexType >( &Grid::template getEntity<typename Grid::Vertex>, py::const_ ))
+        .def("getVertex", py::overload_cast< const typename Grid::CoordinatesType& >( &Grid::template getEntity<typename Grid::Vertex>, py::const_ ))
         .def("getEntityIndex", &Grid::template getEntityIndex<typename Grid::Cell>)
         .def("getEntityIndex", &Grid::template getEntityIndex<typename Grid::Face>)
         .def("getEntityIndex", &Grid::template getEntityIndex<typename Grid::Vertex>)
         .def("getCellMeasure", &Grid::getCellMeasure, py::return_value_policy::reference_internal)
         .def("getSpaceSteps", &Grid::getSpaceSteps, py::return_value_policy::reference_internal)
         .def("getSmallestSpaceStep", &Grid::getSmallestSpaceStep)
-        // TODO: writeProlog()
     ;
 
     // complicated methods
