@@ -21,7 +21,7 @@ void export_DistributedMeshWriter( py::module & m, const char* name )
     // Python value fits into the C++ type when selecting the alternative for a scalar type, and
     // for containers like std::vector it merely selects the first possible type. For reference, see
     // https://github.com/pybind/pybind11/issues/1625#issuecomment-723499161
-    using VariantVector = mpark::variant< std::vector< IndexType >, std::vector< RealType > >;
+    using VariantVector = std::variant< std::vector< IndexType >, std::vector< RealType > >;
 
     // Binding to Writer directly is not possible, because the writer has a std::ostream attribute
     // which would reference the streambuf created by the type caster from the Python file-like object.
@@ -48,7 +48,7 @@ void export_DistributedMeshWriter( py::module & m, const char* name )
         // VTKWriter and VTUWriter classes.
         // we use the VariantVector from MeshReader because we already have a caster for it
         .def("writePPointData", []( PythonWriter& writer, const VariantVector& array, std::string name, int numberOfComponents = 1 ) {
-               using mpark::visit;
+               using std::visit;
                visit( [&](auto&& array) {
                        using value_type = typename std::decay_t<decltype(array)>::value_type;
                        writer.template writePPointData< value_type >( name, numberOfComponents );
@@ -58,7 +58,7 @@ void export_DistributedMeshWriter( py::module & m, const char* name )
             },
             py::arg("array"), py::arg("name"), py::arg("numberOfComponents") = 1)
         .def("writePCellData", []( PythonWriter& writer, const VariantVector& array, std::string name, int numberOfComponents = 1 ) {
-               using mpark::visit;
+               using std::visit;
                visit( [&](auto&& array) {
                        using value_type = typename std::decay_t<decltype(array)>::value_type;
                        writer.template writePCellData< value_type >( name, numberOfComponents );
@@ -68,7 +68,7 @@ void export_DistributedMeshWriter( py::module & m, const char* name )
             },
             py::arg("array"), py::arg("name"), py::arg("numberOfComponents") = 1)
         .def("writePDataArray", []( PythonWriter& writer, const VariantVector& array, std::string name, int numberOfComponents = 1 ) {
-               using mpark::visit;
+               using std::visit;
                visit( [&](auto&& array) {
                        using value_type = typename std::decay_t<decltype(array)>::value_type;
                        writer.template writePDataArray< value_type >( name, numberOfComponents );
