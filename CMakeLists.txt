@@ -13,7 +13,7 @@ endforeach()
 # Set build flags for CXX
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wall -Werror=vla")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} ${CMAKE_CXX_FLAGS_DEBUG}")
 
 # Enable link-time optimization
@@ -24,11 +24,6 @@ include_directories(include)
 
 # Set up TNL
 add_subdirectory(libs/tnl)
-# We have bindings for unsafe objects (e.g. Array::operator[]) where assertion
-# is the only safeguard, so we need to translate the TNL::AssertionError to
-# Python's AssertionError.
-# We also cannot define NDEBUG as is the case in TNL's CMAKE_CXX_FLAGS
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D TNL_THROW_ASSERTION_ERROR" )
 
 # Set the install path for Python modules
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)

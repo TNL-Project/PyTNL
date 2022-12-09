@@ -26,10 +26,6 @@ static void register_exceptions( py::module & m )
             catch (const NotImplementedError & e) {
                 PyErr_SetString(PyExc_NotImplementedError, e.what());
             }
-            // translate TNL::Assert::AssertionError
-            catch (const TNL::Assert::AssertionError & e) {
-                PyErr_SetString(PyExc_AssertionError, e.what());
-            }
         }
     );
 }
