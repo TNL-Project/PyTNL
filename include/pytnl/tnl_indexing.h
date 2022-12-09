@@ -24,16 +24,16 @@ void tnl_indexing( Scope & scope )
 
     scope.def("__getitem__",
         [](Array &a, Index i) {
-            if (i >= a.getSize())
-                throw py::index_error();
+            if (i < 0 || i >= a.getSize())
+                throw py::index_error( "index " + std::to_string(i) + " is out-of-bounds for given array with size " + std::to_string(a.getSize()) );
             return a[i];
         }
     );
 
     scope.def("__setitem__",
         [](Array &a, Index i, const Value& e) {
-            if (i >= a.getSize())
-                throw py::index_error();
+            if (i < 0 || i >= a.getSize())
+                throw py::index_error( "index " + std::to_string(i) + " is out-of-bounds for given array with size " + std::to_string(a.getSize()) );
             a[i] = e;
         }
     );

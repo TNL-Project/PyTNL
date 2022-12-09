@@ -26,8 +26,16 @@ void export_Array(py::module & m, const char* name)
         .def("swap", &ArrayType::swap)
         .def("reset", &ArrayType::reset)
         .def("getSize", &ArrayType::getSize)
-        .def("setElement", &ArrayType::setElement)
-        .def("getElement", &ArrayType::getElement)
+        .def("setElement", []( ArrayType& array, typename ArrayType::IndexType i, typename ArrayType::ValueType value ) {
+                if( i < 0 || i >= array.getSize() )
+                    throw py::index_error( "index " + std::to_string(i) + " is out-of-bounds for given array with size " + std::to_string(array.getSize()) );
+                array.setElement( i, value );
+            } )
+        .def("getElement", []( const ArrayType& array, typename ArrayType::IndexType i ) {
+                if( i < 0 || i >= array.getSize() )
+                    throw py::index_error( "index " + std::to_string(i) + " is out-of-bounds for given array with size " + std::to_string(array.getSize()) );
+                return array.getElement( i );
+            } )
         // operator=
         .def("assign", []( ArrayType& array, const ArrayType& other ) -> ArrayType& {
                 return array = other;
