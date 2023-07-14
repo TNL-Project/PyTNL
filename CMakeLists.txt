@@ -3,7 +3,22 @@ project(PyTNL
     LANGUAGES CXX
 )
 
-# Require C++14, and disable compiler-specific extensions (if possible).
+# check if PyTNL is being used directly or via add_subdirectory
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+   set(TNL_TOP_LEVEL_PROJECT ON)
+   set(TNL_SYSTEM "")
+else()
+   set(TNL_TOP_LEVEL_PROJECT OFF)
+   set(TNL_SYSTEM SYSTEM)
+endif()
+
+# make cache variables for install destinations
+include(GNUInstallDirs)
+
+# install paths relative to the cmake's prefix
+set(PyTNL_TARGET_CMAKE_DIRECTORY "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
+# Require C++17, and disable compiler-specific extensions (if possible).
 foreach(lang CXX)
     set(CMAKE_${lang}_STANDARD 17)
     set(CMAKE_${lang}_STANDARD_REQUIRED ON)
@@ -11,23 +26,53 @@ foreach(lang CXX)
 endforeach()
 
 # Set build flags for CXX
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wall -Werror=vla")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} ${CMAKE_CXX_FLAGS_DEBUG}")
 
+# make cache variable so it can be used in downstream projects
+set(PyTNL_INCLUDE_DIRS
+    "${CMAKE_CURRENT_LIST_DIR}/include"
+    CACHE INTERNAL "Directories where PyTNL headers are located")
+
+# create the exported targets
+add_library(PyTNL INTERFACE)
+# aliases to match exported targets
+add_library(PyTNL::PyTNL ALIAS PyTNL)
+
+# add the include directory to the interface
+target_include_directories(PyTNL ${PyTNL_SYSTEM}
+                           INTERFACE $<BUILD_INTERFACE:${PyTNL_INCLUDE_DIRS}>
+                                     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+# add compiler features to the interface
+target_compile_features(PyTNL INTERFACE cxx_std_17)
+
+if(TNL_TOP_LEVEL_PROJECT)
+    # export the interface targets
+    install(TARGETS PyTNL EXPORT PyTNLTargets)
+    # install a CMake file for the interface target
+    install(EXPORT PyTNLTargets
+            NAMESPACE PyTNL::
+            DESTINATION ${PyTNL_TARGET_CMAKE_DIRECTORY})
+    # install the TNLConfig.cmake file
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file("cmake/${PROJECT_NAME}Config.cmake.in"
+                                  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+                                  INSTALL_DESTINATION ${PyTNL_TARGET_CMAKE_DIRECTORY})
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+            DESTINATION ${PyTNL_TARGET_CMAKE_DIRECTORY} )
+endif()
+
 # Enable link-time optimization
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-
-# Set the project's include path
-include_directories(include)
 
 # Set up TNL
 add_subdirectory(libs/tnl)
 
 # Set the install path for Python modules
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-set(PYTHON_SITE_PACKAGES_DIR lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages)
+set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages)
 
 # Set up pybind11
 if( SYSTEM_PYBIND11 )

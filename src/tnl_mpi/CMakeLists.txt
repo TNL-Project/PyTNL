@@ -6,8 +6,8 @@ set( sources
 )
 pybind11_add_module(tnl_mpi ${sources})
 
-# add TNL
-target_link_libraries(tnl_mpi PUBLIC TNL::TNL_CXX)
+# add TNL and PyTNL
+target_link_libraries(tnl_mpi PUBLIC TNL::TNL_CXX PyTNL::PyTNL)
 
 # enable zlib and tinyxml2 (used by PVTUReader)
 find_package(ZLIB)
@@ -27,4 +27,4 @@ target_compile_definitions(tnl_mpi PUBLIC "-DHAVE_MPI")
 find_package(MPI COMPONENTS CXX REQUIRED)
 target_link_libraries(tnl_mpi PUBLIC MPI::MPI_CXX)
 
-install(TARGETS tnl_mpi DESTINATION ${PYTHON_SITE_PACKAGES_DIR})
+install(TARGETS tnl_mpi DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR})
