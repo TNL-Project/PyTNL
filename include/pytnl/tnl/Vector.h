@@ -34,9 +34,5 @@ void export_Vector(py::module & m, const char* name)
         .def(py::self - RealType())
         .def(py::self * RealType())
         .def(py::self / RealType())
-        .def(py::self < py::self)
-        .def(py::self > py::self)
-        .def(py::self <= py::self)
-        .def(py::self >= py::self)
     ;
 }
