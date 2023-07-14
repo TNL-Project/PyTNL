@@ -68,7 +68,11 @@ endif()
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 # Set up TNL
-add_subdirectory(libs/tnl)
+if( SYSTEM_TNL )
+    find_package(TNL REQUIRED)
+else()
+    add_subdirectory(libs/tnl)
+endif()
 
 # Set the install path for Python modules
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
