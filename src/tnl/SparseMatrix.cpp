@@ -11,7 +11,7 @@
 #include <TNL/Algorithms/Segments/SlicedEllpack.h>
 
 template< typename Device, typename Index, typename IndexAllocator >
-using CSR = TNL::Algorithms::Segments::CSRDefault< Device, Index, IndexAllocator >;
+using CSR = TNL::Algorithms::Segments::CSR< Device, Index, IndexAllocator >;
 template< typename Device, typename Index, typename IndexAllocator >
 using Ellpack = TNL::Algorithms::Segments::Ellpack< Device, Index, IndexAllocator >;
 template< typename Device, typename Index, typename IndexAllocator >

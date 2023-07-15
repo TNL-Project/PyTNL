@@ -67,7 +67,7 @@ struct export_CSR< Segments, typename TNL::enable_if_type< decltype(Segments{}.g
    static void e( Scope & s )
    {
       s
-         .def("getOffsets", []( const Segments& segments ) -> const typename Segments::OffsetsContainer& {
+         .def("getOffsets", []( const Segments& segments ) -> typename Segments::ConstOffsetsView {
                   return segments.getOffsets();
             }, py::return_value_policy::reference_internal)
       ;
@@ -133,15 +133,19 @@ void export_Matrix( py::module & m, const char* name )
       .def("getRowCapacities",         &Matrix::template getRowCapacities< IndexVectorType >)
       .def("getCompressedRowLengths",  &Matrix::template getCompressedRowLengths< IndexVectorType >)
       .def("getRowCapacity",           &Matrix::getRowCapacity)
-      .def("getPaddingIndex",          &Matrix::getPaddingIndex)
+      // TODO: implement bounds checking
       .def("getRow", []( Matrix& matrix, IndexType rowIdx ) -> typename Matrix::RowView {
                return matrix.getRow( rowIdx );
          })
+      // TODO: implement bounds checking
       .def("getRow", []( const Matrix& matrix, IndexType rowIdx ) -> typename Matrix::ConstRowView {
                return matrix.getRow( rowIdx );
          })
+      // TODO: implement bounds checking
       .def("setElement",               &Matrix::setElement)
+      // TODO: implement bounds checking
       .def("addElement",               &Matrix::addElement)
+      // TODO: implement bounds checking
       .def("getElement",               &Matrix::getElement)
       // TODO: reduceRows, reduceAllRows, forElements, forAllElements, forRows, forAllRows
       // TODO: export for more types
