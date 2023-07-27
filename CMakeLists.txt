@@ -75,8 +75,8 @@ else()
 endif()
 
 # Set the install path for Python modules
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages)
+find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
+set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages)
 
 # Set up pybind11
 if( SYSTEM_PYBIND11 )
