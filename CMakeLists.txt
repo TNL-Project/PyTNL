@@ -5,11 +5,11 @@ project(PyTNL
 
 # check if PyTNL is being used directly or via add_subdirectory
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-   set(TNL_TOP_LEVEL_PROJECT ON)
-   set(TNL_SYSTEM "")
+   set(PyTNL_TOP_LEVEL_PROJECT ON)
+   set(PyTNL_SYSTEM "")
 else()
-   set(TNL_TOP_LEVEL_PROJECT OFF)
-   set(TNL_SYSTEM SYSTEM)
+   set(PyTNL_TOP_LEVEL_PROJECT OFF)
+   set(PyTNL_SYSTEM SYSTEM)
 endif()
 
 # make cache variables for install destinations
@@ -48,27 +48,24 @@ target_include_directories(PyTNL ${PyTNL_SYSTEM}
 # add compiler features to the interface
 target_compile_features(PyTNL INTERFACE cxx_std_17)
 
-if(TNL_TOP_LEVEL_PROJECT)
+if(PyTNL_TOP_LEVEL_PROJECT)
     # export the interface targets
     install(TARGETS PyTNL EXPORT PyTNLTargets)
     # install a CMake file for the interface target
     install(EXPORT PyTNLTargets
             NAMESPACE PyTNL::
             DESTINATION ${PyTNL_TARGET_CMAKE_DIRECTORY})
-    # install the TNLConfig.cmake file
+    # install the PyTNLConfig.cmake file
     include(CMakePackageConfigHelpers)
     configure_package_config_file("cmake/${PROJECT_NAME}Config.cmake.in"
                                   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
                                   INSTALL_DESTINATION ${PyTNL_TARGET_CMAKE_DIRECTORY})
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-            DESTINATION ${PyTNL_TARGET_CMAKE_DIRECTORY} )
+            DESTINATION ${PyTNL_TARGET_CMAKE_DIRECTORY})
 endif()
 
-# Enable link-time optimization
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-
 # Set up TNL
-if( SYSTEM_TNL )
+if(SYSTEM_TNL)
     find_package(TNL REQUIRED)
 else()
     add_subdirectory(libs/tnl)
@@ -79,7 +76,7 @@ find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
 set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages)
 
 # Set up pybind11
-if( SYSTEM_PYBIND11 )
+if(SYSTEM_PYBIND11)
     find_package(pybind11 REQUIRED)
 else()
     add_subdirectory(libs/pybind11)

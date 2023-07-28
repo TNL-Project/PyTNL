@@ -13,18 +13,21 @@ set( sources
 )
 pybind11_add_module(tnl ${sources})
 
+# enable link-time optimization
+set_target_properties(tnl PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+
 # add TNL and PyTNL
 target_link_libraries(tnl PUBLIC TNL::TNL_CXX PyTNL::PyTNL)
 
 # enable zlib and tinyxml2 (used by VTUReader)
 find_package(ZLIB)
 find_package(tinyxml2)
-if( ZLIB_FOUND )
+if(ZLIB_FOUND)
    target_compile_definitions(tnl PUBLIC "-DHAVE_ZLIB")
    target_include_directories(tnl PUBLIC ${ZLIB_INCLUDE_DIRS})
    target_link_libraries(tnl PUBLIC ${ZLIB_LIBRARIES})
 endif()
-if( tinyxml2_FOUND )
+if(tinyxml2_FOUND)
    target_compile_definitions(tnl PUBLIC "-DHAVE_TINYXML2")
    target_link_libraries(tnl PUBLIC tinyxml2::tinyxml2)
 endif()

@@ -6,18 +6,21 @@ set( sources
 )
 pybind11_add_module(tnl_mpi ${sources})
 
+# enable link-time optimization
+set_target_properties(tnl PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+
 # add TNL and PyTNL
 target_link_libraries(tnl_mpi PUBLIC TNL::TNL_CXX PyTNL::PyTNL)
 
 # enable zlib and tinyxml2 (used by PVTUReader)
 find_package(ZLIB)
 find_package(tinyxml2)
-if( ZLIB_FOUND )
+if(ZLIB_FOUND)
    target_compile_definitions(tnl_mpi PUBLIC "-DHAVE_ZLIB")
    target_include_directories(tnl_mpi PUBLIC ${ZLIB_INCLUDE_DIRS})
    target_link_libraries(tnl_mpi PUBLIC ${ZLIB_LIBRARIES})
 endif()
-if( tinyxml2_FOUND )
+if(tinyxml2_FOUND)
    target_compile_definitions(tnl_mpi PUBLIC "-DHAVE_TINYXML2")
    target_link_libraries(tnl_mpi PUBLIC tinyxml2::tinyxml2)
 endif()
