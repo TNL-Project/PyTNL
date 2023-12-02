@@ -68,7 +68,7 @@ endif()
 if(SYSTEM_TNL)
     find_package(TNL REQUIRED)
 else()
-    add_subdirectory(libs/tnl)
+    add_subdirectory(libs/tnl EXCLUDE_FROM_ALL)
 endif()
 
 # Set the install path for Python modules
