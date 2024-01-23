@@ -3,7 +3,8 @@
 
 #include <pytnl/tnl/Grid.h>
 
-void export_Grid3D( py::module & m )
+void
+export_Grid3D( py::module& m )
 {
-    export_Grid< Grid3D >( m, "Grid3D" );
+   export_Grid< Grid3D >( m, "Grid3D" );
 }

@@ -7,25 +7,24 @@ namespace py = pybind11;
 
 #include <TNL/Assert.h>
 
-struct NotImplementedError
-   : public std::runtime_error
+struct NotImplementedError : public std::runtime_error
 {
-   NotImplementedError( const char* msg )
-   : std::runtime_error( msg )
-   {}
+   NotImplementedError( const char* msg ) : std::runtime_error( msg ) {}
 };
 
-static void register_exceptions( py::module & m )
+static void
+register_exceptions( py::module& m )
 {
-    py::register_exception_translator(
-        [](std::exception_ptr p) {
-            try {
-                if (p) std::rethrow_exception(p);
-            }
-            // translate exceptions used in the bindings
-            catch (const NotImplementedError & e) {
-                PyErr_SetString(PyExc_NotImplementedError, e.what());
-            }
-        }
-    );
+   py::register_exception_translator(
+      []( std::exception_ptr p )
+      {
+         try {
+            if( p )
+               std::rethrow_exception( p );
+         }
+         // translate exceptions used in the bindings
+         catch( const NotImplementedError& e ) {
+            PyErr_SetString( PyExc_NotImplementedError, e.what() );
+         }
+      } );
 }

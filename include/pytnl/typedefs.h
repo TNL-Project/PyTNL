@@ -1,31 +1,27 @@
 #pragma once
 
+#include <TNL/Meshes/DefaultConfig.h>
+#include <TNL/Meshes/DistributedMeshes/DistributedMesh.h>
 #include <TNL/Meshes/Grid.h>
 #include <TNL/Meshes/Mesh.h>
-#include <TNL/Meshes/DistributedMeshes/DistributedMesh.h>
-#include <TNL/Meshes/DefaultConfig.h>
 #include <TNL/Meshes/Topologies/Edge.h>
-#include <TNL/Meshes/Topologies/Triangle.h>
+#include <TNL/Meshes/Topologies/Hexahedron.h>
 #include <TNL/Meshes/Topologies/Quadrangle.h>
 #include <TNL/Meshes/Topologies/Tetrahedron.h>
-#include <TNL/Meshes/Topologies/Hexahedron.h>
+#include <TNL/Meshes/Topologies/Triangle.h>
 
 using RealType = double;
 using DeviceType = TNL::Devices::Host;
 using IndexType = int;
 
-using Grid1D = TNL::Meshes::Grid<1, RealType, DeviceType, IndexType>;
-using Grid2D = TNL::Meshes::Grid<2, RealType, DeviceType, IndexType>;
-using Grid3D = TNL::Meshes::Grid<3, RealType, DeviceType, IndexType>;
+using Grid1D = TNL::Meshes::Grid< 1, RealType, DeviceType, IndexType >;
+using Grid2D = TNL::Meshes::Grid< 2, RealType, DeviceType, IndexType >;
+using Grid3D = TNL::Meshes::Grid< 3, RealType, DeviceType, IndexType >;
 
 using LocalIndexType = short int;
 template< typename Topology >
-using DefaultMeshTemplate = TNL::Meshes::Mesh< TNL::Meshes::DefaultConfig<
-                            Topology,
-                            Topology::dimension,
-                            RealType,
-                            IndexType,
-                            LocalIndexType > >;
+using DefaultMeshTemplate =
+   TNL::Meshes::Mesh< TNL::Meshes::DefaultConfig< Topology, Topology::dimension, RealType, IndexType, LocalIndexType > >;
 
 using MeshOfEdges = DefaultMeshTemplate< TNL::Meshes::Topologies::Edge >;
 using MeshOfTriangles = DefaultMeshTemplate< TNL::Meshes::Topologies::Triangle >;
