@@ -6,21 +6,21 @@
 
 #include <TNL/Meshes/Readers/PVTUReader.h>
 
-void export_DistributedMeshReaders( py::module & m )
+void
+export_DistributedMeshReaders( py::module& m )
 {
-    using XMLVTK = TNL::Meshes::Readers::XMLVTK;
-    using PVTUReader = TNL::Meshes::Readers::PVTUReader;
+   using XMLVTK = TNL::Meshes::Readers::XMLVTK;
+   using PVTUReader = TNL::Meshes::Readers::PVTUReader;
 
-    // make sure that bindings for the parent class are available
-    py::module_::import("tnl");
+   // make sure that bindings for the parent class are available
+   py::module_::import( "tnl" );
 
-    py::class_< PVTUReader, XMLVTK >( m, "PVTUReader" )
-        .def(py::init<std::string>())
-        // loadMesh is not virtual in PVTUReader
-        .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfEdges >)
-        .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTriangles >)
-        .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfQuadrangles >)
-        .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTetrahedrons >)
-        .def("loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfHexahedrons >)
-    ;
+   py::class_< PVTUReader, XMLVTK >( m, "PVTUReader" )
+      .def( py::init< std::string >() )
+      // loadMesh is not virtual in PVTUReader
+      .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfEdges > )
+      .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTriangles > )
+      .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfQuadrangles > )
+      .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTetrahedrons > )
+      .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfHexahedrons > );
 }

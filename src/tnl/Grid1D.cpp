@@ -3,7 +3,8 @@
 
 #include <pytnl/tnl/Grid.h>
 
-void export_Grid1D( py::module & m )
+void
+export_Grid1D( py::module& m )
 {
-    export_Grid< Grid1D >( m, "Grid1D" );
+   export_Grid< Grid1D >( m, "Grid1D" );
 }
