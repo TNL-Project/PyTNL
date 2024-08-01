@@ -1,7 +1,0 @@
-[submodule "libs/tnl"]
-	path = libs/tnl
-	url = https://gitlab.com/tnl-project/tnl.git
-[submodule "libs/pybind11"]
-	path = libs/pybind11
-	url = https://github.com/pybind/pybind11.git
-	branch = stable

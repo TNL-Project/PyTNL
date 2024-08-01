@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.28)
 project(PyTNL
     LANGUAGES CXX
 )
@@ -64,23 +64,25 @@ if(PyTNL_TOP_LEVEL_PROJECT)
             DESTINATION ${PyTNL_TARGET_CMAKE_DIRECTORY})
 endif()
 
-# Set up TNL
-if(SYSTEM_TNL)
-    find_package(TNL REQUIRED)
-else()
-    add_subdirectory(libs/tnl EXCLUDE_FROM_ALL)
-endif()
+# Add dependencies
+include(FetchContent)
+FetchContent_Declare(TNL
+    GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git
+    GIT_TAG main
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(TNL)
 
 # Set the install path for Python modules
 find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
 set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages)
 
-# Set up pybind11
-if(SYSTEM_PYBIND11)
-    find_package(pybind11 REQUIRED)
-else()
-    add_subdirectory(libs/pybind11)
-endif()
+FetchContent_Declare(pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+    GIT_TAG master
+    FIND_PACKAGE_ARGS
+)
+FetchContent_MakeAvailable(pybind11)
 
 # Add subdirectories
 add_subdirectory(include)

@@ -8,9 +8,9 @@ Python bindings for the Template Numerical Library
    [GNU Make](https://www.gnu.org/software/make/), [Python 3](https://www.python.org/), and
    an [MPI](https://www.mpi-forum.org/) implementation are installed on your Linux system.
 
-2. Clone the repository and initialize the submodules:
+2. Clone the repository:
 
-       git clone --recurse-submodules https://gitlab.com/tnl-project/pytnl.git
+       git clone https://gitlab.com/tnl-project/pytnl.git
 
 3. Build and install the Python bindings:
 
