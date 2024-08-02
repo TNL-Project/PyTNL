@@ -80,6 +80,7 @@ set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VE
 FetchContent_Declare(pybind11
     GIT_REPOSITORY https://github.com/pybind/pybind11.git
     GIT_TAG master
+    SYSTEM
     FIND_PACKAGE_ARGS
 )
 FetchContent_MakeAvailable(pybind11)
