@@ -6,8 +6,11 @@ set( sources
 )
 pybind11_add_module(tnl_mpi ${sources})
 
+# enable position-independent code
+set_target_properties(tnl_mpi PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
 # enable link-time optimization
-set_target_properties(tnl PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_target_properties(tnl_mpi PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 # add TNL and PyTNL
 target_link_libraries(tnl_mpi PUBLIC PyTNL::PyTNL)

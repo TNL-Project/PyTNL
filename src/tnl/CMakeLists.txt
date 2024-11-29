@@ -13,6 +13,9 @@ set( sources
 )
 pybind11_add_module(tnl ${sources})
 
+# enable position-independent code
+set_target_properties(tnl PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
 # enable link-time optimization
 set_target_properties(tnl PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 

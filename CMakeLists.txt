@@ -63,6 +63,11 @@ if(PyTNL_EXPORT_INTERFACE_TARGETS)
             DESTINATION ${PyTNL_TARGET_CMAKE_DIRECTORY})
 endif()
 
+# Set position independent code for all targets, including dependencies
+# downloaded and built by FetchContent. Otherwise, linking to static libraries
+# without PIC fails.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Find or fetch dependencies
 include(FetchContent)
 FetchContent_Declare(TNL
