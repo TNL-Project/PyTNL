@@ -10,7 +10,11 @@ option(PyTNL_EXPORT_INTERFACE_TARGETS "Instruct CMake to generate rules to expor
 include(GNUInstallDirs)
 
 # install paths relative to the cmake's prefix
-set(PyTNL_TARGET_CMAKE_DIRECTORY "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+if (SKBUILD_DATA_DIR)
+    set(PyTNL_TARGET_CMAKE_DIRECTORY "${SKBUILD_DATA_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+else()
+    set(PyTNL_TARGET_CMAKE_DIRECTORY "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+endif()
 
 # Require C++17, and disable compiler-specific extensions (if possible).
 foreach(lang CXX)
@@ -91,9 +95,13 @@ find_package(tinyxml2)
 
 # Set the install path for Python modules
 find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
-# Make cache variable so it can be used in downstream projects
-set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages
-    CACHE INTERNAL "Path where PyTNL Python packages are installed")
+if (SKBUILD_PLATLIB_DIR)
+    set(PyTNL_PYTHON_SITE_PACKAGES_DIR "${SKBUILD_PLATLIB_DIR}")
+else()
+    # Make cache variable so it can be used in downstream projects
+    set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages
+        CACHE INTERNAL "Path where PyTNL Python packages are installed")
+endif()
 
 # Add dependencies to the interface target
 target_link_libraries(PyTNL INTERFACE TNL::TNL pybind11::pybind11)
