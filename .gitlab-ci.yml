@@ -1,25 +1,125 @@
-default:
-  image: "jlk.fjfi.cvut.cz:5000/fjfi-mmg/archlinux-tnl-cuda:latest"
-  before_script:
-    # make sure that $PATH and other essential variables are set correctly
-    - source /etc/profile
-
-# automatically initialize git submodules
-# https://docs.gitlab.com/ee/ci/git_submodules.html
-variables:
-  GIT_SUBMODULE_STRATEGY: recursive
-
 stages:
   - build
 
-build_Release:
+Arch_cmake:
   stage: build
+  image: "quay.io/archlinux/archlinux:base-devel"
+  # don't wait for jobs in previous stages to complete before starting this job
+  needs: []
+  before_script:
+    - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
+    - pacman -Suy --needed --noconfirm python-pytest
   script:
-    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release
-    - ninja -C build
+    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX="$HOME/.local"
+    - cmake --build build
+    - cmake --install build
+    - pytest
+  parallel:
+    matrix:
+      - BUILD_TYPE:
+          - Debug
+          - Release
 
-build_Debug:
+Arch_python_build:
   stage: build
+  image: "quay.io/archlinux/archlinux:base-devel"
+  # don't wait for jobs in previous stages to complete before starting this job
+  needs: []
+  before_script:
+    - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
+    - pacman -Suy --needed --noconfirm python-build python-installer python-scikit-build-core
+    - pacman -Suy --needed --noconfirm python-pytest
   script:
-    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug
-    - ninja -C build
+    - python -m build --no-isolation
+    - python -m venv --system-site-packages .venv
+    - source .venv/bin/activate
+    - python -m installer dist/*.whl
+    - python -m pytest
+
+Arch_pip:
+  stage: build
+  image: "quay.io/archlinux/archlinux:base-devel"
+  # don't wait for jobs in previous stages to complete before starting this job
+  needs: []
+  before_script:
+    - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
+  script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - python -m pip install .[test]
+    - pytest
+
+Python_build:
+  stage: build
+  image: "docker.io/library/python:${IMAGE_TAG}"
+  # don't wait for jobs in previous stages to complete before starting this job
+  needs: []
+  before_script:
+    - if [[ ${DISTRO} == "Alpine" ]]; then
+        apk add build-base git cmake ninja openmpi-dev;
+      fi
+    - if [[ ${DISTRO} == "Debian" ]]; then
+        apt update;
+        apt -y install git cmake ninja-build libopenmpi-dev;
+      fi
+  script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - python -m pip install build installer pytest
+    - python -m build
+    - python -m installer dist/*.whl
+    - pytest
+  parallel:
+    matrix:
+      # FIXME: TNL currently does not work on Alpine (musl problem)
+      #- DISTRO: "Alpine"
+      #  IMAGE_TAG:
+      #    - "3.9-alpine"
+      #    - "3.10-alpine"
+      #    - "3.11-alpine"
+      #    - "3.12-alpine"
+      #    - "3.13-alpine"
+      - DISTRO: "Debian"
+        IMAGE_TAG:
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+
+Ubuntu_cmake:
+  stage: build
+  image: "docker.io/library/ubuntu:latest"
+  # don't wait for jobs in previous stages to complete before starting this job
+  needs: []
+  before_script:
+    - apt update
+    - apt -y install build-essential git cmake ninja-build
+    - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
+    - apt -y install python3-pytest
+  script:
+    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="$HOME/.local"
+    - cmake --build build
+    - cmake --install build
+    - pytest
+  parallel:
+    matrix:
+      - BUILD_TYPE:
+          - Debug
+          - Release
+
+Ubuntu_pip:
+  stage: build
+  image: "docker.io/library/ubuntu:latest"
+  # don't wait for jobs in previous stages to complete before starting this job
+  needs: []
+  before_script:
+    - apt update
+    - apt -y install build-essential git
+    - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
+    - apt -y install python3-venv
+  script:
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - python3 -m pip install .[test]
+    - pytest
