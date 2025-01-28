@@ -56,7 +56,7 @@ Python_build:
   needs: []
   before_script:
     - if [[ ${DISTRO} == "Alpine" ]]; then
-        apk add build-base git cmake ninja openmpi-dev;
+        apk add build-base git cmake ninja openmpi-dev zlib-dev;
       fi
     - if [[ ${DISTRO} == "Debian" ]]; then
         apt update;
@@ -71,14 +71,13 @@ Python_build:
     - pytest
   parallel:
     matrix:
-      # FIXME: TNL currently does not work on Alpine (musl problem)
-      #- DISTRO: "Alpine"
-      #  IMAGE_TAG:
-      #    - "3.9-alpine"
-      #    - "3.10-alpine"
-      #    - "3.11-alpine"
-      #    - "3.12-alpine"
-      #    - "3.13-alpine"
+      - DISTRO: "Alpine"
+        IMAGE_TAG:
+          - "3.9-alpine"
+          - "3.10-alpine"
+          - "3.11-alpine"
+          - "3.12-alpine"
+          - "3.13-alpine"
       - DISTRO: "Debian"
         IMAGE_TAG:
           - "3.9"
