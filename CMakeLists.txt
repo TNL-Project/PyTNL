@@ -5,6 +5,7 @@ project(PyTNL
 
 # Declare all CMake options for the project
 option(PyTNL_EXPORT_INTERFACE_TARGETS "Instruct CMake to generate rules to export the interface target" ${PROJECT_IS_TOP_LEVEL})
+option(PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization (IPO/LTO) for PyTNL targets" ON)
 
 # make cache variables for install destinations
 include(GNUInstallDirs)

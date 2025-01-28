@@ -4,13 +4,13 @@ set( sources
       DistributedMeshWriters.cpp
       tnl_mpi.cpp
 )
-pybind11_add_module(tnl_mpi ${sources})
+pybind11_add_module(tnl_mpi NO_EXTRAS ${sources})
 
 # enable position-independent code
 set_target_properties(tnl_mpi PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 # enable link-time optimization
-set_target_properties(tnl_mpi PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_target_properties(tnl_mpi PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION})
 
 # add TNL and PyTNL
 target_link_libraries(tnl_mpi PUBLIC PyTNL::PyTNL)
