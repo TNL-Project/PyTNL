@@ -56,7 +56,7 @@ Python_build:
   needs: []
   before_script:
     - if [[ ${DISTRO} == "Alpine" ]]; then
-        apk add build-base git cmake ninja openmpi-dev;
+        apk add build-base git cmake ninja openmpi-dev zlib-dev;
       fi
     - if [[ ${DISTRO} == "Debian" ]]; then
         apt update;
@@ -66,19 +66,21 @@ Python_build:
     - python -m venv .venv
     - source .venv/bin/activate
     - python -m pip install build installer pytest
-    - python -m build
+    - python -m build --config-setting=cmake.define.PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION=${PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION}
     - python -m installer dist/*.whl
     - pytest
   parallel:
     matrix:
-      # FIXME: TNL currently does not work on Alpine (musl problem)
-      #- DISTRO: "Alpine"
-      #  IMAGE_TAG:
-      #    - "3.9-alpine"
-      #    - "3.10-alpine"
-      #    - "3.11-alpine"
-      #    - "3.12-alpine"
-      #    - "3.13-alpine"
+      - DISTRO: "Alpine"
+        IMAGE_TAG:
+          - "3.9-alpine"
+          - "3.10-alpine"
+          - "3.11-alpine"
+          - "3.12-alpine"
+          - "3.13-alpine"
+        # IPO/LTO does not work on Alpine:
+        # error: inlining failed in call to 'always_inline' 'vsnprintf': function body can be overwritten at link time
+        PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION: "OFF"
       - DISTRO: "Debian"
         IMAGE_TAG:
           - "3.9"
@@ -86,6 +88,7 @@ Python_build:
           - "3.11"
           - "3.12"
           - "3.13"
+        PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION: "ON"
 
 Ubuntu_cmake:
   stage: build
