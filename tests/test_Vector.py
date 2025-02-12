@@ -26,6 +26,9 @@ def test_addition(size):
     for i in range(size):
         assert v3[i] == v1[i] + v2[i]
 
+def test_negative_size():
+    with pytest.raises(ValueError):
+        tnl.Vector(-1)
 
 def test_copy(size):
     v1 = tnl.Vector(size)
