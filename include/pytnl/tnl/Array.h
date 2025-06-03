@@ -67,6 +67,20 @@ export_Array( py::module& m, const char* name )
                   return ss.str();
                } )
 
+         // Deepcopy support https://pybind11.readthedocs.io/en/stable/advanced/classes.html#deepcopy-support
+         .def( "__copy__",
+               []( const ArrayType& self )
+               {
+                  return ArrayType( self );
+               } )
+         .def(
+            "__deepcopy__",
+            []( const ArrayType& self, py::dict )
+            {
+               return ArrayType( self );
+            },
+            py::arg( "memo" ) )
+
          // Python buffer protocol:
          // http://pybind11.readthedocs.io/en/master/advanced/pycpp/numpy.html
          .def_buffer(

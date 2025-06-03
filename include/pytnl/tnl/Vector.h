@@ -34,5 +34,18 @@ export_Vector( py::module& m, const char* name )
       .def( py::self + RealType() )
       .def( py::self - RealType() )
       .def( py::self * RealType() )
-      .def( py::self / RealType() );
+      .def( py::self / RealType() )
+      // Deepcopy support https://pybind11.readthedocs.io/en/stable/advanced/classes.html#deepcopy-support
+      .def( "__copy__",
+            []( const VectorType& self )
+            {
+               return VectorType( self );
+            } )
+      .def(
+         "__deepcopy__",
+         []( const VectorType& self, py::dict )
+         {
+            return VectorType( self );
+         },
+         py::arg( "memo" ) );
 }
