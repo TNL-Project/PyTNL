@@ -1,5 +1,33 @@
+default:
+  interruptible: true
+
 stages:
+  - lint
   - build
+
+ruff format:
+  stage: lint
+  image: "quay.io/archlinux/archlinux:base"
+  before_script:
+    - pacman -Syu --needed --noconfirm ruff
+  script:
+    - ruff format --diff
+  variables:
+    FORCE_COLOR: 1
+
+ruff check:
+  stage: lint
+  image: "quay.io/archlinux/archlinux:base"
+  before_script:
+    - pacman -Syu --needed --noconfirm ruff
+  script:
+    - ruff check --exit-zero
+    - ruff check --output-format=gitlab > code-quality-report.json
+  variables:
+    FORCE_COLOR: 1
+  artifacts:
+    reports:
+      codequality: $CI_PROJECT_DIR/code-quality-report.json
 
 Arch_cmake:
   stage: build
@@ -46,7 +74,7 @@ Arch_pip:
   script:
     - python -m venv .venv
     - source .venv/bin/activate
-    - python -m pip install .[test]
+    - python -m pip install .[dev]
     - pytest
 
 Python_build:
@@ -124,5 +152,5 @@ Ubuntu_pip:
   script:
     - python3 -m venv .venv
     - source .venv/bin/activate
-    - python3 -m pip install .[test]
+    - python3 -m pip install .[dev]
     - pytest
