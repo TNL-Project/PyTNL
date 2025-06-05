@@ -9,8 +9,6 @@
 
 // external functions
 void
-export_Object( py::module& m );
-void
 export_String( py::module& m );
 void
 export_Grid1D( py::module& m );
@@ -40,7 +38,6 @@ PYBIND11_MODULE( tnl, m )
 {
    register_exceptions( m );
 
-   export_Object( m );
    // TODO: TNL::File
    export_String( m );
 

@@ -5,7 +5,6 @@ set( sources
       Mesh.cpp
       MeshReaders.cpp
       MeshWriters.cpp
-      Object.cpp
       SparseMatrix.cpp
       String.cpp
       VTKTraits.cpp
