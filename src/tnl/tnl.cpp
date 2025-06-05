@@ -9,8 +9,6 @@
 
 // external functions
 void
-export_String( py::module& m );
-void
 export_Grid1D( py::module& m );
 void
 export_Grid2D( py::module& m );
@@ -39,7 +37,6 @@ PYBIND11_MODULE( tnl, m )
    register_exceptions( m );
 
    // TODO: TNL::File
-   export_String( m );
 
    export_Array< _array< double > >( m, "Array" );
    export_Vector< _array< double >, _vector< double > >( m, "Vector" );
