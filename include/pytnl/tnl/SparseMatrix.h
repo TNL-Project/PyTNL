@@ -125,11 +125,15 @@ export_Matrix( py::module& m, const char* name )
    using IndexVectorType = TNL::Containers::Vector< IndexType, DeviceType, IndexType >;
 
    auto matrix =
-      py::class_< Matrix, TNL::Object >( m, name )
+      py::class_< Matrix >( m, name )
          .def( py::init<>() )
-         // overloads (defined in Object)
+         // File I/O
          .def_static( "getSerializationType", &Matrix::getSerializationType )
          .def( "getSerializationTypeVirtual", &Matrix::getSerializationTypeVirtual )
+         //.def( "save", py::overload_cast< const TNL::String& >( &Matrix::save ), py::const_ )
+         .def( "save", ( void( Matrix::* )( const TNL::String& ) const ) & Matrix::save )
+         .def( "load", py::overload_cast< const TNL::String& >( &Matrix::load ) )
+
          .def( "print", &Matrix::print )
          .def( "__str__",
                []( Matrix& m )

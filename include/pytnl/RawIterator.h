@@ -3,12 +3,20 @@
 #include <iterator>
 
 template< typename DataType >
-class RawIterator : public std::iterator< std::random_access_iterator_tag, DataType, ptrdiff_t, DataType*, DataType& >
+class RawIterator
 {
 protected:
    DataType* m_ptr;
 
 public:
+   // typedefs required by std::iterator_traits
+   // https://en.cppreference.com/w/cpp/iterator/iterator_traits.html
+   using iterator_category = std::random_access_iterator_tag;
+   using value_type = DataType;
+   using difference_type = std::ptrdiff_t;
+   using pointer = DataType*;
+   using reference = DataType&;
+
    RawIterator( DataType* ptr = nullptr )
    {
       m_ptr = ptr;

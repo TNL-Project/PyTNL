@@ -23,13 +23,14 @@ Homepage = "https://gitlab.com/tnl-project/pytnl"
 Issues = "https://gitlab.com/tnl-project/pytnl/-/issues"
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff"]
+dev = ["hypothesis", "pytest", "pytest-xdist[psutil]", "ruff", "numpy"]
 
 [build-system]
 requires = ["scikit-build-core>=0.10"]
 build-backend = "scikit_build_core.build"
 
 [tool.pytest.ini_options]
+addopts = "-n auto"
 testpaths = ["tests"]
 
 [tool.ruff]
