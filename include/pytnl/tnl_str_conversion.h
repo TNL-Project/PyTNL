@@ -1,11 +1,10 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+#include <nanobind/nanobind.h>
 
 #include <TNL/String.h>
 
-namespace pybind11 {
+namespace nanobind {
 namespace detail {
 
 template<>
@@ -16,40 +15,35 @@ struct type_caster< TNL::String >
 
 public:
    /**
-    * This macro establishes the name 'TNL::String' in
-    * function signatures and declares a local variable
-    * 'value' of type TNL::String
+    * This macro establishes the name 'TNL::String' in function signatures and
+    * declares a local variable 'value' of type TNL::String
     */
-   PYBIND11_TYPE_CASTER( TNL::String, _( "TNL::String" ) );
+   NB_TYPE_CASTER( TNL::String, const_name( "TNL::String" ) );
 
    /**
-    * Conversion part 1 (Python->C++): convert a PyObject into a TNL::String
-    * instance or return false upon failure. The second argument
-    * indicates whether implicit conversions should be applied.
+    * Conversion from Python to C++: convert a PyObject into a TNL::String
+    * instance or return false upon failure.
     */
    bool
-   load( handle src, bool implicit )
+   from_python( handle src, std::uint8_t flags, cleanup_list* cleanup )
    {
-      if( ! _caster.load( src, implicit ) )
+      if( ! _caster.from_python( src, flags, cleanup ) )
          return false;
-      const std::string& str = (std::string&) _caster;
+      const std::string& str = static_cast< std::string& >( _caster );
       value = TNL::String( str.c_str() );
       return true;
    }
 
    /**
-    * Conversion part 2 (C++ -> Python): convert an TNL::String instance into
-    * a Python object. The second and third arguments are used to
-    * indicate the return value policy and parent object (for
-    * ``return_value_policy::reference_internal``) and are generally
-    * ignored by implicit casters.
+    * Conversion from C++ to Python: convert an TNL::String instance into
+    * a Python object.
     */
    static handle
-   cast( TNL::String src, return_value_policy policy, handle parent )
+   from_cpp( TNL::String&& src, rv_policy policy, cleanup_list* cleanup )
    {
-      return StdStringCaster::cast( src.getString(), policy, parent );
+      return StdStringCaster::from_cpp( src.getString(), policy, cleanup );
    }
 };
 
 }  // namespace detail
-}  // namespace pybind11
+}  // namespace nanobind

@@ -2,17 +2,18 @@
 #include <pytnl/tnl_conversions.h>
 
 #include <pytnl/tnl/MeshReaders.h>
+#include <pytnl/nanobind.h>
 #include <pytnl/typedefs.h>
 
 void
-export_MeshReaders( py::module& m )
+export_MeshReaders( nb::module_& m )
 {
    using MeshReader = TNL::Meshes::Readers::MeshReader;
    using XMLVTK = TNL::Meshes::Readers::XMLVTK;
 
    // base class with trampolines for virtual methods
-   py::class_< MeshReader, PyMeshReader >( m, "MeshReader" )
-      .def( py::init< std::string >() )
+   nb::class_< MeshReader, PyMeshReader >( m, "MeshReader" )
+      .def( nb::init< std::string >() )
       // bindings against the actual class, NOT the trampoline
       .def( "reset", &MeshReader::reset )
       .def( "detectMesh", &MeshReader::detectMesh )
@@ -27,12 +28,12 @@ export_MeshReaders( py::module& m )
       .def( "readPointData", &MeshReader::readPointData )
       .def( "readCellData", &MeshReader::readCellData );
 
-   py::class_< TNL::Meshes::Readers::VTKReader, MeshReader >( m, "VTKReader" ).def( py::init< std::string >() );
+   nb::class_< TNL::Meshes::Readers::VTKReader, MeshReader >( m, "VTKReader" ).def( nb::init< std::string >() );
 
    // base class for VTUReader, VTIReader and PVTUReader
-   py::class_< XMLVTK, PyXMLVTK, MeshReader >( m, "XMLVTK" ).def( py::init< std::string >() );
+   nb::class_< XMLVTK, PyXMLVTK, MeshReader >( m, "XMLVTK" ).def( nb::init< std::string >() );
 
-   py::class_< TNL::Meshes::Readers::VTUReader, XMLVTK >( m, "VTUReader" ).def( py::init< std::string >() );
+   nb::class_< TNL::Meshes::Readers::VTUReader, XMLVTK >( m, "VTUReader" ).def( nb::init< std::string >() );
 
-   py::class_< TNL::Meshes::Readers::VTIReader, XMLVTK >( m, "VTIReader" ).def( py::init< std::string >() );
+   nb::class_< TNL::Meshes::Readers::VTIReader, XMLVTK >( m, "VTIReader" ).def( nb::init< std::string >() );
 }

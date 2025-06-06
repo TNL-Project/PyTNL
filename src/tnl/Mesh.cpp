@@ -4,7 +4,7 @@
 #include <pytnl/tnl/Mesh.h>
 
 void
-export_Meshes( py::module& m )
+export_Meshes( nb::module_& m )
 {
    export_Mesh< MeshOfEdges >( m, "MeshOfEdges" );
    export_Mesh< MeshOfTriangles >( m, "MeshOfTriangles" );

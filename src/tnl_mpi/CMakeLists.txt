@@ -4,7 +4,7 @@ set( sources
       DistributedMeshWriters.cpp
       tnl_mpi.cpp
 )
-pybind11_add_module(tnl_mpi NO_EXTRAS ${sources})
+nanobind_add_module(tnl_mpi ${sources})
 
 # enable position-independent code
 set_target_properties(tnl_mpi PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

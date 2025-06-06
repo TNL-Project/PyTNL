@@ -9,16 +9,16 @@
 
 // external functions
 void
-export_DistributedMeshes( py::module& m );
+export_DistributedMeshes( nb::module_& m );
 void
-export_DistributedMeshReaders( py::module& m );
+export_DistributedMeshReaders( nb::module_& m );
 void
-export_DistributedMeshWriters( py::module& m );
+export_DistributedMeshWriters( nb::module_& m );
 
 #include <TNL/Meshes/DistributedMeshes/distributeSubentities.h>
 
 // Python module definition
-PYBIND11_MODULE( tnl_mpi, m )
+NB_MODULE( tnl_mpi, m )
 {
    register_exceptions( m );
 
@@ -30,12 +30,12 @@ PYBIND11_MODULE( tnl_mpi, m )
       TNL::MPI::Init( argc, argv );
    }
    // https://pybind11.readthedocs.io/en/stable/advanced/misc.html#module-destructors
-   auto cleanup_callback = []()
+   auto cleanup_callback = []( void* ptr ) noexcept
    {
       if( TNL::MPI::Initialized() && ! TNL::MPI::Finalized() )
          TNL::MPI::Finalize();
    };
-   m.add_object( "_cleanup", py::capsule( cleanup_callback ) );
+   m.attr( "_cleanup" ) = nb::capsule( nullptr, cleanup_callback );
 
    // bindings for distributed data structures
    export_DistributedMeshes( m );

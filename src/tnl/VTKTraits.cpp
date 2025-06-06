@@ -1,19 +1,18 @@
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+#include <pytnl/nanobind.h>
 
 #include <TNL/Meshes/VTKTraits.h>
 
 void
-export_VTKTraits( py::module& m )
+export_VTKTraits( nb::module_& m )
 {
-   py::enum_< TNL::Meshes::VTK::FileFormat >( m, "VTKFileFormat" )
+   nb::enum_< TNL::Meshes::VTK::FileFormat >( m, "VTKFileFormat" )
       .value( "ascii", TNL::Meshes::VTK::FileFormat::ascii )
       .value( "binary", TNL::Meshes::VTK::FileFormat::binary )
       .value( "zlib_compressed", TNL::Meshes::VTK::FileFormat::zlib_compressed );
-   py::enum_< TNL::Meshes::VTK::DataType >( m, "VTKDataType" )
+   nb::enum_< TNL::Meshes::VTK::DataType >( m, "VTKDataType" )
       .value( "CellData", TNL::Meshes::VTK::DataType::CellData )
       .value( "PointData", TNL::Meshes::VTK::DataType::PointData );
-   py::enum_< TNL::Meshes::VTK::EntityShape >( m, "VTKEntityShape" )
+   nb::enum_< TNL::Meshes::VTK::EntityShape >( m, "VTKEntityShape" )
       .value( "Vertex", TNL::Meshes::VTK::EntityShape::Vertex )
       .value( "PolyVertex", TNL::Meshes::VTK::EntityShape::PolyVertex )
       .value( "Line", TNL::Meshes::VTK::EntityShape::Line )
@@ -28,7 +27,7 @@ export_VTKTraits( py::module& m )
       .value( "Hexahedron", TNL::Meshes::VTK::EntityShape::Hexahedron )
       .value( "Wedge", TNL::Meshes::VTK::EntityShape::Wedge )
       .value( "Pyramid", TNL::Meshes::VTK::EntityShape::Pyramid );
-   py::enum_< TNL::Meshes::VTK::CellGhostTypes >( m, "VTKCellGhostTypes" )
+   nb::enum_< TNL::Meshes::VTK::CellGhostTypes >( m, "VTKCellGhostTypes" )
       .value( "DUPLICATECELL", TNL::Meshes::VTK::CellGhostTypes::DUPLICATECELL, "the cell is present on multiple processors" )
       .value( "HIGHCONNECTIVITYCELL",
               TNL::Meshes::VTK::CellGhostTypes::HIGHCONNECTIVITYCELL,
@@ -42,7 +41,7 @@ export_VTKTraits( py::module& m )
               TNL::Meshes::VTK::CellGhostTypes::HIDDENCELL,
               "the cell is needed to maintain connectivity, but the data values "
               "should be ignored" );
-   py::enum_< TNL::Meshes::VTK::PointGhostTypes >( m, "VTKPointGhostTypes" )
+   nb::enum_< TNL::Meshes::VTK::PointGhostTypes >( m, "VTKPointGhostTypes" )
       .value(
          "DUPLICATEPOINT", TNL::Meshes::VTK::PointGhostTypes::DUPLICATEPOINT, "the cell is present on multiple processors" )
       .value( "HIDDENPOINT",

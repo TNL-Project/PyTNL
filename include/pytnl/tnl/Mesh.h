@@ -1,17 +1,16 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+#include <type_traits>
+
+#include <pytnl/typedefs.h>
+#include <pytnl/nanobind.h>
 
 #include "StaticVector.h"
 #include "mesh_getters.h"
-#include <pytnl/typedefs.h>
 
 #include <TNL/Meshes/Geometry/getEntityCenter.h>
 #include <TNL/Meshes/Geometry/getEntityMeasure.h>
 #include <TNL/String.h>
-
-#include <type_traits>
 
 template< typename MeshEntity,
           int Superdimension,
@@ -84,9 +83,9 @@ template< typename MeshEntity, typename Scope >
 void
 export_MeshEntity( Scope& scope, const char* name )
 {
-   auto entity = py::class_< MeshEntity >( scope, name )
-                    //        .def(py::init<>())
-                    //        .def(py::init<typename MeshEntity::MeshType, typename
+   auto entity = nb::class_< MeshEntity >( scope, name )
+                    //        .def(nb::init<>())
+                    //        .def(nb::init<typename MeshEntity::MeshType, typename
                     //        MeshEntity::GlobalIndexType>())
                     .def_static( "getEntityDimension", &MeshEntity::getEntityDimension )
                     .def( "getIndex", &MeshEntity::getIndex )
@@ -101,10 +100,10 @@ export_MeshEntity( Scope& scope, const char* name )
 
 template< typename Mesh >
 void
-export_Mesh( py::module& m, const char* name )
+export_Mesh( nb::module_& m, const char* name )
 {
-   auto mesh = py::class_< Mesh >( m, name )
-                  .def( py::init<>() )
+   auto mesh = nb::class_< Mesh >( m, name )
+                  .def( nb::init<>() )
                   .def_static( "getMeshDimension", &Mesh::getMeshDimension )
                   .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Cell > )
                   .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Face > )

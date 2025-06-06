@@ -27,7 +27,7 @@ using SE_cuda =
    TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Cuda, IndexType, TNL::Matrices::GeneralMatrix, SlicedEllpack >;
 
 void
-export_SparseMatrices( py::module& m )
+export_SparseMatrices( nb::module_& m )
 {
    export_Matrix< CSR_host >( m, "CSR" );
    export_Matrix< E_host >( m, "Ellpack" );

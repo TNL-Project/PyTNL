@@ -1,9 +1,7 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
-
 #include <pytnl/typedefs.h>
+#include <pytnl/nanobind.h>
 
 template< typename Grid >
 struct SpaceStepsProductsGetter
@@ -33,7 +31,7 @@ struct SpaceStepsProductsGetter< Grid1D >
    static void
    export_getSpaceSteps( PyGrid& scope, const char* name = "getSpaceSteps" )
    {
-      scope.def( "getSpaceStepsProducts", get, py::arg( "xPow" ) );
+      scope.def( "getSpaceStepsProducts", get, nb::arg( "xPow" ) );
    }
 };
 
@@ -58,7 +56,7 @@ struct SpaceStepsProductsGetter< Grid2D >
    static void
    export_getSpaceSteps( PyGrid& scope, const char* name = "getSpaceSteps" )
    {
-      scope.def( "getSpaceStepsProducts", get, py::arg( "xPow" ), py::arg( "yPow" ) = 0 );
+      scope.def( "getSpaceStepsProducts", get, nb::arg( "xPow" ), nb::arg( "yPow" ) = 0 );
    }
 };
 
@@ -86,6 +84,6 @@ struct SpaceStepsProductsGetter< Grid3D >
    static void
    export_getSpaceSteps( PyGrid& scope, const char* name = "getSpaceSteps" )
    {
-      scope.def( "getSpaceStepsProducts", get, py::arg( "xPow" ), py::arg( "yPow" ) = 0, py::arg( "zPow" ) = 0 );
+      scope.def( "getSpaceStepsProducts", get, nb::arg( "xPow" ), nb::arg( "yPow" ) = 0, nb::arg( "zPow" ) = 0 );
    }
 };

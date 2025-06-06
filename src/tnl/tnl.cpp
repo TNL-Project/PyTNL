@@ -9,21 +9,21 @@
 
 // external functions
 void
-export_Grid1D( py::module& m );
+export_Grid1D( nb::module_& m );
 void
-export_Grid2D( py::module& m );
+export_Grid2D( nb::module_& m );
 void
-export_Grid3D( py::module& m );
+export_Grid3D( nb::module_& m );
 void
-export_VTKTraits( py::module& m );
+export_VTKTraits( nb::module_& m );
 void
-export_Meshes( py::module& m );
+export_Meshes( nb::module_& m );
 void
-export_MeshReaders( py::module& m );
+export_MeshReaders( nb::module_& m );
 void
-export_MeshWriters( py::module& m );
+export_MeshWriters( nb::module_& m );
 void
-export_SparseMatrices( py::module& m );
+export_SparseMatrices( nb::module_& m );
 
 template< typename T >
 using _array = TNL::Containers::Array< T, TNL::Devices::Host, IndexType >;
@@ -32,7 +32,7 @@ template< typename T >
 using _vector = TNL::Containers::Vector< T, TNL::Devices::Host, IndexType >;
 
 // Python module definition
-PYBIND11_MODULE( tnl, m )
+NB_MODULE( tnl, m )
 {
    register_exceptions( m );
 

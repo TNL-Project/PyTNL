@@ -1,8 +1,6 @@
 #pragma once
 
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+#include <pytnl/nanobind.h>
 
 #include <TNL/Containers/Vector.h>
 #include <TNL/TypeTraits.h>
@@ -20,14 +18,14 @@ export_RowView_nonconst( Scope& s )
        {
           return row.getColumnIndex( localIdx );
        },
-       py::return_value_policy::reference_internal )
+       nb::rv_policy::reference_internal )
       .def(
          "getValue",
          []( RowView& row, IndexType localIdx ) -> RealType&
          {
             return row.getValue( localIdx );
          },
-         py::return_value_policy::reference_internal )
+         nb::rv_policy::reference_internal )
       .def( "setValue", &RowView::setValue )
       .def( "setColumnIndex", &RowView::setColumnIndex )
       .def( "setElement", &RowView::setElement );
@@ -45,7 +43,7 @@ export_RowView( Scope& s, const char* name )
    using RealType = typename RowView::RealType;
    using IndexType = typename RowView::IndexType;
 
-   auto rowView = py::class_< RowView >( s, name )
+   auto rowView = nb::class_< RowView >( s, name )
                      .def( "getSize", &RowView::getSize )
                      .def( "getRowIndex", &RowView::getRowIndex )
                      .def(
@@ -54,16 +52,16 @@ export_RowView( Scope& s, const char* name )
                         {
                            return row.getColumnIndex( localIdx );
                         },
-                        py::return_value_policy::reference_internal )
+                        nb::rv_policy::reference_internal )
                      .def(
                         "getValue",
                         []( const RowView& row, IndexType localIdx ) -> const RealType&
                         {
                            return row.getValue( localIdx );
                         },
-                        py::return_value_policy::reference_internal )
-                     .def( py::self == py::self )
-      //      .def(py::self_ns::str(py::self_ns::self))
+                        nb::rv_policy::reference_internal )
+                     .def( nb::self == nb::self )
+      //      .def(nb::self_ns::str(nb::self_ns::self))
       ;
    export_RowView_nonconst< RowView >( rowView );
 }
@@ -90,7 +88,7 @@ struct export_CSR< Segments, typename TNL::enable_if_type< decltype( Segments{}.
          {
             return segments.getOffsets();
          },
-         py::return_value_policy::reference_internal );
+         nb::rv_policy::reference_internal );
    }
 };
 
@@ -98,14 +96,14 @@ template< typename Segments, typename Scope >
 void
 export_Segments( Scope& s, const char* name )
 {
-   auto segments = py::class_< Segments >( s, name )
+   auto segments = nb::class_< Segments >( s, name )
                       .def( "getSegmentsCount", &Segments::getSegmentsCount )
                       .def( "getSegmentSize", &Segments::getSegmentSize )
                       .def( "getSize", &Segments::getSize )
                       .def( "getStorageSize", &Segments::getStorageSize )
                       .def( "getGlobalIndex", &Segments::getGlobalIndex )
       // FIXME: this does not compile
-      //      .def(py::self == py::self)
+      //      .def(nb::self == nb::self)
       // TODO: forElements, forAllElements, forSegments, forAllSegments,
       // segmentsReduction, allReduction
       ;
@@ -115,7 +113,7 @@ export_Segments( Scope& s, const char* name )
 
 template< typename Matrix >
 void
-export_Matrix( py::module& m, const char* name )
+export_Matrix( nb::module_& m, const char* name )
 {
    using RealType = typename Matrix::RealType;
    using DeviceType = typename Matrix::DeviceType;
@@ -125,8 +123,8 @@ export_Matrix( py::module& m, const char* name )
    using IndexVectorType = TNL::Containers::Vector< IndexType, DeviceType, IndexType >;
 
    auto matrix =
-      py::class_< Matrix >( m, name )
-         .def( py::init<>() )
+      nb::class_< Matrix >( m, name )
+         .def( nb::init<>() )
          // File I/O
          .def_static( "getSerializationType", &Matrix::getSerializationType )
          .def( "save", &Matrix::save )
@@ -142,7 +140,7 @@ export_Matrix( py::module& m, const char* name )
                } )
 
          // Matrix
-         .def( "setDimensions", py::overload_cast< IndexType, IndexType >( &Matrix::setDimensions ) )
+         .def( "setDimensions", nb::overload_cast< IndexType, IndexType >( &Matrix::setDimensions ) )
          // TODO: export for more types
          .def( "setLike",
                []( Matrix& matrix, const Matrix& other ) -> void
@@ -155,8 +153,8 @@ export_Matrix( py::module& m, const char* name )
          .def( "getRows", &Matrix::getRows )
          .def( "getColumns", &Matrix::getColumns )
          // TODO: export for more types
-         .def( py::self == py::self )
-         .def( py::self != py::self )
+         .def( nb::self == nb::self )
+         .def( nb::self != nb::self )
 
          // SparseMatrix
          .def( "setRowCapacities", &Matrix::template setRowCapacities< IndexVectorType > )
@@ -196,10 +194,9 @@ export_Matrix( py::module& m, const char* name )
                } )
 
          // accessors for internal vectors
-         .def( "getValues", py::overload_cast<>( &Matrix::getValues ), py::return_value_policy::reference_internal )
-         .def(
-            "getColumnIndexes", py::overload_cast<>( &Matrix::getColumnIndexes ), py::return_value_policy::reference_internal )
-         .def( "getSegments", py::overload_cast<>( &Matrix::getSegments ), py::return_value_policy::reference_internal );
+         .def( "getValues", nb::overload_cast<>( &Matrix::getValues ), nb::rv_policy::reference_internal )
+         .def( "getColumnIndexes", nb::overload_cast<>( &Matrix::getColumnIndexes ), nb::rv_policy::reference_internal )
+         .def( "getSegments", nb::overload_cast<>( &Matrix::getSegments ), nb::rv_policy::reference_internal );
 
    export_Segments< typename Matrix::SegmentsType >( matrix, "Segments" );
 }

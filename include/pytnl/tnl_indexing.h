@@ -1,7 +1,6 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+#include <pytnl/nanobind.h>
 
 #include "RawIterator.h"
 
@@ -18,18 +17,21 @@ tnl_indexing( Scope& scope )
       "__iter__",
       []( Array& array )
       {
-         return py::make_iterator( RawIterator< Value >( array.getData() ),
+         return nb::make_iterator( nb::type< Array >(),
+                                   "Iterator",
+                                   RawIterator< Value >( array.getData() ),
                                    RawIterator< Value >( array.getData() + array.getSize() ) );
       },
-      py::keep_alive< 0, 1 >()  // keep array alive while iterator is used
+      nb::keep_alive< 0, 1 >()  // keep array alive while iterator is used
    );
 
    scope.def( "__getitem__",
               []( Array& a, Index i )
               {
                  if( i < 0 || i >= a.getSize() )
-                    throw py::index_error( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
-                                           + std::to_string( a.getSize() ) );
+                    throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
+                                             + std::to_string( a.getSize() ) )
+                                              .c_str() );
                  return a[ i ];
               } );
 
@@ -37,8 +39,9 @@ tnl_indexing( Scope& scope )
               []( Array& a, Index i, const Value& e )
               {
                  if( i < 0 || i >= a.getSize() )
-                    throw py::index_error( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
-                                           + std::to_string( a.getSize() ) );
+                    throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
+                                             + std::to_string( a.getSize() ) )
+                                              .c_str() );
                  a[ i ] = e;
               } );
 }
@@ -50,17 +53,14 @@ tnl_slice_indexing( Scope& scope )
    /// Slicing protocol
    scope.def(
       "__getitem__",
-      []( const Array& a, py::slice slice ) -> Array*
+      []( const Array& a, nb::slice slice ) -> Array*
       {
-         size_t start, stop, step, slicelength;
-
-         if( ! slice.compute( a.getSize(), &start, &stop, &step, &slicelength ) )
-            throw py::error_already_set();
+         auto [ start, stop, step, slicelength ] = slice.compute( a.getSize() );
 
          Array* seq = new Array();
          seq->setSize( slicelength );
 
-         for( size_t i = 0; i < slicelength; ++i ) {
+         for( std::size_t i = 0; i < slicelength; ++i ) {
             seq->operator[]( i ) = a[ start ];
             start += step;
          }
@@ -70,17 +70,15 @@ tnl_slice_indexing( Scope& scope )
 
    scope.def(
       "__setitem__",
-      []( Array& a, py::slice slice, const Array& value )
+      []( Array& a, nb::slice slice, const Array& value )
       {
-         size_t start, stop, step, slicelength;
-         if( ! slice.compute( a.getSize(), &start, &stop, &step, &slicelength ) )
-            throw py::error_already_set();
+         auto [ start, stop, step, slicelength ] = slice.compute( a.getSize() );
 
-         if( slicelength != (size_t) value.getSize() )
+         if( slicelength != (std::size_t) value.getSize() )
             throw std::runtime_error( "Left and right hand size of slice "
                                       "assignment have different sizes!" );
 
-         for( size_t i = 0; i < slicelength; ++i ) {
+         for( std::size_t i = 0; i < slicelength; ++i ) {
             a[ start ] = value[ i ];
             start += step;
          }

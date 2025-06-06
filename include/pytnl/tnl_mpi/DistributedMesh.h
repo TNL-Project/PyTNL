@@ -1,19 +1,18 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
+#include <pytnl/nanobind.h>
 
 template< typename Mesh >
 void
-export_DistributedMesh( py::module& m, const char* name )
+export_DistributedMesh( nb::module_& m, const char* name )
 {
-   auto mesh =
-      py::class_< Mesh >( m, name )
-         .def( py::init<>() )
+   auto mesh =  //
+      nb::class_< Mesh >( m, name )
+         .def( nb::init<>() )
          .def_static( "getMeshDimension", &Mesh::getMeshDimension )
-         //        .def("setmunicationGroup", &Mesh::setCommunicationGroup)
-         //        .def("getmunicationGroup", &Mesh::getCommunicationGroup)
-         .def( "getLocalMesh", py::overload_cast<>( &Mesh::getLocalMesh ), py::return_value_policy::reference_internal )
+         //.def("setCommunicationGroup", &Mesh::setCommunicationGroup)
+         //.def("getCommunicationGroup", &Mesh::getCommunicationGroup)
+         .def( "getLocalMesh", nb::overload_cast<>( &Mesh::getLocalMesh ), nb::rv_policy::reference_internal )
          .def( "setGhostLevels", &Mesh::setGhostLevels )
          .def( "getGhostLevels", &Mesh::getGhostLevels )
          .def(
@@ -22,26 +21,26 @@ export_DistributedMesh( py::module& m, const char* name )
             {
                return mesh.template getGlobalIndices< 0 >();
             },
-            py::return_value_policy::reference_internal )
+            nb::rv_policy::reference_internal )
          .def(
             "getGlobalCellIndices",
             []( const Mesh& mesh ) -> typename Mesh::GlobalIndexArray const&
             {
                return mesh.template getGlobalIndices< Mesh::getMeshDimension() >();
             },
-            py::return_value_policy::reference_internal )
+            nb::rv_policy::reference_internal )
          .def(
             "vtkPointGhostTypes",
             []( const Mesh& mesh ) -> typename Mesh::VTKTypesArrayType const&
             {
                return mesh.vtkPointGhostTypes();
             },
-            py::return_value_policy::reference_internal )
+            nb::rv_policy::reference_internal )
          .def(
             "vtkCellGhostTypes",
             []( const Mesh& mesh ) -> typename Mesh::VTKTypesArrayType const&
             {
                return mesh.vtkCellGhostTypes();
             },
-            py::return_value_policy::reference_internal );
+            nb::rv_policy::reference_internal );
 }

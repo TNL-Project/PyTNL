@@ -1,9 +1,6 @@
 #pragma once
 
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
-
+#include <pytnl/nanobind.h>
 #include <pytnl/tnl_indexing.h>
 
 template< typename VectorType, typename Scope >
@@ -15,11 +12,13 @@ export_StaticVector( Scope& scope, const char* name )
    using RealType = typename VectorType::RealType;
 
    auto vector =  //
-      py::class_< VectorType >( scope, name )
-         .def( py::init< RealType >() )
-         .def( py::init< VectorType >() )
+      nb::class_< VectorType >( scope, name )
+         // NOTE: the nb::init<...> does not work due to list-initialization and
+         //       std::list_initializer constructor in ArrayType
+         .def( my_init< RealType >() )
+         .def( my_init< VectorType >() )
          // this enables initialization from Python lists (assuming that implicit conversion for STL containers is enabled)
-         .def( py::init< std::array< ValueType, VectorType::getSize() > >() )
+         .def( my_init< std::array< ValueType, VectorType::getSize() > >() )
 
          // Conversion back to Python list through the STL container
          .def( "as_list",
@@ -29,55 +28,55 @@ export_StaticVector( Scope& scope, const char* name )
                } )
 
          // Typedefs
-         .def_property_readonly_static(  //
+         .def_prop_ro_static(  //
             "IndexType",
-            []( py::object )
+            []( nb::object ) -> nb::object
             {
-               // py::type::of<> does not handle generic types like int, float, etc.
-               // https://github.com/pybind/pybind11/issues/2486
+               // nb::type<> does not handle generic types like int, float, etc.
+               // https://github.com/wjakob/nanobind/discussions/1070
                if constexpr( std::is_integral_v< IndexType > ) {
-                  return py::type::of( py::int_() );
+                  return nb::borrow( &PyLong_Type );
                }
                else {
-                  return py::type::of< IndexType >();
+                  return nb::type< IndexType >();
                }
             } )
-         .def_property_readonly_static(  //
+         .def_prop_ro_static(  //
             "ValueType",
-            []( py::object )
+            []( nb::object ) -> nb::object
             {
-               // py::type::of<> does not handle generic types like int, float, etc.
-               // https://github.com/pybind/pybind11/issues/2486
+               // nb::type<> does not handle generic types like int, float, etc.
+               // https://github.com/wjakob/nanobind/discussions/1070
                if constexpr( std::is_same_v< ValueType, bool > ) {
-                  return py::type::of( py::bool_() );
+                  return nb::borrow( &PyBool_Type );
                }
                else if constexpr( std::is_integral_v< ValueType > ) {
-                  return py::type::of( py::int_() );
+                  return nb::borrow( &PyLong_Type );
                }
                else if constexpr( std::is_floating_point_v< ValueType > ) {
-                  return py::type::of( py::float_() );
+                  return nb::borrow( &PyFloat_Type );
                }
                else {
-                  return py::type::of< ValueType >();
+                  return nb::type< ValueType >();
                }
             } )
-         .def_property_readonly_static(  //
+         .def_prop_ro_static(  //
             "RealType",
-            []( py::object )
+            []( nb::object ) -> nb::object
             {
-               // py::type::of<> does not handle generic types like int, float, etc.
-               // https://github.com/pybind/pybind11/issues/2486
+               // nb::type<> does not handle generic types like int, float, etc.
+               // https://github.com/wjakob/nanobind/discussions/1070
                if constexpr( std::is_same_v< RealType, bool > ) {
-                  return py::type::of( py::bool_() );
+                  return nb::borrow( &PyBool_Type );
                }
                else if constexpr( std::is_integral_v< RealType > ) {
-                  return py::type::of( py::int_() );
+                  return nb::borrow( &PyLong_Type );
                }
                else if constexpr( std::is_floating_point_v< RealType > ) {
-                  return py::type::of( py::float_() );
+                  return nb::borrow( &PyFloat_Type );
                }
                else {
-                  return py::type::of< RealType >();
+                  return nb::type< RealType >();
                }
             } )
 
@@ -94,18 +93,7 @@ export_StaticVector( Scope& scope, const char* name )
          // Fill
          .def( "setValue", &VectorType::setValue )
 
-         // Comparison operators
-         .def( py::self == py::self )
-         .def( py::self != py::self )
-         .def( py::self < py::self )
-         .def( py::self > py::self )
-         .def( py::self <= py::self )
-         .def( py::self >= py::self )
-
-         // TODO: pybind11
-         // explicit namespace resolution is necessary, see
-         // http://stackoverflow.com/a/3084341/4180822
-         //        .def(py::self_ns::str(py::self))
+         // TODO: __str__ and __repr__
 
          // Comparison operators (Vector OP Vector)
          .def(
@@ -114,42 +102,42 @@ export_StaticVector( Scope& scope, const char* name )
             {
                return self == other;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__ne__",
             []( const VectorType& self, const VectorType& other )
             {
                return self != other;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__lt__",
             []( const VectorType& self, const VectorType& other )
             {
                return self < other;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__le__",
             []( const VectorType& self, const VectorType& other )
             {
                return self <= other;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__gt__",
             []( const VectorType& self, const VectorType& other )
             {
                return self > other;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__ge__",
             []( const VectorType& self, const VectorType& other )
             {
                return self >= other;
             },
-            py::is_operator() )
+            nb::is_operator() )
 
          // In-place arithmetic operators (Vector OP Vector)
          .def(
@@ -159,7 +147,7 @@ export_StaticVector( Scope& scope, const char* name )
                self += other;
                return self;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__isub__",
             []( VectorType& self, const VectorType& other ) -> VectorType&
@@ -167,7 +155,7 @@ export_StaticVector( Scope& scope, const char* name )
                self -= other;
                return self;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__imul__",
             []( VectorType& self, const VectorType& other ) -> VectorType&
@@ -175,7 +163,7 @@ export_StaticVector( Scope& scope, const char* name )
                self *= other;
                return self;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__idiv__",
             []( VectorType& self, const VectorType& other ) -> VectorType&
@@ -183,7 +171,7 @@ export_StaticVector( Scope& scope, const char* name )
                self /= other;
                return self;
             },
-            py::is_operator() )
+            nb::is_operator() )
 
          // In-place arithmetic operators (Vector OP Scalar)
          .def(
@@ -193,7 +181,7 @@ export_StaticVector( Scope& scope, const char* name )
                self += scalar;
                return self;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__isub__",
             []( VectorType& self, RealType scalar ) -> VectorType&
@@ -201,7 +189,7 @@ export_StaticVector( Scope& scope, const char* name )
                self -= scalar;
                return self;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__imul__",
             []( VectorType& self, RealType scalar ) -> VectorType&
@@ -209,7 +197,7 @@ export_StaticVector( Scope& scope, const char* name )
                self *= scalar;
                return self;
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__idiv__",
             []( VectorType& self, RealType scalar ) -> VectorType&
@@ -217,7 +205,7 @@ export_StaticVector( Scope& scope, const char* name )
                self /= scalar;
                return self;
             },
-            py::is_operator() )
+            nb::is_operator() )
 
          // Binary arithmetic operators (Vector OP Vector)
          .def(
@@ -226,28 +214,28 @@ export_StaticVector( Scope& scope, const char* name )
             {
                return VectorType( self + other );
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__sub__",
             []( const VectorType& self, const VectorType& other )
             {
                return VectorType( self - other );
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__mul__",
             []( const VectorType& self, const VectorType& other )
             {
                return VectorType( self * other );
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__truediv__",
             []( const VectorType& self, const VectorType& other )
             {
                return VectorType( self / other );
             },
-            py::is_operator() )
+            nb::is_operator() )
 
          // Binary arithmetic operators (Vector OP Scalar)
          .def(
@@ -256,28 +244,28 @@ export_StaticVector( Scope& scope, const char* name )
             {
                return VectorType( self + scalar );
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__sub__",
             []( const VectorType& self, RealType scalar )
             {
                return VectorType( self - scalar );
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__mul__",
             []( const VectorType& self, RealType scalar )
             {
                return VectorType( self * scalar );
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__truediv__",
             []( const VectorType& self, RealType scalar )
             {
                return VectorType( self / scalar );
             },
-            py::is_operator() )
+            nb::is_operator() )
 
          // Reverse arithmetic operators (Scalar OP Vector)
          .def(
@@ -286,28 +274,28 @@ export_StaticVector( Scope& scope, const char* name )
             {
                return VectorType( scalar + self );
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__rsub__",
             []( const VectorType& self, RealType scalar )
             {
                return VectorType( scalar - self );
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__rmul__",
             []( const VectorType& self, RealType scalar )
             {
                return VectorType( scalar * self );
             },
-            py::is_operator() )
+            nb::is_operator() )
          .def(
             "__rtruediv__",
             []( const VectorType& self, RealType scalar )
             {
                return VectorType( scalar / self );
             },
-            py::is_operator() )
+            nb::is_operator() )
 
          // Unary Operators
          .def( "__pos__",
@@ -329,24 +317,24 @@ export_StaticVector( Scope& scope, const char* name )
                } )
          .def(
             "__deepcopy__",
-            []( const VectorType& self, py::dict )
+            []( const VectorType& self, nb::dict )
             {
                return VectorType( self );
             },
-            py::arg( "memo" ) );
+            nb::arg( "memo" ) );
 
    // Additional operators defined only for integral value types
    if constexpr( std::is_integral_v< ValueType > ) {
       vector  //
-         .def( py::self %= py::self )
-         .def( py::self %= RealType() )
-         .def( py::self % py::self )
-         .def( py::self % RealType() )
-         .def( RealType() % py::self );
+         .def( nb::self %= nb::self )
+         .def( nb::self %= RealType() )
+         .def( nb::self % nb::self )
+         .def( nb::self % RealType() )
+         .def( RealType() % nb::self );
    }
 
    // x, y, z properties
-   vector.def_property(
+   vector.def_prop_rw(
       "x",
       []( const VectorType& self )
       {
@@ -357,7 +345,7 @@ export_StaticVector( Scope& scope, const char* name )
          self.x() = value;
       } );
    if constexpr( VectorType::getSize() >= 2 ) {
-      vector.def_property(
+      vector.def_prop_rw(
          "y",
          []( const VectorType& self )
          {
@@ -369,7 +357,7 @@ export_StaticVector( Scope& scope, const char* name )
          } );
    }
    if constexpr( VectorType::getSize() >= 3 ) {
-      vector.def_property(
+      vector.def_prop_rw(
          "z",
          []( const VectorType& self )
          {

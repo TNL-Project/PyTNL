@@ -9,7 +9,7 @@ set( sources
       VTKTraits.cpp
       tnl.cpp
 )
-pybind11_add_module(tnl NO_EXTRAS ${sources})
+nanobind_add_module(tnl ${sources})
 
 # enable position-independent code
 set_target_properties(tnl PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

@@ -6,10 +6,10 @@
 #include <pytnl/typedefs.h>
 
 void
-export_DistributedMeshes( py::module& m )
+export_DistributedMeshes( nb::module_& m )
 {
    // make sure that bindings for the local meshes are available
-   py::module_::import( "tnl" );
+   nb::module_::import_( "tnl" );
 
    export_DistributedMesh< DistributedMeshOfEdges >( m, "DistributedMeshOfEdges" );
    export_DistributedMesh< DistributedMeshOfTriangles >( m, "DistributedMeshOfTriangles" );

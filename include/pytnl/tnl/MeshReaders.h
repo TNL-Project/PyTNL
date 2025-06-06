@@ -1,29 +1,30 @@
+#include <nanobind/trampoline.h>
+
 #include <TNL/Meshes/Readers/VTIReader.h>
 #include <TNL/Meshes/Readers/VTKReader.h>
 #include <TNL/Meshes/Readers/VTUReader.h>
 
 // trampoline classes needed for overriding virtual methods
-// https://pybind11.readthedocs.io/en/stable/advanced/classes.html
+// https://nanobind.readthedocs.io/en/latest/classes.html#trampolines
 
 class PyMeshReader : public TNL::Meshes::Readers::MeshReader
 {
    using Parent = TNL::Meshes::Readers::MeshReader;
 
 public:
-   // inherit constructors
-   using TNL::Meshes::Readers::MeshReader::MeshReader;
+   NB_TRAMPOLINE( Parent, 2 );
 
    // trampolines (one for each virtual method)
    void
    reset() override
    {
-      PYBIND11_OVERRIDE_PURE( void, Parent, reset );
+      NB_OVERRIDE_PURE( reset );
    }
 
    void
    detectMesh() override
    {
-      PYBIND11_OVERRIDE_PURE( void, Parent, detectMesh );
+      NB_OVERRIDE_PURE( detectMesh );
    }
 };
 
@@ -32,19 +33,18 @@ class PyXMLVTK : public TNL::Meshes::Readers::XMLVTK
    using Parent = TNL::Meshes::Readers::XMLVTK;
 
 public:
-   // inherit constructors
-   using TNL::Meshes::Readers::XMLVTK::XMLVTK;
+   NB_TRAMPOLINE( Parent, 2 );
 
    // trampolines (one for each virtual method)
    void
    reset() override
    {
-      PYBIND11_OVERRIDE_PURE( void, Parent, reset );
+      NB_OVERRIDE_PURE( reset );
    }
 
    void
    detectMesh() override
    {
-      PYBIND11_OVERRIDE_PURE( void, Parent, detectMesh );
+      NB_OVERRIDE_PURE( detectMesh );
    }
 };
