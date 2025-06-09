@@ -273,7 +273,7 @@ export_Vector( py::module& m, const char* name )
             py::arg( "memo" ) );
 
    // Additional operators defined only for integral value types
-   if constexpr( std::is_integral_v< typename VectorType::ValueType > ) {
+   if constexpr( std::is_integral_v< RealType > ) {
       vector
          // Modulo operators
          .def(
