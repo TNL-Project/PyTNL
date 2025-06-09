@@ -43,7 +43,6 @@ export_Vector( py::module& m, const char* name )
 
          // Serialization
          .def_static( "getSerializationType", &VectorType::getSerializationType )
-         .def( "getSerializationTypeVirtual", &VectorType::getSerializationTypeVirtual )
 
          // Comparison operators (Vector OP Vector)
          .def(

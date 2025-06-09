@@ -129,10 +129,8 @@ export_Matrix( py::module& m, const char* name )
          .def( py::init<>() )
          // File I/O
          .def_static( "getSerializationType", &Matrix::getSerializationType )
-         .def( "getSerializationTypeVirtual", &Matrix::getSerializationTypeVirtual )
-         //.def( "save", py::overload_cast< const TNL::String& >( &Matrix::save ), py::const_ )
-         .def( "save", ( void( Matrix::* )( const TNL::String& ) const ) & Matrix::save )
-         .def( "load", py::overload_cast< const TNL::String& >( &Matrix::load ) )
+         .def( "save", &Matrix::save )
+         .def( "load", &Matrix::load )
 
          .def( "print", &Matrix::print )
          .def( "__str__",
@@ -144,7 +142,7 @@ export_Matrix( py::module& m, const char* name )
                } )
 
          // Matrix
-         .def( "setDimensions", &Matrix::setDimensions )
+         .def( "setDimensions", py::overload_cast< IndexType, IndexType >( &Matrix::setDimensions ) )
          // TODO: export for more types
          .def( "setLike",
                []( Matrix& matrix, const Matrix& other ) -> void

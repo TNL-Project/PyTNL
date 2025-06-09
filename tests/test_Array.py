@@ -292,9 +292,7 @@ def test_setValue(array_type, data, size, begin, end):
 
 @pytest.mark.parametrize("array_type", array_types)
 def test_serialization_type(array_type):
-    a = array_type()
-    assert a.getSerializationTypeVirtual() == array_type.getSerializationType()
-    assert a.getSerializationTypeVirtual().startswith("TNL::Containers::Array<")
+    assert array_type.getSerializationType().startswith("TNL::Containers::Array<")
 
 
 @pytest.mark.parametrize("array_type", array_types)

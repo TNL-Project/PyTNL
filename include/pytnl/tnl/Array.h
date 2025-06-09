@@ -110,7 +110,6 @@ export_Array( py::module& m, const char* name )
 
          // File I/O
          .def_static( "getSerializationType", &ArrayType::getSerializationType )
-         .def( "getSerializationTypeVirtual", &ArrayType::getSerializationTypeVirtual )
          .def( "save", &ArrayType::save )
          .def( "load", &ArrayType::load )
 
