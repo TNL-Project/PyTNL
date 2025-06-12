@@ -5,91 +5,68 @@
 #include <pytnl/typedefs.h>
 #include <pytnl/nanobind.h>
 
-#include "StaticVector.h"
 #include "mesh_getters.h"
 
 #include <TNL/Meshes/Geometry/getEntityCenter.h>
 #include <TNL/Meshes/Geometry/getEntityMeasure.h>
 #include <TNL/String.h>
 
-template< typename MeshEntity,
-          int Superdimension,
-          typename Scope,
-          std::enable_if_t< Superdimension <= MeshEntity::MeshType::getMeshDimension(), bool > = true >
-//                                           && MeshEntity::template
-//                                           SuperentityTraits< Superdimension
-//                                           >::storageEnabled >::type >
+template< typename MeshEntity, int Superdimension, typename Scope >
 void
 export_getSuperentityIndex( Scope& m )
 {
-   m.def( "getSuperentityIndex",
-          []( const MeshEntity& entity, const typename MeshEntity::LocalIndexType& i )
-          {
-             return entity.template getSuperentityIndex< Superdimension >( i );
-          } );
+   if constexpr( Superdimension <= MeshEntity::MeshType::getMeshDimension()
+                 // && MeshEntity::template SuperentityTraits< Superdimension >::storageEnabled
+   )
+   {
+      m.def( "getSuperentityIndex",
+             []( const MeshEntity& entity, const typename MeshEntity::LocalIndexType& i )
+             {
+                return entity.template getSuperentityIndex< Superdimension >( i );
+             } );
+   }
 }
 
-template< typename MeshEntity,
-          int Superdimension,
-          typename Scope,
-          std::enable_if_t< ! ( Superdimension <= MeshEntity::MeshType::getMeshDimension() ), bool > = true >
-void
-export_getSuperentityIndex( Scope& )
-{}
-
-template< typename MeshEntity,
-          int Subdimension,
-          typename Scope,
-          std::enable_if_t< Subdimension <= MeshEntity::MeshType::getMeshDimension()
-                               && ( Subdimension < MeshEntity::getEntityDimension() ),
-                            bool > = true >
+template< typename MeshEntity, int Subdimension, typename Scope >
 void
 export_getSubentityIndex( Scope& m, const char* name )
 {
-   m.def( name,
-          []( const MeshEntity& entity, const typename MeshEntity::LocalIndexType& i )
-          {
-             return entity.template getSubentityIndex< Subdimension >( i );
-          } );
+   if constexpr( Subdimension <= MeshEntity::MeshType::getMeshDimension()
+                 && ( Subdimension < MeshEntity::getEntityDimension() ) )
+   {
+      m.def( name,
+             []( const MeshEntity& entity, const typename MeshEntity::LocalIndexType& i )
+             {
+                return entity.template getSubentityIndex< Subdimension >( i );
+             } );
+   }
 }
 
-template< typename MeshEntity,
-          int Subdimension,
-          typename Scope,
-          std::enable_if_t< ! ( Subdimension <= MeshEntity::MeshType::getMeshDimension()
-                                && ( Subdimension < MeshEntity::getEntityDimension() ) ),
-                            bool > = true >
-void
-export_getSubentityIndex( Scope&, const char* )
-{}
-
-template< typename MeshEntity, typename Scope, std::enable_if_t< MeshEntity::getEntityDimension() == 0, bool > = true >
+template< typename MeshEntity, typename Scope >
 void
 export_getPoint( Scope& scope )
 {
-   scope.def( "getPoint",
-              []( const MeshEntity& entity )
-              {
-                 return entity.getPoint();
-              } );
+   if constexpr( MeshEntity::getEntityDimension() == 0 ) {
+      scope.def( "getPoint",
+                 []( const MeshEntity& entity )
+                 {
+                    return entity.getPoint();
+                 } );
+   }
 }
-
-template< typename MeshEntity, typename Scope, std::enable_if_t< MeshEntity::getEntityDimension() != 0, bool > = true >
-void
-export_getPoint( Scope& )
-{}
 
 template< typename MeshEntity, typename Scope >
 void
 export_MeshEntity( Scope& scope, const char* name )
 {
-   auto entity = nb::class_< MeshEntity >( scope, name )
-                    //        .def(nb::init<>())
-                    //        .def(nb::init<typename MeshEntity::MeshType, typename
-                    //        MeshEntity::GlobalIndexType>())
-                    .def_static( "getEntityDimension", &MeshEntity::getEntityDimension )
-                    .def( "getIndex", &MeshEntity::getIndex )
-                    .def( "getTag", &MeshEntity::getTag )
+   auto entity =  //
+      nb::class_< MeshEntity >( scope, name )
+         //.def(nb::init<>())
+         //.def(nb::init<typename MeshEntity::MeshType, typename
+         //MeshEntity::GlobalIndexType>())
+         .def_static( "getEntityDimension", &MeshEntity::getEntityDimension )
+         .def( "getIndex", &MeshEntity::getIndex )
+         .def( "getTag", &MeshEntity::getTag )
       // TODO
       ;
 
@@ -102,83 +79,84 @@ template< typename Mesh >
 void
 export_Mesh( nb::module_& m, const char* name )
 {
-   auto mesh = nb::class_< Mesh >( m, name )
-                  .def( nb::init<>() )
-                  .def_static( "getMeshDimension", &Mesh::getMeshDimension )
-                  .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Cell > )
-                  .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Face > )
-                  .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Vertex > )
-                  .def( "getGhostEntitiesCount", &mesh_getGhostEntitiesCount< Mesh, typename Mesh::Cell > )
-                  .def( "getGhostEntitiesCount", &mesh_getGhostEntitiesCount< Mesh, typename Mesh::Face > )
-                  .def( "getGhostEntitiesCount", &mesh_getGhostEntitiesCount< Mesh, typename Mesh::Vertex > )
-                  .def( "getGhostEntitiesOffset", &mesh_getGhostEntitiesOffset< Mesh, typename Mesh::Cell > )
-                  .def( "getGhostEntitiesOffset", &mesh_getGhostEntitiesOffset< Mesh, typename Mesh::Face > )
-                  .def( "getGhostEntitiesOffset", &mesh_getGhostEntitiesOffset< Mesh, typename Mesh::Vertex > )
-                  // NOTE: if combined into getEntity, the return type would depend on
-                  // the runtime parameter (entity)
-                  .def( "getCell", &Mesh::template getEntity< typename Mesh::Cell > )
-                  .def( "getFace", &Mesh::template getEntity< typename Mesh::Face > )
-                  .def( "getVertex", &Mesh::template getEntity< typename Mesh::Vertex > )
-                  .def( "getEntityCenter",
-                        []( const Mesh& mesh, const typename Mesh::Cell& cell )
-                        {
-                           return getEntityCenter( mesh, cell );
-                        } )
-                  .def( "getEntityCenter",
-                        []( const Mesh& mesh, const typename Mesh::Face& face )
-                        {
-                           return getEntityCenter( mesh, face );
-                        } )
-                  .def( "getEntityCenter",
-                        []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
-                        {
-                           return getEntityCenter( mesh, vertex );
-                        } )
-                  .def( "getEntityMeasure",
-                        []( const Mesh& mesh, const typename Mesh::Cell& cell )
-                        {
-                           return getEntityMeasure( mesh, cell );
-                        } )
-                  .def( "getEntityMeasure",
-                        []( const Mesh& mesh, const typename Mesh::Face& face )
-                        {
-                           return getEntityMeasure( mesh, face );
-                        } )
-                  .def( "getEntityMeasure",
-                        []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
-                        {
-                           return getEntityMeasure( mesh, vertex );
-                        } )
-                  .def( "isBoundaryEntity",
-                        []( const Mesh& mesh, const typename Mesh::Cell& cell )
-                        {
-                           return mesh.template isBoundaryEntity< Mesh::Cell::getEntityDimension() >( cell.getIndex() );
-                        } )
-                  .def( "isBoundaryEntity",
-                        []( const Mesh& mesh, const typename Mesh::Face& face )
-                        {
-                           return mesh.template isBoundaryEntity< Mesh::Face::getEntityDimension() >( face.getIndex() );
-                        } )
-                  .def( "isBoundaryEntity",
-                        []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
-                        {
-                           return mesh.template isBoundaryEntity< Mesh::Vertex::getEntityDimension() >( vertex.getIndex() );
-                        } )
-                  .def( "isGhostEntity",
-                        []( const Mesh& mesh, const typename Mesh::Cell& cell )
-                        {
-                           return mesh.template isGhostEntity< Mesh::Cell::getEntityDimension() >( cell.getIndex() );
-                        } )
-                  .def( "isGhostEntity",
-                        []( const Mesh& mesh, const typename Mesh::Face& face )
-                        {
-                           return mesh.template isGhostEntity< Mesh::Face::getEntityDimension() >( face.getIndex() );
-                        } )
-                  .def( "isGhostEntity",
-                        []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
-                        {
-                           return mesh.template isGhostEntity< Mesh::Vertex::getEntityDimension() >( vertex.getIndex() );
-                        } )
+   auto mesh =  //
+      nb::class_< Mesh >( m, name )
+         .def( nb::init<>() )
+         .def_static( "getMeshDimension", &Mesh::getMeshDimension )
+         .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Cell > )
+         .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Face > )
+         .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Vertex > )
+         .def( "getGhostEntitiesCount", &mesh_getGhostEntitiesCount< Mesh, typename Mesh::Cell > )
+         .def( "getGhostEntitiesCount", &mesh_getGhostEntitiesCount< Mesh, typename Mesh::Face > )
+         .def( "getGhostEntitiesCount", &mesh_getGhostEntitiesCount< Mesh, typename Mesh::Vertex > )
+         .def( "getGhostEntitiesOffset", &mesh_getGhostEntitiesOffset< Mesh, typename Mesh::Cell > )
+         .def( "getGhostEntitiesOffset", &mesh_getGhostEntitiesOffset< Mesh, typename Mesh::Face > )
+         .def( "getGhostEntitiesOffset", &mesh_getGhostEntitiesOffset< Mesh, typename Mesh::Vertex > )
+         // NOTE: if combined into getEntity, the return type would depend on
+         // the runtime parameter (entity)
+         .def( "getCell", &Mesh::template getEntity< typename Mesh::Cell > )
+         .def( "getFace", &Mesh::template getEntity< typename Mesh::Face > )
+         .def( "getVertex", &Mesh::template getEntity< typename Mesh::Vertex > )
+         .def( "getEntityCenter",
+               []( const Mesh& mesh, const typename Mesh::Cell& cell )
+               {
+                  return getEntityCenter( mesh, cell );
+               } )
+         .def( "getEntityCenter",
+               []( const Mesh& mesh, const typename Mesh::Face& face )
+               {
+                  return getEntityCenter( mesh, face );
+               } )
+         .def( "getEntityCenter",
+               []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
+               {
+                  return getEntityCenter( mesh, vertex );
+               } )
+         .def( "getEntityMeasure",
+               []( const Mesh& mesh, const typename Mesh::Cell& cell )
+               {
+                  return getEntityMeasure( mesh, cell );
+               } )
+         .def( "getEntityMeasure",
+               []( const Mesh& mesh, const typename Mesh::Face& face )
+               {
+                  return getEntityMeasure( mesh, face );
+               } )
+         .def( "getEntityMeasure",
+               []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
+               {
+                  return getEntityMeasure( mesh, vertex );
+               } )
+         .def( "isBoundaryEntity",
+               []( const Mesh& mesh, const typename Mesh::Cell& cell )
+               {
+                  return mesh.template isBoundaryEntity< Mesh::Cell::getEntityDimension() >( cell.getIndex() );
+               } )
+         .def( "isBoundaryEntity",
+               []( const Mesh& mesh, const typename Mesh::Face& face )
+               {
+                  return mesh.template isBoundaryEntity< Mesh::Face::getEntityDimension() >( face.getIndex() );
+               } )
+         .def( "isBoundaryEntity",
+               []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
+               {
+                  return mesh.template isBoundaryEntity< Mesh::Vertex::getEntityDimension() >( vertex.getIndex() );
+               } )
+         .def( "isGhostEntity",
+               []( const Mesh& mesh, const typename Mesh::Cell& cell )
+               {
+                  return mesh.template isGhostEntity< Mesh::Cell::getEntityDimension() >( cell.getIndex() );
+               } )
+         .def( "isGhostEntity",
+               []( const Mesh& mesh, const typename Mesh::Face& face )
+               {
+                  return mesh.template isGhostEntity< Mesh::Face::getEntityDimension() >( face.getIndex() );
+               } )
+         .def( "isGhostEntity",
+               []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
+               {
+                  return mesh.template isGhostEntity< Mesh::Vertex::getEntityDimension() >( vertex.getIndex() );
+               } )
       // TODO: more?
       ;
 
