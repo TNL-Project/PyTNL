@@ -83,15 +83,6 @@ export_Mesh( nb::module_& m, const char* name )
       nb::class_< Mesh >( m, name )
          .def( nb::init<>() )
          .def_static( "getMeshDimension", &Mesh::getMeshDimension )
-         .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Cell > )
-         .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Face > )
-         .def( "getEntitiesCount", &mesh_getEntitiesCount< Mesh, typename Mesh::Vertex > )
-         .def( "getGhostEntitiesCount", &mesh_getGhostEntitiesCount< Mesh, typename Mesh::Cell > )
-         .def( "getGhostEntitiesCount", &mesh_getGhostEntitiesCount< Mesh, typename Mesh::Face > )
-         .def( "getGhostEntitiesCount", &mesh_getGhostEntitiesCount< Mesh, typename Mesh::Vertex > )
-         .def( "getGhostEntitiesOffset", &mesh_getGhostEntitiesOffset< Mesh, typename Mesh::Cell > )
-         .def( "getGhostEntitiesOffset", &mesh_getGhostEntitiesOffset< Mesh, typename Mesh::Face > )
-         .def( "getGhostEntitiesOffset", &mesh_getGhostEntitiesOffset< Mesh, typename Mesh::Vertex > )
          // NOTE: if combined into getEntity, the return type would depend on
          // the runtime parameter (entity)
          .def( "getCell", &Mesh::template getEntity< typename Mesh::Cell > )
@@ -159,6 +150,10 @@ export_Mesh( nb::module_& m, const char* name )
                } )
       // TODO: more?
       ;
+
+   export_getEntitiesCount( mesh );
+   export_getGhostEntitiesCount( mesh );
+   export_getGhostEntitiesOffset( mesh );
 
    // nested types
    export_MeshEntity< typename Mesh::Cell >( mesh, "Cell" );

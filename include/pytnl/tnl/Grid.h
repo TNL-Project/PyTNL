@@ -65,9 +65,6 @@ export_Grid( nb::module_& m, const char* name )
          .def( "setOrigin", _setOrigin )
          .def( "getOrigin", &Grid::getOrigin, nb::rv_policy::reference_internal )
          .def( "getProportions", &Grid::getProportions, nb::rv_policy::reference_internal )
-         .def( "getEntitiesCount", &mesh_getEntitiesCount< Grid, typename Grid::Cell > )
-         .def( "getEntitiesCount", &mesh_getEntitiesCount< Grid, typename Grid::Face > )
-         .def( "getEntitiesCount", &mesh_getEntitiesCount< Grid, typename Grid::Vertex > )
          // NOTE: if combined into getEntity, the return type would depend on
          // the runtime parameter (entity)
          .def( "getCell",
@@ -93,6 +90,7 @@ export_Grid( nb::module_& m, const char* name )
          .def( "getSmallestSpaceStep", &Grid::getSmallestSpaceStep );
 
    // complicated methods
+   export_getEntitiesCount( grid );
    SpaceStepsProductsGetter< Grid >::export_getSpaceSteps( grid );
 
    // nested types
