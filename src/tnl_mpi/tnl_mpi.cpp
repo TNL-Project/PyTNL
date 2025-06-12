@@ -30,12 +30,13 @@ NB_MODULE( tnl_mpi, m )
       TNL::MPI::Init( argc, argv );
    }
    // https://pybind11.readthedocs.io/en/stable/advanced/misc.html#module-destructors
-   auto cleanup_callback = []( void* ptr ) noexcept
-   {
-      if( TNL::MPI::Initialized() && ! TNL::MPI::Finalized() )
-         TNL::MPI::Finalize();
-   };
-   m.attr( "_cleanup" ) = nb::capsule( nullptr, cleanup_callback );
+   auto atexit = nb::module_::import_( "atexit" );
+   atexit.attr( "register" )( nb::cpp_function(
+      []()
+      {
+         if( TNL::MPI::Initialized() && ! TNL::MPI::Finalized() )
+            TNL::MPI::Finalize();
+      } ) );
 
    // bindings for distributed data structures
    export_DistributedMeshes( m );
