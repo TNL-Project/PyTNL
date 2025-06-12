@@ -38,10 +38,10 @@ NB_MODULE( tnl, m )
 
    // TODO: TNL::File
 
-   export_Array< _array< double > >( m, "Array" );
-   export_Vector< _array< double >, _vector< double > >( m, "Vector" );
-   export_Array< _array< int > >( m, "Array_int" );
-   export_Vector< _array< int >, _vector< int > >( m, "Vector_int" );
+   export_Array< _array< RealType > >( m, "Array" );
+   export_Vector< _array< RealType >, _vector< RealType > >( m, "Vector" );
+   export_Array< _array< IndexType > >( m, "Array_int" );
+   export_Vector< _array< IndexType >, _vector< IndexType > >( m, "Vector_int" );
    export_Array< _array< bool > >( m, "Array_bool" );
 
    export_Grid1D( m );

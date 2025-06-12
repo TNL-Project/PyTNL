@@ -29,9 +29,9 @@ array_types = [
 
 def element_strategy(array_type):
     """Return appropriate data strategy for the given array type."""
-    if array_type.IndexType is int:
-        # lower limits because C++ has 32-bit int and we test even multiplication
-        return st.integers(min_value=-(2**31), max_value=2**31 - 1)
+    if array_type.ValueType is int:
+        # lower limits because C++ uses int64_t for IndexType
+        return st.integers(min_value=-(2**63), max_value=2**63 - 1)
     else:
         return st.floats(allow_nan=False, allow_infinity=False)
 
@@ -129,7 +129,7 @@ def test_resize_negative(array_type, size):
 
 
 @pytest.mark.parametrize("array_type", array_types)
-@given(size=st.integers(min_value=0, max_value=20), value=st.integers(min_value=-(2**31), max_value=2**31 - 1))
+@given(size=st.integers(min_value=0, max_value=20), value=st.integers(min_value=-(2**63), max_value=2**63 - 1))
 def test_resize_with_value(array_type, size, value):
     if array_type.ValueType is float:
         value = float(value)

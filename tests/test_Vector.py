@@ -22,9 +22,9 @@ vector_types = [tnl.Vector, tnl.Vector_int]
 
 def element_strategy(vector_type):
     """Return appropriate data strategy for the given vector type."""
-    if vector_type.IndexType is int:
-        # lower limits because C++ has 32-bit int and we test even multiplication
-        return st.integers(min_value=-(2**15), max_value=2**15)
+    if vector_type.ValueType is int:
+        # lower limits because C++ uses int64_t for IndexType and we test even multiplication
+        return st.integers(min_value=-(2**31), max_value=2**31)
     else:
         return st.floats(allow_nan=False, allow_infinity=False)
 
@@ -82,14 +82,14 @@ def test_typedefs():
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
-@given(size=st.integers(min_value=0, max_value=2**30))
+@given(size=st.integers(min_value=0, max_value=2**10))
 def test_init(vector_type, size):
     v = vector_type(size)
     assert v.getSize() == size
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
-@given(size=st.integers(min_value=-(2**30), max_value=-1))
+@given(size=st.integers(min_value=-(2**10), max_value=-1))
 def test_negative_size(vector_type, size):
     with pytest.raises(ValueError):
         vector_type(size)

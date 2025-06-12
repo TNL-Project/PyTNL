@@ -12,7 +12,7 @@
 
 using RealType = double;
 using DeviceType = TNL::Devices::Host;
-using IndexType = int;
+using IndexType = std::int64_t;
 
 using Grid1D = TNL::Meshes::Grid< 1, RealType, DeviceType, IndexType >;
 using Grid2D = TNL::Meshes::Grid< 2, RealType, DeviceType, IndexType >;

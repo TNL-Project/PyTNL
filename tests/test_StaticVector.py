@@ -29,9 +29,9 @@ vector_types = [
 
 def element_strategy(vector_type):
     """Return appropriate data strategy for the given vector type."""
-    if vector_type.IndexType is int:
-        # lower limits because C++ has 32-bit int and we test even multiplication
-        return st.integers(min_value=-(2**15), max_value=2**15)
+    if vector_type.ValueType is int:
+        # lower limits because C++ uses int64_t for IndexType and we test even multiplication
+        return st.integers(min_value=-(2**31), max_value=2**31)
     else:
         return st.floats(allow_nan=False, allow_infinity=False)
 
