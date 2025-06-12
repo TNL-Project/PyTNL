@@ -23,14 +23,25 @@ Homepage = "https://gitlab.com/tnl-project/pytnl"
 Issues = "https://gitlab.com/tnl-project/pytnl/-/issues"
 
 [project.optional-dependencies]
-dev = ["hypothesis", "pytest", "pytest-xdist[psutil]", "ruff", "numpy"]
+dev = [
+    "hypothesis",
+    "pytest",
+    "pytest-xdist[psutil]",
+    "ruff",
+    "numpy",
+    "mpi4py",
+]
 
 [build-system]
 requires = ["scikit-build-core>=0.10"]
 build-backend = "scikit_build_core.build"
 
 [tool.pytest.ini_options]
-addopts = "-n auto"
+addopts = "--strict-markers -n auto"
+markers = [
+    "mpi: marks tests that require the mpi4py package and execution through mpirun",
+]
+log_level = "INFO"
 testpaths = ["tests"]
 
 [tool.ruff]

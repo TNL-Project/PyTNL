@@ -36,7 +36,7 @@ Arch_cmake:
   needs: []
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
-    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy
+    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy python-mpi4py
   script:
     - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX="$HOME/.local"
     - cmake --build build
@@ -56,7 +56,7 @@ Arch_python_build:
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
     - pacman -Suy --needed --noconfirm python-build python-installer python-scikit-build-core
-    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy
+    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy python-mpi4py
   script:
     - python -m build --no-isolation
     - python -m venv --system-site-packages .venv
@@ -94,10 +94,11 @@ Python_build:
     - python -m venv .venv
     - source .venv/bin/activate
     # Note: psutil does not work on Alpine
+    # Note: mpi4py wheel takes a very long time to build
     - python -m pip install build installer pytest pytest-xdist hypothesis numpy
     - python -m build --config-setting=cmake.define.PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION=${PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION}
     - python -m installer dist/*.whl
-    - pytest
+    - pytest -m "not mpi"
   parallel:
     matrix:
       - DISTRO: "Alpine"
@@ -128,7 +129,7 @@ Ubuntu_cmake:
     - apt update
     - apt -y install build-essential git cmake ninja-build
     - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
-    - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis python3-numpy
+    - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis python3-numpy python3-mpi4py
   script:
     - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="$HOME/.local"
     - cmake --build build
