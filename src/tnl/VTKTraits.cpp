@@ -26,7 +26,8 @@ export_VTKTraits( nb::module_& m )
       .value( "Voxel", TNL::Meshes::VTK::EntityShape::Voxel )
       .value( "Hexahedron", TNL::Meshes::VTK::EntityShape::Hexahedron )
       .value( "Wedge", TNL::Meshes::VTK::EntityShape::Wedge )
-      .value( "Pyramid", TNL::Meshes::VTK::EntityShape::Pyramid );
+      .value( "Pyramid", TNL::Meshes::VTK::EntityShape::Pyramid )
+      .value( "Polyhedron", TNL::Meshes::VTK::EntityShape::Polyhedron );
    nb::enum_< TNL::Meshes::VTK::CellGhostTypes >( m, "VTKCellGhostTypes" )
       .value( "DUPLICATECELL", TNL::Meshes::VTK::CellGhostTypes::DUPLICATECELL, "the cell is present on multiple processors" )
       .value( "HIGHCONNECTIVITYCELL",

@@ -6,6 +6,8 @@
 #include <TNL/Meshes/Mesh.h>
 #include <TNL/Meshes/Topologies/Edge.h>
 #include <TNL/Meshes/Topologies/Hexahedron.h>
+#include <TNL/Meshes/Topologies/Polygon.h>
+#include <TNL/Meshes/Topologies/Polyhedron.h>
 #include <TNL/Meshes/Topologies/Quadrangle.h>
 #include <TNL/Meshes/Topologies/Tetrahedron.h>
 #include <TNL/Meshes/Topologies/Triangle.h>
@@ -28,6 +30,8 @@ using MeshOfTriangles = DefaultMeshTemplate< TNL::Meshes::Topologies::Triangle >
 using MeshOfQuadrangles = DefaultMeshTemplate< TNL::Meshes::Topologies::Quadrangle >;
 using MeshOfTetrahedrons = DefaultMeshTemplate< TNL::Meshes::Topologies::Tetrahedron >;
 using MeshOfHexahedrons = DefaultMeshTemplate< TNL::Meshes::Topologies::Hexahedron >;
+using MeshOfPolygons = DefaultMeshTemplate< TNL::Meshes::Topologies::Polygon >;
+using MeshOfPolyhedrons = DefaultMeshTemplate< TNL::Meshes::Topologies::Polyhedron >;
 
 using DistributedMeshOfEdges = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfEdges >;
 using DistributedMeshOfTriangles = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfTriangles >;

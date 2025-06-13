@@ -11,4 +11,6 @@ export_Meshes( nb::module_& m )
    export_Mesh< MeshOfQuadrangles >( m, "MeshOfQuadrangles" );
    export_Mesh< MeshOfTetrahedrons >( m, "MeshOfTetrahedrons" );
    export_Mesh< MeshOfHexahedrons >( m, "MeshOfHexahedrons" );
+   export_Mesh< MeshOfPolygons >( m, "MeshOfPolygons" );
+   export_Mesh< MeshOfPolyhedrons >( m, "MeshOfPolyhedrons" );
 }

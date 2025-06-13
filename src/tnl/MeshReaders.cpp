@@ -25,6 +25,8 @@ export_MeshReaders( nb::module_& m )
       .def( "loadMesh", &MeshReader::template loadMesh< MeshOfQuadrangles > )
       .def( "loadMesh", &MeshReader::template loadMesh< MeshOfTetrahedrons > )
       .def( "loadMesh", &MeshReader::template loadMesh< MeshOfHexahedrons > )
+      .def( "loadMesh", &MeshReader::template loadMesh< MeshOfPolygons > )
+      .def( "loadMesh", &MeshReader::template loadMesh< MeshOfPolyhedrons > )
       .def( "readPointData", &MeshReader::readPointData )
       .def( "readCellData", &MeshReader::readCellData );
 

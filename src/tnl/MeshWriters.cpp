@@ -150,4 +150,12 @@ export_MeshWriters( nb::module_& m )
       m, "VTKWriter_MeshOfHexahedrons" );
    export_MeshWriter< TNL::Meshes::Writers::VTUWriter< MeshOfHexahedrons >, TNL::Meshes::VTK::FileFormat::zlib_compressed >(
       m, "VTUWriter_MeshOfHexahedrons" );
+   export_MeshWriter< TNL::Meshes::Writers::VTKWriter< MeshOfPolygons >, TNL::Meshes::VTK::FileFormat::binary >(
+      m, "VTKWriter_MeshOfPolygons" );
+   export_MeshWriter< TNL::Meshes::Writers::VTUWriter< MeshOfPolygons >, TNL::Meshes::VTK::FileFormat::zlib_compressed >(
+      m, "VTUWriter_MeshOfPolygons" );
+   export_MeshWriter< TNL::Meshes::Writers::VTKWriter< MeshOfPolyhedrons >, TNL::Meshes::VTK::FileFormat::binary >(
+      m, "VTKWriter_MeshOfPolyhedrons" );
+   export_MeshWriter< TNL::Meshes::Writers::VTUWriter< MeshOfPolyhedrons >, TNL::Meshes::VTK::FileFormat::zlib_compressed >(
+      m, "VTUWriter_MeshOfPolyhedrons" );
 }
