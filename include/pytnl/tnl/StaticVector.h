@@ -325,12 +325,126 @@ export_StaticVector( Scope& scope, const char* name )
 
    // Additional operators defined only for integral value types
    if constexpr( std::is_integral_v< ValueType > ) {
-      vector  //
-         .def( nb::self %= nb::self )
-         .def( nb::self %= RealType() )
-         .def( nb::self % nb::self )
-         .def( nb::self % RealType() )
-         .def( RealType() % nb::self );
+      vector
+         // Modulo operators
+         .def(
+            "__mod__",
+            []( const VectorType& self, const VectorType& other )
+            {
+               return VectorType( self % other );
+            },
+            nb::is_operator() )
+         .def(
+            "__mod__",
+            []( const VectorType& self, RealType scalar )
+            {
+               return VectorType( self % scalar );
+            },
+            nb::is_operator() )
+         .def(
+            "__rmod__",
+            []( const VectorType& self, const VectorType& other )
+            {
+               return VectorType( other % self );
+            },
+            nb::is_operator() )
+         .def(
+            "__rmod__",
+            []( const VectorType& self, RealType scalar )
+            {
+               return VectorType( scalar % self );
+            },
+            nb::is_operator() )
+         .def(
+            "__imod__",
+            []( VectorType& self, const VectorType& other ) -> VectorType&
+            {
+               self %= other;
+               return self;
+            },
+            nb::is_operator() )
+         .def(
+            "__imod__",
+            []( VectorType& self, RealType scalar ) -> VectorType&
+            {
+               self %= scalar;
+               return self;
+            },
+            nb::is_operator() )
+
+         // Bitwise operators
+         .def(
+            "__and__",
+            []( const VectorType& self, const VectorType& other )
+            {
+               return VectorType( self & other );
+            },
+            nb::is_operator() )
+         .def(
+            "__and__",
+            []( const VectorType& self, RealType scalar )
+            {
+               return VectorType( self & scalar );
+            },
+            nb::is_operator() )
+         .def(
+            "__rand__",
+            []( const VectorType& self, RealType scalar )
+            {
+               return VectorType( scalar & self );
+            },
+            nb::is_operator() )
+
+         .def(
+            "__or__",
+            []( const VectorType& self, const VectorType& other )
+            {
+               return VectorType( self | other );
+            },
+            nb::is_operator() )
+         .def(
+            "__or__",
+            []( const VectorType& self, RealType scalar )
+            {
+               return VectorType( self | scalar );
+            },
+            nb::is_operator() )
+         .def(
+            "__ror__",
+            []( const VectorType& self, RealType scalar )
+            {
+               return VectorType( scalar | self );
+            },
+            nb::is_operator() )
+
+         .def(
+            "__xor__",
+            []( const VectorType& self, const VectorType& other )
+            {
+               return VectorType( self ^ other );
+            },
+            nb::is_operator() )
+         .def(
+            "__xor__",
+            []( const VectorType& self, RealType scalar )
+            {
+               return VectorType( self ^ scalar );
+            },
+            nb::is_operator() )
+         .def(
+            "__rxor__",
+            []( const VectorType& self, RealType scalar )
+            {
+               return VectorType( scalar ^ self );
+            },
+            nb::is_operator() )
+
+         // Bitwise negation
+         .def( "__invert__",
+               []( const VectorType& self )
+               {
+                  return VectorType( ~self );
+               } );
    }
 
    // x, y, z properties
