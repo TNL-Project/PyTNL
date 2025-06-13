@@ -239,11 +239,9 @@ def test_scalar_div_vector(vector_type, data):
 # ----------------------
 
 
-@pytest.mark.parametrize("vector_type", vector_types)
+@pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
 def test_vector_modulo_vector(vector_type, data):
-    if vector_type != tnl.Vector_int:
-        pytest.skip("Modulo only available for integer vectors")
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     for i in range(v2.getSize()):
         if v2[i] == 0:
@@ -255,11 +253,9 @@ def test_vector_modulo_vector(vector_type, data):
         assert v3[i] == int(math.fmod(v1[i], v2[i]))
 
 
-@pytest.mark.parametrize("vector_type", vector_types)
+@pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
 def test_vector_modulo_scalar(vector_type, data):
-    if vector_type != tnl.Vector_int:
-        pytest.skip("Modulo only available for integer vectors")
     v, s = data.draw(vector_scalar_strategy(vector_type))
     if s == 0:
         assume(False)
@@ -270,11 +266,9 @@ def test_vector_modulo_scalar(vector_type, data):
         assert v2[i] == int(math.fmod(v[i], s))
 
 
-@pytest.mark.parametrize("vector_type", vector_types)
+@pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
 def test_scalar_modulo_vector(vector_type, data):
-    if vector_type != tnl.Vector_int:
-        pytest.skip("Modulo only available for integer vectors")
     v, s = data.draw(vector_scalar_strategy(vector_type))
     for i in range(v.getSize()):
         if v[i] == 0:
@@ -338,11 +332,9 @@ def test_idiv_vector(vector_type, data):
             assert v1[i] == original_v1[i] / v2[i]
 
 
-@pytest.mark.parametrize("vector_type", vector_types)
+@pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
 def test_imod_vector(vector_type, data):
-    if vector_type != tnl.Vector_int:
-        pytest.skip("Modulo only available for integer vectors")
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     for i in range(v2.getSize()):
         if v2[i] == 0:
@@ -406,11 +398,9 @@ def test_idiv_scalar(vector_type, data):
             assert v[i] == original_v[i] / s
 
 
-@pytest.mark.parametrize("vector_type", vector_types)
+@pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
 def test_imod_scalar(vector_type, data):
-    if vector_type != tnl.Vector_int:
-        pytest.skip("Modulo only available for integer vectors")
     v, s = data.draw(vector_scalar_strategy(vector_type))
     if s == 0:
         assume(False)
