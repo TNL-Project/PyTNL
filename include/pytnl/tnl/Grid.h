@@ -87,7 +87,14 @@ export_Grid( nb::module_& m, const char* name )
          .def( "getEntityIndex", &Grid::template getEntityIndex< typename Grid::Vertex > )
          .def( "getCellMeasure", &Grid::getCellMeasure, nb::rv_policy::reference_internal )
          .def( "getSpaceSteps", &Grid::getSpaceSteps, nb::rv_policy::reference_internal )
-         .def( "getSmallestSpaceStep", &Grid::getSmallestSpaceStep );
+         .def( "getSmallestSpaceStep", &Grid::getSmallestSpaceStep )
+
+         // Comparison operators
+         .def( nb::self == nb::self )
+         .def( nb::self != nb::self )
+
+      // TODO: more?
+      ;
 
    // complicated methods
    export_getEntitiesCount( grid );

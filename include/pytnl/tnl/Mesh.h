@@ -148,6 +148,11 @@ export_Mesh( nb::module_& m, const char* name )
                {
                   return mesh.template isGhostEntity< Mesh::Vertex::getEntityDimension() >( vertex.getIndex() );
                } )
+
+         // Comparison operators
+         .def( nb::self == nb::self )
+         .def( nb::self != nb::self )
+
       // TODO: more?
       ;
 
