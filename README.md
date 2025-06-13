@@ -63,7 +63,8 @@ Build and install PyTNL:
 
 ## Usage
 
-After installing PyTNL, run `python` and import the `tnl` and/or `tnl_mpi` modules.
+After installing PyTNL, run `python` and import some module from the `pytnl`
+package, e.g. `pytnl.containers`.
 
 The [examples directory](./examples/) contains some short examples showing how
 to use PyTNL.

@@ -8,7 +8,8 @@ from types import ModuleType
 
 import pytest
 
-import tnl
+import pytnl.meshes
+import pytnl.mpi
 
 mpi4py: ModuleType | None
 try:
@@ -24,19 +25,19 @@ TNL_DECOMPOSE_FLAGS = "--ghost-levels 1"
 
 # Mapping from file suffix to reader class
 suffix_to_reader = {
-    ".vtk": tnl.VTKReader,
-    ".vtu": tnl.VTUReader,
+    ".vtk": pytnl.meshes.VTKReader,
+    ".vtu": pytnl.meshes.VTUReader,
 }
 
 # Mapping from topology directory to mesh and writer classes
 mesh_writer_map = {
-    "triangles": (tnl.MeshOfTriangles, tnl.VTKWriter_MeshOfTriangles, tnl.VTUWriter_MeshOfTriangles),
-    "triangles_2x2x2": (tnl.MeshOfTriangles, tnl.VTKWriter_MeshOfTriangles, tnl.VTUWriter_MeshOfTriangles),
-    "tetrahedrons": (tnl.MeshOfTetrahedrons, tnl.VTKWriter_MeshOfTetrahedrons, tnl.VTUWriter_MeshOfTetrahedrons),
-    "quadrangles": (tnl.MeshOfQuadrangles, tnl.VTKWriter_MeshOfQuadrangles, tnl.VTUWriter_MeshOfQuadrangles),
-    "hexahedrons": (tnl.MeshOfHexahedrons, tnl.VTKWriter_MeshOfHexahedrons, tnl.VTUWriter_MeshOfHexahedrons),
-    "polygons": (tnl.MeshOfPolygons, tnl.VTKWriter_MeshOfPolygons, tnl.VTUWriter_MeshOfPolygons),
-    "polyhedrons": (tnl.MeshOfPolyhedrons, tnl.VTKWriter_MeshOfPolyhedrons, tnl.VTUWriter_MeshOfPolyhedrons),
+    "triangles": (pytnl.meshes.MeshOfTriangles, pytnl.meshes.VTKWriter_MeshOfTriangles, pytnl.meshes.VTUWriter_MeshOfTriangles),
+    "triangles_2x2x2": (pytnl.meshes.MeshOfTriangles, pytnl.meshes.VTKWriter_MeshOfTriangles, pytnl.meshes.VTUWriter_MeshOfTriangles),
+    "tetrahedrons": (pytnl.meshes.MeshOfTetrahedrons, pytnl.meshes.VTKWriter_MeshOfTetrahedrons, pytnl.meshes.VTUWriter_MeshOfTetrahedrons),
+    "quadrangles": (pytnl.meshes.MeshOfQuadrangles, pytnl.meshes.VTKWriter_MeshOfQuadrangles, pytnl.meshes.VTUWriter_MeshOfQuadrangles),
+    "hexahedrons": (pytnl.meshes.MeshOfHexahedrons, pytnl.meshes.VTKWriter_MeshOfHexahedrons, pytnl.meshes.VTUWriter_MeshOfHexahedrons),
+    "polygons": (pytnl.meshes.MeshOfPolygons, pytnl.meshes.VTKWriter_MeshOfPolygons, pytnl.meshes.VTUWriter_MeshOfPolygons),
+    "polyhedrons": (pytnl.meshes.MeshOfPolyhedrons, pytnl.meshes.VTKWriter_MeshOfPolyhedrons, pytnl.meshes.VTUWriter_MeshOfPolyhedrons),
 }
 
 # Define test cases with expected vertex and cell counts
@@ -174,7 +175,7 @@ def test_mesh_file(file_path, expected_vertices, expected_cells, tmp_path):
         pytest.fail(f"Unsupported file suffix: {suffix}")
 
     # Choose writer based on reader
-    writer_class = vtk_writer if reader_class == tnl.VTKReader else vtu_writer
+    writer_class = vtk_writer if reader_class == pytnl.meshes.VTKReader else vtu_writer
 
     # Load mesh
     mesh = mesh_class()
@@ -214,14 +215,12 @@ def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cel
     cmd = f"{TNL_DECOMPOSE_CMD} --input-file {full_path} --output-file {output_pvtu} --subdomains {nproc} {TNL_DECOMPOSE_FLAGS}"
     subprocess.run(cmd, shell=True, check=True)
 
-    import tnl_mpi
-
     # Load mesh and read data
-    mesh = tnl_mpi.DistributedMeshOfTriangles()
+    mesh = pytnl.mpi.DistributedMeshOfTriangles()
     local_mesh = mesh.getLocalMesh()
-    reader = tnl_mpi.PVTUReader(str(output_pvtu))
+    reader = pytnl.mpi.PVTUReader(str(output_pvtu))
     reader.loadMesh(mesh)
-    tnl_mpi.distributeFaces(mesh)
+    pytnl.mpi.distributeFaces(mesh)
     indices = reader.readCellData("GlobalIndex")
 
     assert len(indices) > 0
@@ -230,7 +229,7 @@ def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cel
 
     # Write test
     f = io.BytesIO()
-    writer = tnl_mpi.PVTUWriter_MeshOfTriangles(f)
+    writer = pytnl.mpi.PVTUWriter_MeshOfTriangles(f)
     writer.writeCells(mesh)
     writer.writeMetadata(cycle=0, time=1.0)
     array = [42] * local_mesh.getEntitiesCount(mesh.Cell)

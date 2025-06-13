@@ -5,14 +5,14 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-import tnl
+import pytnl.containers
 
 # ----------------------
 # Configuration
 # ----------------------
 
 # List of vector types to test
-vector_types = [tnl.Vector, tnl.Vector_int]
+vector_types = [pytnl.containers.Vector, pytnl.containers.Vector_int]
 
 
 # ----------------------
@@ -74,11 +74,11 @@ def test_typedefs():
     for vector_type in vector_types:
         assert vector_type.IndexType is int
 
-    assert tnl.Vector.ValueType is float
-    assert tnl.Vector_int.ValueType is int
+    assert pytnl.containers.Vector.ValueType is float
+    assert pytnl.containers.Vector_int.ValueType is int
 
-    assert tnl.Vector.RealType is float
-    assert tnl.Vector_int.RealType is int
+    assert pytnl.containers.Vector.RealType is float
+    assert pytnl.containers.Vector_int.RealType is int
 
 
 @pytest.mark.parametrize("vector_type", vector_types)

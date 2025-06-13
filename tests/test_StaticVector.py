@@ -5,7 +5,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-import tnl
+import pytnl.meshes
 
 # ----------------------
 # Configuration
@@ -13,12 +13,12 @@ import tnl
 
 # List of vector types to test
 vector_types = [
-    tnl.Grid1D.CoordinatesType,
-    tnl.Grid2D.CoordinatesType,
-    tnl.Grid3D.CoordinatesType,
-    tnl.Grid1D.PointType,
-    tnl.Grid2D.PointType,
-    tnl.Grid3D.PointType,
+    pytnl.meshes.Grid1D.CoordinatesType,
+    pytnl.meshes.Grid2D.CoordinatesType,
+    pytnl.meshes.Grid3D.CoordinatesType,
+    pytnl.meshes.Grid1D.PointType,
+    pytnl.meshes.Grid2D.PointType,
+    pytnl.meshes.Grid3D.PointType,
 ]
 
 

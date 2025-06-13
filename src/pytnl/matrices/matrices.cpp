@@ -46,3 +46,9 @@ export_SparseMatrices( nb::module_& m )
    m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_host, SE_host > );
    m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, E_host > );
 }
+
+// Python module definition
+NB_MODULE( matrices, m )
+{
+   export_SparseMatrices( m );
+}

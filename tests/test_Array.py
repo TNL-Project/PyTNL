@@ -7,7 +7,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-import tnl
+import pytnl.containers
 
 # ----------------------
 # Configuration
@@ -15,10 +15,10 @@ import tnl
 
 # List of array types to test
 array_types = [
-    tnl.Array,
-    tnl.Array_int,
-    tnl.Vector,
-    tnl.Vector_int,
+    pytnl.containers.Array,
+    pytnl.containers.Array_int,
+    pytnl.containers.Vector,
+    pytnl.containers.Vector_int,
 ]
 
 
@@ -62,15 +62,15 @@ def array_strategy(draw, array_type):
 
 
 def test_typedefs():
-    for array_type in [tnl.Array, tnl.Array_int, tnl.Array_bool, tnl.Vector, tnl.Vector_int]:
+    for array_type in [pytnl.containers.Array, pytnl.containers.Array_int, pytnl.containers.Array_bool, pytnl.containers.Vector, pytnl.containers.Vector_int]:
         assert array_type.IndexType is int
 
-    assert tnl.Array.ValueType is float
-    assert tnl.Array_int.ValueType is int
-    assert tnl.Array_bool.ValueType is bool
+    assert pytnl.containers.Array.ValueType is float
+    assert pytnl.containers.Array_int.ValueType is int
+    assert pytnl.containers.Array_bool.ValueType is bool
 
-    assert tnl.Vector.ValueType is float
-    assert tnl.Vector_int.ValueType is int
+    assert pytnl.containers.Vector.ValueType is float
+    assert pytnl.containers.Vector_int.ValueType is int
 
 
 @pytest.mark.parametrize("array_type", array_types)

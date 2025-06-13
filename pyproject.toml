@@ -36,6 +36,13 @@ dev = [
 requires = ["scikit-build-core>=0.10"]
 build-backend = "scikit_build_core.build"
 
+# Reference: https://scikit-build-core.readthedocs.io/en/latest/configuration/index.html
+[tool.scikit-build]
+# all files are installed by CMake
+wheel.packages = []
+# specifying build-dir breaks build isolation, but enables incremental and editable builds
+build-dir = "build"
+
 [tool.pytest.ini_options]
 addopts = "--strict-markers -n auto"
 markers = [

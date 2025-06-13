@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-import tnl
+import pytnl.meshes
 
 # ----------------------
 # Configuration
@@ -12,12 +12,12 @@ import tnl
 
 # List of array types to test
 array_types = [
-    tnl.Grid1D.CoordinatesType,
-    tnl.Grid2D.CoordinatesType,
-    tnl.Grid3D.CoordinatesType,
-    tnl.Grid1D.PointType,
-    tnl.Grid2D.PointType,
-    tnl.Grid3D.PointType,
+    pytnl.meshes.Grid1D.CoordinatesType,
+    pytnl.meshes.Grid2D.CoordinatesType,
+    pytnl.meshes.Grid3D.CoordinatesType,
+    pytnl.meshes.Grid1D.PointType,
+    pytnl.meshes.Grid2D.PointType,
+    pytnl.meshes.Grid3D.PointType,
 ]
 
 
@@ -59,7 +59,7 @@ def array_strategy(draw, array_type):
 
 
 def test_typedefs():
-    for grid_type in [tnl.Grid1D, tnl.Grid2D, tnl.Grid3D]:
+    for grid_type in [pytnl.meshes.Grid1D, pytnl.meshes.Grid2D, pytnl.meshes.Grid3D]:
         assert grid_type.CoordinatesType.IndexType is int
         assert grid_type.PointType.IndexType is int
 

@@ -18,7 +18,7 @@ export_DistributedMeshWriters( nb::module_& m );
 #include <TNL/Meshes/DistributedMeshes/distributeSubentities.h>
 
 // Python module definition
-NB_MODULE( tnl_mpi, m )
+NB_MODULE( mpi, m )
 {
    register_exceptions( m );
 
