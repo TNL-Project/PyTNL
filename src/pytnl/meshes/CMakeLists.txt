@@ -6,6 +6,7 @@ set( sources
       MeshReaders.cpp
       MeshWriters.cpp
       VTKTraits.cpp
+      resolveMeshType.cpp
       meshes.cpp
 )
 nanobind_add_module(meshes ${sources})

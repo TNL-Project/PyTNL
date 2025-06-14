@@ -192,6 +192,58 @@ def test_mesh_file(file_path, expected_vertices, expected_cells, tmp_path):
     _test_meshfunction(reader_class, writer_class, mesh, tmp_path, "CellData")
 
 
+# This test actually tests three functions:
+# 1. getMeshReader - returns the MeshReader instance based on file extension
+#       (does not call `reader.detectMesh` so it succeeds even for invalid file)
+# 2. resolveMeshType - returns a `(reader, mesh)` pair where `reader` is initialized
+#       with the given file name (using `getMeshReader`) and `mesh` is empty
+# 3. resolveAndLoadMesh - same plus loads the mesh using `reader.loadMesh`
+@pytest.mark.parametrize("file_path, expected_vertices, expected_cells", test_cases)
+def test_resolveMeshType(file_path, expected_vertices, expected_cells, tmp_path):
+    data_dir = Path(__file__).parent / "data"
+    full_path = (data_dir / file_path).resolve()
+    suffix = full_path.suffix
+    directory = full_path.parent.name
+
+    # Get mesh class and writer class based on directory
+    try:
+        mesh_class, vtk_writer, vtu_writer = mesh_writer_map[directory]
+    except KeyError:
+        pytest.fail(f"Unsupported directory: {directory}")
+
+    # Get reader class based on suffix
+    try:
+        reader_class = suffix_to_reader[suffix]
+    except KeyError:
+        pytest.fail(f"Unsupported file suffix: {suffix}")
+
+    # Test getMeshReader
+    reader = pytnl.meshes.getMeshReader(f"invalid{suffix}")
+    assert isinstance(reader, reader_class), reader
+    reader = pytnl.meshes.getMeshReader(str(full_path))
+    assert isinstance(reader, reader_class), reader
+
+    # Test resolveMeshType
+    with pytest.raises(RuntimeError):
+        pytnl.meshes.resolveMeshType(f"invalid{suffix}")
+    reader, mesh = pytnl.meshes.resolveMeshType(str(full_path))
+    assert isinstance(reader, reader_class), reader
+    assert isinstance(mesh, mesh_class), mesh
+    # Check mesh entities
+    assert mesh.getEntitiesCount(mesh.Vertex) == 0
+    assert mesh.getEntitiesCount(mesh.Cell) == 0
+
+    # Test resolveAndLoadMesh
+    with pytest.raises(RuntimeError):
+        pytnl.meshes.resolveAndLoadMesh(f"invalid{suffix}")
+    reader, mesh = pytnl.meshes.resolveAndLoadMesh(str(full_path))
+    assert isinstance(reader, reader_class), reader
+    assert isinstance(mesh, mesh_class), mesh
+    # Check mesh entities
+    assert mesh.getEntitiesCount(mesh.Vertex) == expected_vertices, f"Expected {expected_vertices} points in {file_path}"
+    assert mesh.getEntitiesCount(mesh.Cell) == expected_cells, f"Expected {expected_cells} cells in {file_path}"
+
+
 # Test for PVTUReader and PVTUWriter (requires MPI)
 @pytest.mark.mpi
 @pytest.mark.skipif(not shutil.which("tnl-decompose-mesh"), reason="tnl-decompose-mesh is not available")

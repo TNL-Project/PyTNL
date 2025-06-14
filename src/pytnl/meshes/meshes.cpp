@@ -19,6 +19,8 @@ void
 export_MeshReaders( nb::module_& m );
 void
 export_MeshWriters( nb::module_& m );
+void
+export_resolveMeshType( nb::module_& m );
 
 // Python module definition
 NB_MODULE( meshes, m )
@@ -34,4 +36,6 @@ NB_MODULE( meshes, m )
    export_Meshes( m );
    export_MeshReaders( m );
    export_MeshWriters( m );
+
+   export_resolveMeshType( m );
 }

@@ -5,6 +5,8 @@
 #include <pytnl/nanobind.h>
 #include <pytnl/typedefs.h>
 
+#include <TNL/Meshes/Readers/getMeshReader.h>
+
 void
 export_MeshReaders( nb::module_& m )
 {
@@ -38,4 +40,13 @@ export_MeshReaders( nb::module_& m )
    nb::class_< TNL::Meshes::Readers::VTUReader, XMLVTK >( m, "VTUReader" ).def( nb::init< std::string >() );
 
    nb::class_< TNL::Meshes::Readers::VTIReader, XMLVTK >( m, "VTIReader" ).def( nb::init< std::string >() );
+
+   auto getMeshReader =  //
+      m.def( "getMeshReader",
+             TNL::Meshes::Readers::getMeshReader,
+             nb::arg( "file_name" ),
+             nb::kw_only(),
+             nb::arg( "file_format" ) = "auto",
+             "Returns the MeshReader instance for given file based on file extension "
+             "(does not call `reader.detectMesh` so it succeeds even for invalid file)" );
 }
