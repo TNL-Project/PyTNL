@@ -15,10 +15,10 @@ import pytnl.containers
 
 # List of array types to test
 array_types = [
-    pytnl.containers.Array,
-    pytnl.containers.Array_int,
-    pytnl.containers.Vector,
-    pytnl.containers.Vector_int,
+    pytnl.containers.Array[int],
+    pytnl.containers.Array[float],
+    pytnl.containers.Vector[int],
+    pytnl.containers.Vector[float],
 ]
 
 
@@ -61,16 +61,24 @@ def array_strategy(draw, array_type):
 # ----------------------
 
 
+def test_pythonization():
+    assert pytnl.containers.Array[bool] is pytnl._containers.Array_bool
+    assert pytnl.containers.Array[int] is pytnl._containers.Array_int
+    assert pytnl.containers.Array[float] is pytnl._containers.Array_float
+    assert pytnl.containers.Vector[int] is pytnl._containers.Vector_int
+    assert pytnl.containers.Vector[float] is pytnl._containers.Vector_float
+
+
 def test_typedefs():
-    for array_type in [pytnl.containers.Array, pytnl.containers.Array_int, pytnl.containers.Array_bool, pytnl.containers.Vector, pytnl.containers.Vector_int]:
+    for array_type in array_types:
         assert array_type.IndexType is int
 
-    assert pytnl.containers.Array.ValueType is float
-    assert pytnl.containers.Array_int.ValueType is int
-    assert pytnl.containers.Array_bool.ValueType is bool
+    assert pytnl.containers.Array[bool].ValueType is bool
+    assert pytnl.containers.Array[int].ValueType is int
+    assert pytnl.containers.Array[float].ValueType is float
 
-    assert pytnl.containers.Vector.ValueType is float
-    assert pytnl.containers.Vector_int.ValueType is int
+    assert pytnl.containers.Vector[float].ValueType is float
+    assert pytnl.containers.Vector[int].ValueType is int
 
 
 @pytest.mark.parametrize("array_type", array_types)

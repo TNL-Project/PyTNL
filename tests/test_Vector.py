@@ -12,7 +12,10 @@ import pytnl.containers
 # ----------------------
 
 # List of vector types to test
-vector_types = [pytnl.containers.Vector, pytnl.containers.Vector_int]
+vector_types = [
+    pytnl.containers.Vector[int],
+    pytnl.containers.Vector[float],
+]
 
 
 # ----------------------
@@ -74,11 +77,11 @@ def test_typedefs():
     for vector_type in vector_types:
         assert vector_type.IndexType is int
 
-    assert pytnl.containers.Vector.ValueType is float
-    assert pytnl.containers.Vector_int.ValueType is int
+    assert pytnl.containers.Vector[float].ValueType is float
+    assert pytnl.containers.Vector[int].ValueType is int
 
-    assert pytnl.containers.Vector.RealType is float
-    assert pytnl.containers.Vector_int.RealType is int
+    assert pytnl.containers.Vector[float].RealType is float
+    assert pytnl.containers.Vector[int].RealType is int
 
 
 @pytest.mark.parametrize("vector_type", vector_types)

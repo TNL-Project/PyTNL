@@ -55,7 +55,7 @@ NB_MODULE( matrices, m )
    register_exceptions( m );
 
    // import depending modules
-   nb::module_::import_( "pytnl.containers" );
+   nb::module_::import_( "pytnl._containers" );
 
    export_SparseMatrices( m );
 }

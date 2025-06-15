@@ -13,12 +13,12 @@ import pytnl.containers
 
 # List of vector types to test
 vector_types = [
-    pytnl.containers.StaticVector_1_int,
-    pytnl.containers.StaticVector_2_int,
-    pytnl.containers.StaticVector_3_int,
-    pytnl.containers.StaticVector_1_float,
-    pytnl.containers.StaticVector_2_float,
-    pytnl.containers.StaticVector_3_float,
+    pytnl.containers.StaticVector[1, int],
+    pytnl.containers.StaticVector[2, int],
+    pytnl.containers.StaticVector[3, int],
+    pytnl.containers.StaticVector[1, float],
+    pytnl.containers.StaticVector[2, float],
+    pytnl.containers.StaticVector[3, float],
 ]
 
 

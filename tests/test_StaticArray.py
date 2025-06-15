@@ -12,12 +12,12 @@ import pytnl.containers
 
 # List of array types to test
 array_types = [
-    pytnl.containers.StaticVector_1_int,
-    pytnl.containers.StaticVector_2_int,
-    pytnl.containers.StaticVector_3_int,
-    pytnl.containers.StaticVector_1_float,
-    pytnl.containers.StaticVector_2_float,
-    pytnl.containers.StaticVector_3_float,
+    pytnl.containers.StaticVector[1, int],
+    pytnl.containers.StaticVector[2, int],
+    pytnl.containers.StaticVector[3, int],
+    pytnl.containers.StaticVector[1, float],
+    pytnl.containers.StaticVector[2, float],
+    pytnl.containers.StaticVector[3, float],
 ]
 
 
@@ -56,6 +56,15 @@ def array_strategy(draw, array_type):
 # ----------------------
 # Constructors and basic properties
 # ----------------------
+
+
+def test_pythonization():
+    assert pytnl.containers.StaticVector[1, int] is pytnl._containers.StaticVector_1_int
+    assert pytnl.containers.StaticVector[2, int] is pytnl._containers.StaticVector_2_int
+    assert pytnl.containers.StaticVector[3, int] is pytnl._containers.StaticVector_3_int
+    assert pytnl.containers.StaticVector[1, float] is pytnl._containers.StaticVector_1_float
+    assert pytnl.containers.StaticVector[2, float] is pytnl._containers.StaticVector_2_float
+    assert pytnl.containers.StaticVector[3, float] is pytnl._containers.StaticVector_3_float
 
 
 def test_typedefs():

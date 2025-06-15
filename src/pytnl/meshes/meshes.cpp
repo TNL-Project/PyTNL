@@ -28,7 +28,7 @@ NB_MODULE( meshes, m )
    register_exceptions( m );
 
    // import depending modules
-   nb::module_::import_( "pytnl.containers" );
+   nb::module_::import_( "pytnl._containers" );
 
    export_Grid1D( m );
    export_Grid2D( m );
