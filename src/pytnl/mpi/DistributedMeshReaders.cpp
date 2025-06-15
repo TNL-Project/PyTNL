@@ -13,9 +13,6 @@ export_DistributedMeshReaders( nb::module_& m )
    using XMLVTK = TNL::Meshes::Readers::XMLVTK;
    using PVTUReader = TNL::Meshes::Readers::PVTUReader;
 
-   // make sure that bindings for the parent class are available
-   nb::module_::import_( "tnl" );
-
    nb::class_< PVTUReader, XMLVTK >( m, "PVTUReader" )
       .def( nb::init< std::string >() )
       // loadMesh is not virtual in PVTUReader

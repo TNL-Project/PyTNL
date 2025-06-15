@@ -1,8 +1,9 @@
 // conversions have to be registered for each object file
 #include <pytnl/tnl_conversions.h>
 
-#include <pytnl/tnl/SparseMatrix.h>
+#include <pytnl/exceptions.h>
 #include <pytnl/typedefs.h>
+#include <pytnl/tnl/SparseMatrix.h>
 
 #include <TNL/Algorithms/Segments/CSR.h>
 #include <TNL/Algorithms/Segments/Ellpack.h>
@@ -50,5 +51,10 @@ export_SparseMatrices( nb::module_& m )
 // Python module definition
 NB_MODULE( matrices, m )
 {
+   register_exceptions( m );
+
+   // import depending modules
+   nb::module_::import_( "pytnl.containers" );
+
    export_SparseMatrices( m );
 }

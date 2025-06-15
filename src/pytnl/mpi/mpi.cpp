@@ -22,6 +22,9 @@ NB_MODULE( mpi, m )
 {
    register_exceptions( m );
 
+   // import depending modules
+   nb::module_::import_( "pytnl.meshes" );
+
    // MPI initialization and finalization
    // https://stackoverflow.com/q/64647846
    if( ! TNL::MPI::Initialized() ) {

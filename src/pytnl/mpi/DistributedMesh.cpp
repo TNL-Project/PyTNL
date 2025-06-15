@@ -8,9 +8,6 @@
 void
 export_DistributedMeshes( nb::module_& m )
 {
-   // make sure that bindings for the local meshes are available
-   nb::module_::import_( "tnl" );
-
    export_DistributedMesh< DistributedMeshOfEdges >( m, "DistributedMeshOfEdges" );
    export_DistributedMesh< DistributedMeshOfTriangles >( m, "DistributedMeshOfTriangles" );
    export_DistributedMesh< DistributedMeshOfQuadrangles >( m, "DistributedMeshOfQuadrangles" );
