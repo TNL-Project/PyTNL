@@ -16,7 +16,8 @@ struct PyOstreamHelper
 };
 
 template< typename Writer, TNL::Meshes::VTK::FileFormat default_format >
-struct PyWriter : public PyOstreamHelper, public Writer
+struct PyMeshWriter : public PyOstreamHelper, public Writer
 {
-   PyWriter( nb::object src, TNL::Meshes::VTK::FileFormat format = default_format ) : PyOstreamHelper( src ), Writer( str ) {}
+   PyMeshWriter( nb::object src, TNL::Meshes::VTK::FileFormat format = default_format ) : PyOstreamHelper( src ), Writer( str )
+   {}
 };

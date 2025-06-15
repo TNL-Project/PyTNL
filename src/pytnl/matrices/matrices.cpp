@@ -3,13 +3,14 @@
 
 #include <pytnl/exceptions.h>
 #include <pytnl/typedefs.h>
-#include <pytnl/tnl/SparseMatrix.h>
 
 #include <TNL/Algorithms/Segments/CSR.h>
 #include <TNL/Algorithms/Segments/Ellpack.h>
 #include <TNL/Algorithms/Segments/SlicedEllpack.h>
 #include <TNL/Matrices/SparseMatrix.h>
 #include <TNL/Matrices/SparseOperations.h>
+
+#include "SparseMatrix.h"
 
 template< typename Device, typename Index, typename IndexAllocator >
 using CSR = TNL::Algorithms::Segments::CSR< Device, Index, IndexAllocator >;

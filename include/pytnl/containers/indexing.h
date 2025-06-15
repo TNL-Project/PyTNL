@@ -1,12 +1,11 @@
 #pragma once
 
 #include <pytnl/nanobind.h>
-
-#include "RawIterator.h"
+#include <pytnl/RawIterator.h>
 
 template< typename Array, typename Scope >
 void
-tnl_indexing( Scope& scope )
+def_indexing( Scope& scope )
 {
    using Index = typename Array::IndexType;
    using Value = typename Array::ValueType;
@@ -48,7 +47,7 @@ tnl_indexing( Scope& scope )
 
 template< typename Array, typename Scope >
 void
-tnl_slice_indexing( Scope& scope )
+def_slice_indexing( Scope& scope )
 {
    /// Slicing protocol
    scope.def(

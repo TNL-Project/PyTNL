@@ -4,9 +4,9 @@
 // conversions have to be registered for each object file
 #include <pytnl/tnl_conversions.h>
 
-#include <pytnl/tnl/Array.h>
-#include <pytnl/tnl/Vector.h>
-#include <pytnl/tnl/StaticVector.h>
+#include <pytnl/containers/Array.h>
+#include <pytnl/containers/Vector.h>
+#include <pytnl/containers/StaticVector.h>
 
 using namespace TNL::Containers;
 

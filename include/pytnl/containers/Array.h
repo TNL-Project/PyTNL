@@ -1,9 +1,10 @@
 #pragma once
 
 #include <pytnl/nanobind.h>
-#include <pytnl/tnl_indexing.h>
 
 #include <TNL/Containers/Array.h>
+
+#include "indexing.h"
 
 template< typename ArrayType >
 void
@@ -159,6 +160,6 @@ export_Array( nb::module_& m, const char* name )
    //         { sizeof( typename ArrayType::ValueType ) } );
    //   } );
 
-   tnl_indexing< ArrayType >( array );
-   tnl_slice_indexing< ArrayType >( array );
+   def_indexing< ArrayType >( array );
+   def_slice_indexing< ArrayType >( array );
 }

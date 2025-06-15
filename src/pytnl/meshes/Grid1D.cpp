@@ -1,7 +1,7 @@
 // conversions have to be registered for each object file
 #include <pytnl/tnl_conversions.h>
 
-#include <pytnl/tnl/Grid.h>
+#include "Grid.h"
 
 void
 export_Grid1D( nb::module_& m )

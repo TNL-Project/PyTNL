@@ -1,9 +1,10 @@
 #pragma once
 
 #include <pytnl/nanobind.h>
-#include <pytnl/tnl/vector_operators.h>
 
 #include <TNL/Containers/Vector.h>
+
+#include "vector_operators.h"
 
 template< typename ArrayType, typename VectorType >
 void

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <pytnl/nanobind.h>
-#include <pytnl/tnl_indexing.h>
-#include <pytnl/tnl/vector_operators.h>
+
+#include "indexing.h"
+#include "vector_operators.h"
 
 template< typename VectorType, typename Scope >
 void
@@ -147,5 +148,5 @@ export_StaticVector( Scope& scope, const char* name )
    }
 
    def_vector_operators( vector );
-   tnl_indexing< VectorType >( vector );
+   def_indexing< VectorType >( vector );
 }

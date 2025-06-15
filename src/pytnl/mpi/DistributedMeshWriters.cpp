@@ -1,9 +1,9 @@
 // conversions have to be registered for each object file
 #include <pytnl/tnl_conversions.h>
 
-#include <pytnl/tnl/MeshWriters.h>
 #include <pytnl/nanobind.h>
 #include <pytnl/typedefs.h>
+#include <pytnl/meshes/MeshWriters.h>
 
 #include <TNL/Meshes/Writers/PVTUWriter.h>
 
@@ -33,7 +33,7 @@ export_DistributedMeshWriter( nb::module_& m, const char* name )
    // segfault. To solve this, we use a transient wrapper struct PyWriter which
    // holds the streambuf in its own ostream attribute and is initialized by a
    // nb::object to avoid type casting.
-   using PythonWriter = PyWriter< Writer, default_format >;
+   using PythonWriter = PyMeshWriter< Writer, default_format >;
    nb::class_< PythonWriter >( m, name )
       .def( nb::init< nb::object, TNL::Meshes::VTK::FileFormat >(),
             nb::keep_alive< 1, 2 >(),

@@ -1,8 +1,7 @@
 #include <nanobind/trampoline.h>
 
-#include <TNL/Meshes/Readers/VTIReader.h>
-#include <TNL/Meshes/Readers/VTKReader.h>
-#include <TNL/Meshes/Readers/VTUReader.h>
+#include <TNL/Meshes/Readers/MeshReader.h>
+#include <TNL/Meshes/Readers/XMLVTK.h>
 
 // trampoline classes needed for overriding virtual methods
 // https://nanobind.readthedocs.io/en/latest/classes.html#trampolines
