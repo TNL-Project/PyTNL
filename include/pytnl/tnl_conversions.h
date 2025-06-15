@@ -14,4 +14,4 @@
 #include <nanobind/stl/vector.h>
 
 #include <pytnl/iostream_caster.h>
-#include <pytnl/tnl_str_conversion.h>
+#include <pytnl/string_caster.h>
