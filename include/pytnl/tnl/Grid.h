@@ -5,7 +5,6 @@
 #include <pytnl/nanobind.h>
 
 #include "Grid_getSpaceStepsProducts.h"
-#include "StaticVector.h"
 #include "mesh_getters.h"
 
 template< typename GridEntity, typename PyGrid >
@@ -105,8 +104,18 @@ export_Grid( nb::module_& m, const char* name )
    SpaceStepsProductsGetter< Grid >::export_getSpaceSteps( grid );
 
    // nested types
-   export_StaticVector< typename Grid::CoordinatesType >( grid, "CoordinatesType" );
-   export_StaticVector< typename Grid::PointType >( grid, "PointType" );
+   grid.def_prop_ro_static(  //
+      "CoordinatesType",
+      []( nb::handle ) -> nb::handle
+      {
+         return nb::type< typename Grid::CoordinatesType >();
+      } );
+   grid.def_prop_ro_static(  //
+      "PointType",
+      []( nb::handle ) -> nb::handle
+      {
+         return nb::type< typename Grid::PointType >();
+      } );
    export_GridEntity< typename Grid::Cell >( grid, "Cell" );
    auto Vertex = export_GridEntity< typename Grid::Vertex >( grid, "Vertex" );
    // avoid duplicate conversion if the type is the same

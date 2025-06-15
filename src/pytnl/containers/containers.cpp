@@ -6,6 +6,9 @@
 
 #include <pytnl/tnl/Array.h>
 #include <pytnl/tnl/Vector.h>
+#include <pytnl/tnl/StaticVector.h>
+
+using namespace TNL::Containers;
 
 template< typename T >
 using _array = TNL::Containers::Array< T, TNL::Devices::Host, IndexType >;
@@ -23,4 +26,11 @@ NB_MODULE( containers, m )
    export_Array< _array< IndexType > >( m, "Array_int" );
    export_Vector< _array< IndexType >, _vector< IndexType > >( m, "Vector_int" );
    export_Array< _array< bool > >( m, "Array_bool" );
+
+   export_StaticVector< StaticVector< 1, IndexType > >( m, "StaticVector_1_int" );
+   export_StaticVector< StaticVector< 2, IndexType > >( m, "StaticVector_2_int" );
+   export_StaticVector< StaticVector< 3, IndexType > >( m, "StaticVector_3_int" );
+   export_StaticVector< StaticVector< 1, RealType > >( m, "StaticVector_1_float" );
+   export_StaticVector< StaticVector< 2, RealType > >( m, "StaticVector_2_float" );
+   export_StaticVector< StaticVector< 3, RealType > >( m, "StaticVector_3_float" );
 }

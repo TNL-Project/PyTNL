@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-import pytnl.meshes
+import pytnl.containers
 
 # ----------------------
 # Configuration
@@ -12,12 +12,12 @@ import pytnl.meshes
 
 # List of array types to test
 array_types = [
-    pytnl.meshes.Grid1D.CoordinatesType,
-    pytnl.meshes.Grid2D.CoordinatesType,
-    pytnl.meshes.Grid3D.CoordinatesType,
-    pytnl.meshes.Grid1D.PointType,
-    pytnl.meshes.Grid2D.PointType,
-    pytnl.meshes.Grid3D.PointType,
+    pytnl.containers.StaticVector_1_int,
+    pytnl.containers.StaticVector_2_int,
+    pytnl.containers.StaticVector_3_int,
+    pytnl.containers.StaticVector_1_float,
+    pytnl.containers.StaticVector_2_float,
+    pytnl.containers.StaticVector_3_float,
 ]
 
 
@@ -59,15 +59,14 @@ def array_strategy(draw, array_type):
 
 
 def test_typedefs():
-    for grid_type in [pytnl.meshes.Grid1D, pytnl.meshes.Grid2D, pytnl.meshes.Grid3D]:
-        assert grid_type.CoordinatesType.IndexType is int
-        assert grid_type.PointType.IndexType is int
-
-        assert grid_type.CoordinatesType.ValueType is int
-        assert grid_type.PointType.ValueType is float
-
-        assert grid_type.CoordinatesType.RealType is int
-        assert grid_type.PointType.RealType is float
+    for array_type in array_types:
+        assert array_type.IndexType is int
+        if array_type.__name__.endswith("_int"):
+            assert array_type.ValueType is int
+            assert array_type.RealType is int
+        else:
+            assert array_type.ValueType is float
+            assert array_type.RealType is float
 
 
 @pytest.mark.parametrize("array_type", array_types)
