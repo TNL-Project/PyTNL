@@ -9,43 +9,47 @@
 #include "mesh_getters.h"
 
 template< typename GridEntity, typename PyGrid >
-void
+nb::class_< GridEntity >
 export_GridEntity( PyGrid& scope, const char* name )
 {
    typename GridEntity::CoordinatesType const& ( GridEntity::*_getCoordinates1 )( void ) const = &GridEntity::getCoordinates;
    typename GridEntity::CoordinatesType& ( GridEntity::*_getCoordinates2 )( void ) = &GridEntity::getCoordinates;
 
-   nb::class_< GridEntity >( scope, name )
-      .def( nb::init< typename GridEntity::GridType >(), nb::rv_policy::reference_internal )
-      .def( nb::init< typename GridEntity::GridType, typename GridEntity::CoordinatesType >(),
-            nb::rv_policy::reference_internal )
-      .def(
-         nb::init< typename GridEntity::GridType, typename GridEntity::CoordinatesType, typename GridEntity::CoordinatesType >(),
-         nb::rv_policy::reference_internal )
-      .def( nb::init< typename GridEntity::GridType,
-                      typename GridEntity::CoordinatesType,
-                      typename GridEntity::CoordinatesType,
-                      typename GridEntity::IndexType >(),
-            nb::rv_policy::reference_internal )
-      .def( nb::init< typename GridEntity::GridType, typename GridEntity::IndexType >(), nb::rv_policy::reference_internal )
-      .def( "getEntityDimension", &GridEntity::getEntityDimension )
-      .def( "getMeshDimension", &GridEntity::getMeshDimension )
-      // TODO: constructors
-      .def( "getCoordinates", _getCoordinates1, nb::rv_policy::reference_internal )
-      .def( "getCoordinates", _getCoordinates2, nb::rv_policy::reference_internal )
-      .def( "setCoordinates", &GridEntity::setCoordinates )
-      .def( "refresh", &GridEntity::refresh )
-      .def( "getIndex", &GridEntity::getIndex )
-      .def( "getNormals", &GridEntity::getNormals )
-      .def( "setNormals", &GridEntity::setNormals )
-      .def( "getOrientation", &GridEntity::getOrientation )
-      .def( "setOrientation", &GridEntity::setOrientation )
-      .def( "getBasis", &GridEntity::getBasis )
-      // TODO: getNeighbourEntity
-      .def( "isBoundary", &GridEntity::isBoundary )
-      .def( "getCenter", &GridEntity::getCenter )
-      .def( "getMeasure", &GridEntity::getMeasure )
-      .def( "getMesh", &GridEntity::getMesh, nb::rv_policy::reference_internal );
+   auto entity =
+      nb::class_< GridEntity >( scope, name )
+         .def( nb::init< typename GridEntity::GridType >(), nb::rv_policy::reference_internal )
+         .def( nb::init< typename GridEntity::GridType, typename GridEntity::CoordinatesType >(),
+               nb::rv_policy::reference_internal )
+         .def( nb::init< typename GridEntity::GridType,
+                         typename GridEntity::CoordinatesType,
+                         typename GridEntity::CoordinatesType >(),
+               nb::rv_policy::reference_internal )
+         .def( nb::init< typename GridEntity::GridType,
+                         typename GridEntity::CoordinatesType,
+                         typename GridEntity::CoordinatesType,
+                         typename GridEntity::IndexType >(),
+               nb::rv_policy::reference_internal )
+         .def( nb::init< typename GridEntity::GridType, typename GridEntity::IndexType >(), nb::rv_policy::reference_internal )
+         .def( "getEntityDimension", &GridEntity::getEntityDimension )
+         .def( "getMeshDimension", &GridEntity::getMeshDimension )
+         // TODO: constructors
+         .def( "getCoordinates", _getCoordinates1, nb::rv_policy::reference_internal )
+         .def( "getCoordinates", _getCoordinates2, nb::rv_policy::reference_internal )
+         .def( "setCoordinates", &GridEntity::setCoordinates )
+         .def( "refresh", &GridEntity::refresh )
+         .def( "getIndex", &GridEntity::getIndex )
+         .def( "getNormals", &GridEntity::getNormals )
+         .def( "setNormals", &GridEntity::setNormals )
+         .def( "getOrientation", &GridEntity::getOrientation )
+         .def( "setOrientation", &GridEntity::setOrientation )
+         .def( "getBasis", &GridEntity::getBasis )
+         // TODO: getNeighbourEntity
+         .def( "isBoundary", &GridEntity::isBoundary )
+         .def( "getCenter", &GridEntity::getCenter )
+         .def( "getMeasure", &GridEntity::getMeasure )
+         .def( "getMesh", &GridEntity::getMesh, nb::rv_policy::reference_internal );
+
+   return entity;
 }
 
 template< typename Grid >
@@ -104,8 +108,10 @@ export_Grid( nb::module_& m, const char* name )
    export_StaticVector< typename Grid::CoordinatesType >( grid, "CoordinatesType" );
    export_StaticVector< typename Grid::PointType >( grid, "PointType" );
    export_GridEntity< typename Grid::Cell >( grid, "Cell" );
-   export_GridEntity< typename Grid::Face >( grid, "Face" );
+   auto Vertex = export_GridEntity< typename Grid::Vertex >( grid, "Vertex" );
    // avoid duplicate conversion if the type is the same
-   if( ! std::is_same< typename Grid::Face, typename Grid::Vertex >::value )
-      export_GridEntity< typename Grid::Vertex >( grid, "Vertex" );
+   if constexpr( std::is_same_v< typename Grid::Face, typename Grid::Vertex > )
+      grid.attr( "Face" ) = Vertex;
+   else
+      export_GridEntity< typename Grid::Face >( grid, "Face" );
 }

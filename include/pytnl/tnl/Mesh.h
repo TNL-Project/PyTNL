@@ -56,7 +56,7 @@ export_getPoint( Scope& scope )
 }
 
 template< typename MeshEntity, typename Scope >
-void
+nb::class_< MeshEntity >
 export_MeshEntity( Scope& scope, const char* name )
 {
    auto entity =  //
@@ -73,6 +73,8 @@ export_MeshEntity( Scope& scope, const char* name )
    export_getSuperentityIndex< MeshEntity, MeshEntity::getEntityDimension() + 1 >( entity );
    export_getSubentityIndex< MeshEntity, 0 >( entity, "getSubvertexIndex" );
    export_getPoint< MeshEntity >( entity );
+
+   return entity;
 }
 
 template< typename Mesh >
@@ -162,8 +164,10 @@ export_Mesh( nb::module_& m, const char* name )
 
    // nested types
    export_MeshEntity< typename Mesh::Cell >( mesh, "Cell" );
-   export_MeshEntity< typename Mesh::Face >( mesh, "Face" );
+   auto Vertex = export_MeshEntity< typename Mesh::Vertex >( mesh, "Vertex" );
    // avoid duplicate conversion if the type is the same
-   if( ! std::is_same< typename Mesh::Face, typename Mesh::Vertex >::value )
-      export_MeshEntity< typename Mesh::Vertex >( mesh, "Vertex" );
+   if constexpr( std::is_same< typename Mesh::Face, typename Mesh::Vertex >::value )
+      mesh.attr( "Face" ) = Vertex;
+   else
+      export_MeshEntity< typename Mesh::Face >( mesh, "Face" );
 }
