@@ -29,7 +29,7 @@ struct SpaceStepsProductsGetter< Grid1D >
 
    template< typename PyGrid >
    static void
-   export_getSpaceSteps( PyGrid& scope, const char* name = "getSpaceSteps" )
+   export_getSpaceSteps( PyGrid& scope )
    {
       scope.def( "getSpaceStepsProducts", get, nb::arg( "xPow" ) );
    }
@@ -54,7 +54,7 @@ struct SpaceStepsProductsGetter< Grid2D >
 
    template< typename PyGrid >
    static void
-   export_getSpaceSteps( PyGrid& scope, const char* name = "getSpaceSteps" )
+   export_getSpaceSteps( PyGrid& scope )
    {
       scope.def( "getSpaceStepsProducts", get, nb::arg( "xPow" ), nb::arg( "yPow" ) = 0 );
    }
@@ -82,7 +82,7 @@ struct SpaceStepsProductsGetter< Grid3D >
 
    template< typename PyGrid >
    static void
-   export_getSpaceSteps( PyGrid& scope, const char* name = "getSpaceSteps" )
+   export_getSpaceSteps( PyGrid& scope )
    {
       scope.def( "getSpaceStepsProducts", get, nb::arg( "xPow" ), nb::arg( "yPow" ) = 0, nb::arg( "zPow" ) = 0 );
    }

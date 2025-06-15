@@ -4,7 +4,7 @@
 
 #include <pytnl/nanobind.h>
 
-#include "Grid_getSpaceStepsProducts.h"
+#include "getSpaceStepsProducts.h"
 #include "mesh_getters.h"
 
 template< typename GridEntity, typename PyGrid >
