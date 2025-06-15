@@ -23,8 +23,23 @@ TNL_DECOMPOSE_CMD = "tnl-decompose-mesh"
 TNL_DECOMPOSE_FLAGS = "--ghost-levels 1"
 
 
+# Mapping from dimension to grid class
+grid_classes = {
+    1: pytnl.meshes.Grid1D,
+    2: pytnl.meshes.Grid2D,
+    3: pytnl.meshes.Grid3D,
+}
+
+# Mapping from dimension to VTI writer class
+grid_writers = {
+    1: pytnl.meshes.VTIWriter_Grid1D,
+    2: pytnl.meshes.VTIWriter_Grid2D,
+    3: pytnl.meshes.VTIWriter_Grid3D,
+}
+
 # Mapping from file suffix to reader class
 suffix_to_reader = {
+    ".vti": pytnl.meshes.VTIReader,
     ".vtk": pytnl.meshes.VTKReader,
     ".vtu": pytnl.meshes.VTUReader,
 }
@@ -42,6 +57,9 @@ mesh_writer_map = {
 
 # Define test cases with expected vertex and cell counts
 test_cases = [
+    # grids
+    ("quadrangles/grid_2x3.vti", 12, 6),
+    ("hexahedrons/grid_2x3x4.vti", 60, 24),
     # triangles
     ("triangles/mrizka_1.vtk", 142, 242),
     ("triangles/mrizka_1.vtu", 142, 242),
@@ -154,6 +172,32 @@ def _test_meshfunction(reader_class, writer_class, mesh, tmp_path, data_type="Po
     assert vector_data_in == vector_data, f"{data_type} vector data mismatch"
 
 
+# Parametrized synthetic grid test cases
+@pytest.mark.parametrize(
+    "dim, origin, proportions, dimensions",
+    [
+        (1, [1], [2], [10]),
+        (2, [1, 2], [3, 4], [10, 20]),
+        (3, [1, 2, 3], [4, 5, 6], [10, 20, 30]),
+    ],
+)
+def test_vti_reader_synthetic(dim, origin, proportions, dimensions, tmp_path):
+    # Choose appropriate grid, reader and writer based on dimension
+    grid_class = grid_classes[dim]
+    reader_class = pytnl.meshes.VTIReader
+    writer_class = grid_writers[dim]
+
+    # Create synthetic grid
+    grid = grid_class()
+    grid.setDomain(grid_class.PointType(origin), grid_class.PointType(proportions))
+    grid.setDimensions(grid_class.CoordinatesType(dimensions))
+
+    # Round-trip tests
+    _test_reader_writer(reader_class, writer_class, grid, tmp_path)
+    _test_meshfunction(reader_class, writer_class, grid, tmp_path, "PointData")
+    _test_meshfunction(reader_class, writer_class, grid, tmp_path, "CellData")
+
+
 # Parametrize test cases with file path, expected vertices, expected cells
 @pytest.mark.parametrize("file_path, expected_vertices, expected_cells", test_cases)
 def test_mesh_file(file_path, expected_vertices, expected_cells, tmp_path):
@@ -162,20 +206,26 @@ def test_mesh_file(file_path, expected_vertices, expected_cells, tmp_path):
     suffix = full_path.suffix
     directory = full_path.parent.name
 
-    # Get mesh class and writer class based on directory
-    try:
-        mesh_class, vtk_writer, vtu_writer = mesh_writer_map[directory]
-    except KeyError:
-        pytest.fail(f"Unsupported directory: {directory}")
-
     # Get reader class based on suffix
     try:
         reader_class = suffix_to_reader[suffix]
     except KeyError:
         pytest.fail(f"Unsupported file suffix: {suffix}")
 
-    # Choose writer based on reader
-    writer_class = vtk_writer if reader_class == pytnl.meshes.VTKReader else vtu_writer
+    if suffix == ".vti":
+        # Choose appropriate grid class and writer class based on dimension
+        dim = 2 if "quadrangles" in file_path else 3
+        mesh_class = grid_classes[dim]
+        writer_class = grid_writers[dim]
+    else:
+        # Get mesh class and writer class based on directory
+        try:
+            mesh_class, vtk_writer, vtu_writer = mesh_writer_map[directory]
+        except KeyError:
+            pytest.fail(f"Unsupported directory: {directory}")
+
+        # Choose writer based on reader
+        writer_class = vtk_writer if reader_class == pytnl.meshes.VTKReader else vtu_writer
 
     # Load mesh
     mesh = mesh_class()
@@ -205,17 +255,22 @@ def test_resolveMeshType(file_path, expected_vertices, expected_cells, tmp_path)
     suffix = full_path.suffix
     directory = full_path.parent.name
 
-    # Get mesh class and writer class based on directory
-    try:
-        mesh_class, vtk_writer, vtu_writer = mesh_writer_map[directory]
-    except KeyError:
-        pytest.fail(f"Unsupported directory: {directory}")
-
     # Get reader class based on suffix
     try:
         reader_class = suffix_to_reader[suffix]
     except KeyError:
         pytest.fail(f"Unsupported file suffix: {suffix}")
+
+    if suffix == ".vti":
+        # Choose appropriate grid class based on dimension
+        dim = 2 if "quadrangles" in file_path else 3
+        mesh_class = grid_classes[dim]
+    else:
+        # Get mesh class based on directory
+        try:
+            mesh_class, _, _ = mesh_writer_map[directory]
+        except KeyError:
+            pytest.fail(f"Unsupported directory: {directory}")
 
     # Test getMeshReader
     reader = pytnl.meshes.getMeshReader(f"invalid{suffix}")
@@ -252,6 +307,10 @@ def test_resolveMeshType(file_path, expected_vertices, expected_cells, tmp_path)
 def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cells: int, tmp_path: Path):
     data_dir = Path(__file__).parent / "data"
     full_path = (data_dir / file_path).resolve()
+
+    # Skip grids
+    if full_path.suffix == ".vti":
+        pytest.skip("not an unstructured mesh")
 
     # Skip small meshes
     if expected_cells < 20:
