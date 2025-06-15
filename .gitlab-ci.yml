@@ -5,6 +5,14 @@ stages:
   - lint
   - build
 
+.env_setup: &env_setup
+  #
+  # do not use all cores for OpenMP
+  - export OMP_NUM_THREADS=4
+  # running as root does not matter inside Docker containers
+  - export OMPI_ALLOW_RUN_AS_ROOT=1
+  - export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
 ruff format:
   stage: lint
   image: "quay.io/archlinux/archlinux:base"
@@ -38,6 +46,7 @@ Arch_cmake:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
     - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy python-mpi4py
   script:
+    - *env_setup
     - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX="$HOME/.local"
     - cmake --build build
     - cmake --install build
@@ -58,6 +67,7 @@ Arch_python_build:
     - pacman -Suy --needed --noconfirm python-build python-installer python-scikit-build-core
     - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy python-mpi4py
   script:
+    - *env_setup
     - python -m build --no-isolation
     - python -m venv --system-site-packages .venv
     - source .venv/bin/activate
@@ -72,6 +82,7 @@ Arch_pip:
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
   script:
+    - *env_setup
     - python -m venv .venv
     - source .venv/bin/activate
     - python -m pip install .[dev]
@@ -91,6 +102,7 @@ Python_build:
       apt -y install git cmake ninja-build libopenmpi-dev;
       fi
   script:
+    - *env_setup
     - python -m venv .venv
     - source .venv/bin/activate
     # Note: psutil does not work on Alpine
@@ -131,6 +143,7 @@ Ubuntu_cmake:
     - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
     - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis python3-numpy python3-mpi4py
   script:
+    - *env_setup
     - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="$HOME/.local"
     - cmake --build build
     - cmake --install build
@@ -152,6 +165,7 @@ Ubuntu_pip:
     - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
     - apt -y install python3-venv
   script:
+    - *env_setup
     - python3 -m venv .venv
     - source .venv/bin/activate
     - python3 -m pip install .[dev]
