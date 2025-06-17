@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pytnl/nanobind.h>
+#include <pytnl/pytnl.h>
 
 template< typename VectorType, typename... Args >
 void

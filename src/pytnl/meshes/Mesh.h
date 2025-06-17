@@ -2,8 +2,7 @@
 
 #include <type_traits>
 
-#include <pytnl/typedefs.h>
-#include <pytnl/nanobind.h>
+#include <pytnl/pytnl.h>
 
 #include "mesh_getters.h"
 

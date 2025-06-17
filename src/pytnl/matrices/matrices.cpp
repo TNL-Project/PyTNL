@@ -1,8 +1,5 @@
-// conversions have to be registered for each object file
-#include <pytnl/tnl_conversions.h>
-
 #include <pytnl/exceptions.h>
-#include <pytnl/typedefs.h>
+#include <pytnl/pytnl.h>
 
 #include <TNL/Algorithms/Segments/CSR.h>
 #include <TNL/Algorithms/Segments/Ellpack.h>

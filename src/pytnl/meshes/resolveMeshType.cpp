@@ -1,8 +1,4 @@
-// conversions have to be registered for each object file
-#include <pytnl/tnl_conversions.h>
-
-#include <pytnl/typedefs.h>
-#include <pytnl/nanobind.h>
+#include <pytnl/pytnl.h>
 
 #include <TNL/Meshes/TypeResolver/resolveMeshType.h>
 

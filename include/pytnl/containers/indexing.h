@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pytnl/nanobind.h>
+#include <pytnl/pytnl.h>
 #include <pytnl/RawIterator.h>
 
 template< typename Array, typename Scope >

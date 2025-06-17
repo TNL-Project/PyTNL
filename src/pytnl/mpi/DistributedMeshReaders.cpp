@@ -1,8 +1,4 @@
-// conversions have to be registered for each object file
-#include <pytnl/tnl_conversions.h>
-
-#include <pytnl/nanobind.h>
-#include <pytnl/typedefs.h>
+#include <pytnl/pytnl.h>
 #include <pytnl/meshes/MeshReaders.h>
 
 #include <TNL/Meshes/Readers/PVTUReader.h>

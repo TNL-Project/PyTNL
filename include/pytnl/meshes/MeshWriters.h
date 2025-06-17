@@ -1,7 +1,6 @@
 #pragma once
 
-#include <pytnl/nanobind.h>
-#include <pytnl/iostream_caster.h>
+#include <pytnl/pytnl.h>
 
 #include <TNL/Meshes/VTKTraits.h>
 

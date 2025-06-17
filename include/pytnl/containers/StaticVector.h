@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pytnl/nanobind.h>
+#include <pytnl/pytnl.h>
 
 #include "indexing.h"
 #include "vector_operators.h"

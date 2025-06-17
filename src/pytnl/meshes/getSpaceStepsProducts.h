@@ -1,7 +1,6 @@
 #pragma once
 
-#include <pytnl/typedefs.h>
-#include <pytnl/nanobind.h>
+#include <pytnl/pytnl.h>
 
 template< typename Grid >
 struct SpaceStepsProductsGetter

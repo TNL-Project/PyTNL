@@ -1,11 +1,36 @@
 #pragma once
 
+// NOTE: This header file should be included by every .cpp file using PyTNL
+
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/operators.h>
 #include <nanobind/make_iterator.h>
 
+// Common type casters for STL classes (note: must be registered for each object file)
+#include <nanobind/stl/array.h>
+#include <nanobind/stl/complex.h>
+#include <nanobind/stl/filesystem.h>
+#include <nanobind/stl/optional.h>
+#include <nanobind/stl/pair.h>
+#include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/string_view.h>
+#include <nanobind/stl/tuple.h>
+#include <nanobind/stl/unique_ptr.h>
+#include <nanobind/stl/variant.h>
+#include <nanobind/stl/vector.h>
+
+// Custom type casters for PyTNL (note: must be registered for each object file)
+#include <pytnl/iostream_caster.h>
+#include <pytnl/string_caster.h>
+
+// Common namespace alias
 namespace nb = nanobind;
+using namespace nanobind::literals;
+
+// Header with type aliases for TNL data structures used throughout PyTNL
+#include <pytnl/typedefs.h>
 
 /* Reimplementation of nb::init but without list-initialization of the class,
  * which is not suitable for us due to using constructors with the

@@ -1,6 +1,3 @@
-// conversions have to be registered for each object file
-#include <pytnl/tnl_conversions.h>
-
 #include "Grid.h"
 
 void
