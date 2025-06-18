@@ -375,16 +375,50 @@ def test_deepcopy(array_type, data):
 
 
 # ----------------------
-# Buffer protocol (Numpy interoperability)
+# DLPack protocol (NumPy interoperability)
 # ----------------------
 
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
-def test_buffer_protocol(array_type, data):
-    tnl_a = data.draw(array_strategy(array_type))
-    np_a = np.array(tnl_a)
-    assert isinstance(np_a, np.ndarray)
-    assert np_a.shape == (tnl_a.getSize(),)
-    for i in range(tnl_a.getSize()):
-        assert np_a[i] == tnl_a[i]
+def test_as_numpy(array_type, data):
+    """
+    Tests the `as_numpy()` method of the Array class.
+
+    Verifies:
+    - The returned NumPy array has the correct shape and dtype.
+    - The array contains the same data as the Array.
+    - The underlying memory is shared.
+    - Changes in NumPy are reflected in the Array and vice versa.
+    """
+
+    # Create and initialize the Array
+    array = data.draw(array_strategy(array_type))
+    assume(array.getSize() > 1)
+    dims = (array.getSize(),)
+
+    # Convert to NumPy array
+    array_np = array.as_numpy()
+
+    # Check shape
+    assert array_np.shape == dims, f"Expected shape {dims}, got {array_np.shape}"
+
+    # Check data type
+    if array_type.ValueType is int:
+        assert array_np.dtype == np.int_, f"Expected dtype {np.int_}, got {array_np.dtype}"
+    else:
+        assert array_np.dtype == np.float64, f"Expected dtype {np.float64}, got {array_np.dtype}"
+
+    # Check element-wise equality
+    assert np.all(array_np == list(array)), "Data mismatch in NumPy array"
+
+    # Modify NumPy array and verify Array reflects the change
+    array_np.flat[0] = 99
+    assert array[0] == 99, "NumPy array modification not reflected in Array"
+
+    # Modify Array and verify NumPy array reflects the change
+    array[1] = 77
+    assert array_np.flat[1] == 77, "Array modification not reflected in NumPy array"
+
+    # Check that memory is shared
+    assert np.shares_memory(array_np, array.as_numpy()), "Memory should be shared between Array and NumPy array"

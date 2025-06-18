@@ -134,31 +134,22 @@ export_Array( nb::module_& m, const char* name )
             },
             nb::arg( "memo" ) )
 
-         .def( "as_ndarray",
-               []( ArrayType& self )
-               {
-                  return nb::ndarray< ValueType >( self.getData(), { static_cast< std::size_t >( self.getSize() ) } );
-               } );
-
-   // Buffer protocol for NumPy interoperability
-   // http://pybind11.readthedocs.io/en/master/advanced/pycpp/numpy.html
-   //.def_buffer(
-   //   []( ArrayType& a ) -> nb::buffer_info
-   //   {
-   //      return nb::buffer_info(
-   //         // Pointer to buffer
-   //         a.getData(),
-   //         // Size of one scalar
-   //         sizeof( typename ArrayType::ValueType ),
-   //         // Python struct-style format descriptor
-   //         nb::format_descriptor< typename ArrayType::ValueType >::format(),
-   //         // Number of dimensions
-   //         1,
-   //         // Buffer dimensions
-   //         { a.getSize() },
-   //         // Strides (in bytes) for each index
-   //         { sizeof( typename ArrayType::ValueType ) } );
-   //   } );
+         .def(
+            "as_numpy",
+            []( ArrayType& self )
+            {
+               return nb::ndarray< ValueType, nb::numpy, nb::ndim< 1 > >(
+                  self.getData(),
+                  { static_cast< std::size_t >( self.getSize() ) },
+                  nb::find( self ),  // find the Python object associated with `self` and pass it as owner
+                  {},                // strides
+                  nb::dtype< ValueType >(),
+                  nb::device::cpu::value,
+                  0  // device_id
+               );
+            },
+            nb::rv_policy::reference_internal,
+            "Returns a NumPy ndarray for this Array with shared memory (i.e. the data is not copied)" );
 
    def_indexing< ArrayType >( array );
    def_slice_indexing< ArrayType >( array );
