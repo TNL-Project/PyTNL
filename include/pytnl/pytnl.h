@@ -24,6 +24,7 @@
 // Custom type casters for PyTNL (note: must be registered for each object file)
 #include <pytnl/iostream_caster.h>
 #include <pytnl/string_caster.h>
+#include <pytnl/SizesHolder_caster.h>
 
 // Common namespace alias
 namespace nb = nanobind;

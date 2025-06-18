@@ -4,6 +4,7 @@
 #include <pytnl/containers/Array.h>
 #include <pytnl/containers/Vector.h>
 #include <pytnl/containers/StaticVector.h>
+#include <pytnl/containers/NDArray.h>
 
 using namespace TNL::Containers;
 
@@ -12,6 +13,24 @@ using _array = TNL::Containers::Array< T, TNL::Devices::Host, IndexType >;
 
 template< typename T >
 using _vector = TNL::Containers::Vector< T, TNL::Devices::Host, IndexType >;
+
+template< std::size_t dim >
+using _ndindexer =
+   NDArrayIndexer< make_sizes_holder< IndexType, dim >,  // all sizes are set at runtime
+                   make_sizes_holder< IndexType, dim >,  // all strides are set at runtime
+                   make_sizes_holder< IndexType, dim >   // all overlaps are set at runtime
+                   //ConstStaticSizesHolder< IndexType, dim, 0 >  // ConstStaticSizesHolder does not have Python bindings
+                   >;
+
+template< int dim, typename T >
+using _ndarray = NDArray< T,
+                          make_sizes_holder< IndexType, dim >,
+                          std::make_index_sequence< dim >,  // identity by default
+                          DeviceType,
+                          IndexType,
+                          make_sizes_holder< IndexType, dim >  // all overlaps are set at runtime
+                          //ConstStaticSizesHolder< IndexType, dim, 0 >  // ConstStaticSizesHolder does not have Python bindings
+                          >;
 
 // Python module definition
 NB_MODULE( _containers, m )
@@ -30,4 +49,15 @@ NB_MODULE( _containers, m )
    export_StaticVector< StaticVector< 1, RealType > >( m, "StaticVector_1_float" );
    export_StaticVector< StaticVector< 2, RealType > >( m, "StaticVector_2_float" );
    export_StaticVector< StaticVector< 3, RealType > >( m, "StaticVector_3_float" );
+
+   export_NDArrayIndexer< _ndindexer< 1 > >( m, "NDArrayIndexer_1" );
+   export_NDArrayIndexer< _ndindexer< 2 > >( m, "NDArrayIndexer_2" );
+   export_NDArrayIndexer< _ndindexer< 3 > >( m, "NDArrayIndexer_3" );
+
+   export_NDArray< _ndarray< 1, IndexType > >( m, "NDArray_1_int" );
+   export_NDArray< _ndarray< 2, IndexType > >( m, "NDArray_2_int" );
+   export_NDArray< _ndarray< 3, IndexType > >( m, "NDArray_3_int" );
+   export_NDArray< _ndarray< 1, RealType > >( m, "NDArray_1_float" );
+   export_NDArray< _ndarray< 2, RealType > >( m, "NDArray_2_float" );
+   export_NDArray< _ndarray< 3, RealType > >( m, "NDArray_3_float" );
 }

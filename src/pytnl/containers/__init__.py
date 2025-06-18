@@ -97,3 +97,70 @@ class StaticVector:
             raise ValueError(f"Class '{class_name}' not found in module. Ensure it is properly exported from C++.")
 
         return getattr(pytnl._containers, class_name)
+
+
+class NDArrayIndexer:
+    @classmethod
+    def __new__(cls, *args, **kwargs):
+        raise RuntimeError(f"{cls} should not be instantiated: use {cls.__name__}[...]")
+
+    @classmethod
+    def __class_getitem__(cls, items):
+        """
+        Allows NDArrayIndexer[dim] syntax to resolve to the correct C++ exported class.
+
+        Example:
+            NDArrayIndexer[1] → NDArrayIndexer_1
+            NDArrayIndexer[2] → NDArrayIndexer_2
+            NDArrayIndexer[3] → NDArrayIndexer_3
+        """
+        if not isinstance(items, tuple):
+            items = (items,)
+        if not isinstance(items, tuple) or len(items) != 1:
+            raise TypeError("NDArrayIndexer must be subscripted with one argument: dimension")
+
+        dimension = items[0]
+
+        if not isinstance(dimension, int):
+            raise TypeError(f"Dimension must be an int, got {dimension}")
+
+        class_name = f"NDArrayIndexer_{dimension}"
+
+        if not hasattr(pytnl._containers, class_name):
+            raise ValueError(f"Class '{class_name}' not found in module. Ensure it is properly exported from C++.")
+
+        return getattr(pytnl._containers, class_name)
+
+
+class NDArray:
+    @classmethod
+    def __new__(cls, *args, **kwargs):
+        raise RuntimeError(f"{cls} should not be instantiated: use {cls.__name__}[...]")
+
+    @classmethod
+    def __class_getitem__(cls, items):
+        """
+        Allows NDArray[dim, value_type] syntax to resolve to the correct C++ exported class.
+
+        Example:
+            NDArray[3, float] → NDArray_3_float
+            NDArray[2, int]   → NDArray_2_int
+        """
+        if not isinstance(items, tuple):
+            items = (items,)
+        if not isinstance(items, tuple) or len(items) != 2:
+            raise TypeError("NDArray must be subscripted with two arguments: (dimension, value_type)")
+
+        dimension, value_type = items
+
+        if not isinstance(dimension, int):
+            raise TypeError(f"Dimension must be an int, got {dimension}")
+        if not isinstance(value_type, type):
+            raise TypeError(f"Value type must be a type, got {value_type}")
+
+        class_name = f"NDArray_{dimension}_{value_type.__name__}"
+
+        if not hasattr(pytnl._containers, class_name):
+            raise ValueError(f"Class '{class_name}' not found in module. Ensure it is properly exported from C++.")
+
+        return getattr(pytnl._containers, class_name)
