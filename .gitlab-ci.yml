@@ -145,7 +145,7 @@ Ubuntu_cmake:
     - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis python3-numpy python3-mpi4py
   script:
     - *env_setup
-    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="$HOME/.local"
+    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX="$HOME/.local"
     - cmake --build build
     - cmake --install build
     - pytest
