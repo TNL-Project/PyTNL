@@ -96,6 +96,7 @@ Python_build:
   before_script:
     - if [[ ${DISTRO} == "Alpine" ]]; then
       apk add build-base git cmake ninja openmpi-dev zlib-dev;
+      export OMPI_MCA_plm_rsh_agent=sh;
       fi
     - if [[ ${DISTRO} == "Debian" ]]; then
       apt update;
