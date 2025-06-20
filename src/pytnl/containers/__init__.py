@@ -1,166 +1,209 @@
+from typing import Any, Literal, overload, override
+
 import pytnl._containers
+import pytnl._meta
+from pytnl._meta import DIMS, VT
+
+__all__ = [
+    "Array",
+    "NDArray",
+    "NDArrayIndexer",
+    "StaticVector",
+    "Vector",
+]
 
 
-class Array:
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        raise RuntimeError(f"{cls} should not be instantiated: use {cls.__name__}[...]")
+class _ArrayMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "Array"
+    _template_parameters = (("value_type", type),)
 
-    @classmethod
-    def __class_getitem__(cls, items):
-        """
-        Allows Array[value_type] syntax to resolve to the correct C++ exported class.
+    # NOTE: Python's typing `float` type accepts even `int` so the overloads
+    # "overlap" and `float` must be carefully ordered last so that pyright
+    # selects the first overload in a tie.
+    # https://stackoverflow.com/a/62734976
 
-        Example:
-            Array[float] → Array_float
-            Array[int]   → Array_int
-        """
-        if not isinstance(items, tuple):
-            items = (items,)
-        if len(items) != 1:
-            raise TypeError("Array must be subscripted with one argument: value type")
+    @overload  # type: ignore[override]
+    def __getitem__(self, items: type[bool]) -> type[pytnl._containers.Array_bool]: ...  # type: ignore[overload-overlap]
 
-        value_type = items[0]
+    @overload
+    def __getitem__(self, items: type[int]) -> type[pytnl._containers.Array_int]: ...
 
-        if not isinstance(value_type, type):
-            raise TypeError(f"Value type must be a type, got {value_type}")
+    @overload
+    def __getitem__(self, items: type[float]) -> type[pytnl._containers.Array_float]: ...
 
-        class_name = f"Array_{value_type.__name__}"
-
-        if not hasattr(pytnl._containers, class_name):
-            raise ValueError(f"Class '{class_name}' not found in module. Ensure it is properly exported from C++.")
-
-        return getattr(pytnl._containers, class_name)
+    @override
+    def __getitem__(self, items: type[bool | VT]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
+        return super().__getitem__(items)
 
 
-class Vector:
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        raise RuntimeError(f"{cls} should not be instantiated: use {cls.__name__}[...]")
+class Array(metaclass=_ArrayMeta):
+    """
+    Allows `Array[value_type]` syntax to resolve to the appropriate C++ `Array` class.
 
-    @classmethod
-    def __class_getitem__(cls, items):
-        """
-        Allows Vector[value_type] syntax to resolve to the correct C++ exported class.
+    This class provides a Python interface to C++ arrays of a specific value type.
 
-        Example:
-            Vector[float] → Vector_float
-            Vector[int]   → Vector_int
-        """
-        if not isinstance(items, tuple):
-            items = (items,)
-        if len(items) != 1:
-            raise TypeError("Vector must be subscripted with one argument: value type")
-
-        value_type = items[0]
-
-        if not isinstance(value_type, type):
-            raise TypeError(f"Value type must be a type, got {value_type}")
-
-        class_name = f"Vector_{value_type.__name__}"
-
-        if not hasattr(pytnl._containers, class_name):
-            raise ValueError(f"Class '{class_name}' not found in module. Ensure it is properly exported from C++.")
-
-        return getattr(pytnl._containers, class_name)
+    Example:
+        Array[float] → Array_float
+        Array[int] → Array_int
+    """
 
 
-class StaticVector:
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        raise RuntimeError(f"{cls} should not be instantiated: use {cls.__name__}[...]")
+class _VectorMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "Vector"
+    _template_parameters = (("value_type", type),)
 
-    @classmethod
-    def __class_getitem__(cls, items):
-        """
-        Allows StaticVector[dim, value_type] syntax to resolve to the correct C++ exported class.
+    # NOTE: Python's typing `float` type accepts even `int` so the overloads
+    # "overlap" and `float` must be carefully ordered last so that pyright
+    # selects the first overload in a tie.
+    # https://stackoverflow.com/a/62734976
 
-        Example:
-            StaticVector[3, float] → StaticVector_3_float
-            StaticVector[2, int]   → StaticVector_2_int
-        """
-        if not isinstance(items, tuple):
-            items = (items,)
-        if not isinstance(items, tuple) or len(items) != 2:
-            raise TypeError("StaticVector must be subscripted with two arguments: (dimension, value_type)")
+    @overload  # type: ignore[override]
+    def __getitem__(self, items: type[int]) -> type[pytnl._containers.Vector_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
-        dimension, value_type = items
+    @overload
+    def __getitem__(self, items: type[float]) -> type[pytnl._containers.Vector_float]: ...
 
-        if not isinstance(dimension, int):
-            raise TypeError(f"Dimension must be an int, got {dimension}")
-        if not isinstance(value_type, type):
-            raise TypeError(f"Value type must be a type, got {value_type}")
-
-        class_name = f"StaticVector_{dimension}_{value_type.__name__}"
-
-        if not hasattr(pytnl._containers, class_name):
-            raise ValueError(f"Class '{class_name}' not found in module. Ensure it is properly exported from C++.")
-
-        return getattr(pytnl._containers, class_name)
+    @override
+    def __getitem__(self, items: type[VT]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
+        return super().__getitem__(items)
 
 
-class NDArrayIndexer:
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        raise RuntimeError(f"{cls} should not be instantiated: use {cls.__name__}[...]")
+class Vector(metaclass=_VectorMeta):
+    """
+    Allows `Vector[value_type]` syntax to resolve to the appropriate C++ `Vector` class.
 
-    @classmethod
-    def __class_getitem__(cls, items):
-        """
-        Allows NDArrayIndexer[dim] syntax to resolve to the correct C++ exported class.
+    This class provides a Python interface to C++ vectors of a specific value type.
 
-        Example:
-            NDArrayIndexer[1] → NDArrayIndexer_1
-            NDArrayIndexer[2] → NDArrayIndexer_2
-            NDArrayIndexer[3] → NDArrayIndexer_3
-        """
-        if not isinstance(items, tuple):
-            items = (items,)
-        if not isinstance(items, tuple) or len(items) != 1:
-            raise TypeError("NDArrayIndexer must be subscripted with one argument: dimension")
-
-        dimension = items[0]
-
-        if not isinstance(dimension, int):
-            raise TypeError(f"Dimension must be an int, got {dimension}")
-
-        class_name = f"NDArrayIndexer_{dimension}"
-
-        if not hasattr(pytnl._containers, class_name):
-            raise ValueError(f"Class '{class_name}' not found in module. Ensure it is properly exported from C++.")
-
-        return getattr(pytnl._containers, class_name)
+    Example:
+        Vector[float] → Vector_float
+        Vector[int] → Vector_int
+    """
 
 
-class NDArray:
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        raise RuntimeError(f"{cls} should not be instantiated: use {cls.__name__}[...]")
+class _StaticVectorMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "StaticVector"
+    _template_parameters = (
+        ("dimension", int),
+        ("value_type", type),
+    )
 
-    @classmethod
-    def __class_getitem__(cls, items):
-        """
-        Allows NDArray[dim, value_type] syntax to resolve to the correct C++ exported class.
+    # NOTE: Python's typing `float` type accepts even `int` so the overloads
+    # "overlap" and `float` must be carefully ordered last so that pyright
+    # selects the first overload in a tie.
+    # https://stackoverflow.com/a/62734976
 
-        Example:
-            NDArray[3, float] → NDArray_3_float
-            NDArray[2, int]   → NDArray_2_int
-        """
-        if not isinstance(items, tuple):
-            items = (items,)
-        if not isinstance(items, tuple) or len(items) != 2:
-            raise TypeError("NDArray must be subscripted with two arguments: (dimension, value_type)")
+    @overload  # type: ignore[override]
+    def __getitem__(self, items: tuple[Literal[1], type[int]]) -> type[pytnl._containers.StaticVector_1_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
-        dimension, value_type = items
+    @overload
+    def __getitem__(self, items: tuple[Literal[2], type[int]]) -> type[pytnl._containers.StaticVector_2_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
-        if not isinstance(dimension, int):
-            raise TypeError(f"Dimension must be an int, got {dimension}")
-        if not isinstance(value_type, type):
-            raise TypeError(f"Value type must be a type, got {value_type}")
+    @overload
+    def __getitem__(self, items: tuple[Literal[3], type[int]]) -> type[pytnl._containers.StaticVector_3_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
-        class_name = f"NDArray_{dimension}_{value_type.__name__}"
+    @overload
+    def __getitem__(self, items: tuple[Literal[1], type[float]]) -> type[pytnl._containers.StaticVector_1_float]: ...
 
-        if not hasattr(pytnl._containers, class_name):
-            raise ValueError(f"Class '{class_name}' not found in module. Ensure it is properly exported from C++.")
+    @overload
+    def __getitem__(self, items: tuple[Literal[2], type[float]]) -> type[pytnl._containers.StaticVector_2_float]: ...
 
-        return getattr(pytnl._containers, class_name)
+    @overload
+    def __getitem__(self, items: tuple[Literal[3], type[float]]) -> type[pytnl._containers.StaticVector_3_float]: ...
+
+    @override
+    def __getitem__(self, items: tuple[DIMS, type[VT]]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
+        return super().__getitem__(items)
+
+
+class StaticVector(metaclass=_StaticVectorMeta):
+    """
+    Allows `StaticVector[dimension, value_type]` syntax to resolve to the appropriate C++ `StaticVector` class.
+
+    This class provides a Python interface to C++ static vectors with a fixed dimension and value type.
+
+    Example:
+        StaticVector[3, float] → StaticVector_3_float
+        StaticVector[2, int] → StaticVector_2_int
+    """
+
+
+class _NDArrayMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "NDArray"
+    _template_parameters = (
+        ("dimension", int),
+        ("value_type", type),
+    )
+
+    # NOTE: Python's typing `float` type accepts even `int` so the overloads
+    # "overlap" and `float` must be carefully ordered last so that pyright
+    # selects the first overload in a tie.
+    # https://stackoverflow.com/a/62734976
+
+    @overload  # type: ignore[override]
+    def __getitem__(self, items: tuple[Literal[1], type[int]]) -> type[pytnl._containers.NDArray_1_int]: ...  # pyright: ignore[reportOverlappingOverload]
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[2], type[int]]) -> type[pytnl._containers.NDArray_2_int]: ...  # pyright: ignore[reportOverlappingOverload]
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[3], type[int]]) -> type[pytnl._containers.NDArray_3_int]: ...  # pyright: ignore[reportOverlappingOverload]
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[1], type[float]]) -> type[pytnl._containers.NDArray_1_float]: ...
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[2], type[float]]) -> type[pytnl._containers.NDArray_2_float]: ...
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[3], type[float]]) -> type[pytnl._containers.NDArray_3_float]: ...
+
+    @override
+    def __getitem__(self, items: tuple[DIMS, type[VT]]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
+        return super().__getitem__(items)
+
+
+class NDArray(metaclass=_NDArrayMeta):
+    """
+    Allows `NDArray[dimension, value_type]` syntax to resolve to the appropriate C++ `NDArray` class.
+
+    This class provides a Python interface to C++ N-dimensional arrays with a fixed dimension and value type.
+
+    Example:
+        NDArray[3, float] → NDArray_3_float
+        NDArray[2, int] → NDArray_2_int
+    """
+
+
+class _NDArrayIndexerMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "NDArrayIndexer"
+    _template_parameters = (("dimension", int),)
+
+    @overload  # type: ignore[override]
+    def __getitem__(self, items: Literal[1]) -> type[pytnl._containers.NDArrayIndexer_1]: ...
+
+    @overload
+    def __getitem__(self, items: Literal[2]) -> type[pytnl._containers.NDArrayIndexer_2]: ...
+
+    @overload
+    def __getitem__(self, items: Literal[3]) -> type[pytnl._containers.NDArrayIndexer_3]: ...
+
+    @override
+    def __getitem__(self, items: DIMS) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
+        return super().__getitem__(items)
+
+
+class NDArrayIndexer(metaclass=_NDArrayIndexerMeta):
+    """
+    Allows `NDArrayIndexer[dimension]` syntax to resolve to the appropriate C++ `NDArrayIndexer` class.
+
+    This class provides a Python interface to C++ indexers for N-dimensional arrays with a fixed dimension.
+
+    Example:
+        NDArrayIndexer[1] → NDArrayIndexer_1
+        NDArrayIndexer[2] → NDArrayIndexer_2
+    """
