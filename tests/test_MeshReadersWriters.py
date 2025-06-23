@@ -9,7 +9,6 @@ from types import ModuleType
 import pytest
 
 import pytnl.meshes
-import pytnl.mpi
 
 mpi4py: ModuleType | None
 try:
@@ -327,11 +326,11 @@ def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cel
     subprocess.run(cmd, shell=True, check=True)
 
     # Load mesh and read data
-    mesh = pytnl.mpi.DistributedMeshOfTriangles()
+    mesh = pytnl.meshes.DistributedMeshOfTriangles()
     local_mesh = mesh.getLocalMesh()
-    reader = pytnl.mpi.PVTUReader(str(output_pvtu))
+    reader = pytnl.meshes.PVTUReader(str(output_pvtu))
     reader.loadMesh(mesh)
-    pytnl.mpi.distributeFaces(mesh)
+    pytnl.meshes.distributeFaces(mesh)
     indices = reader.readCellData("GlobalIndex")
 
     assert len(indices) > 0
@@ -340,7 +339,7 @@ def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cel
 
     # Write test
     f = io.BytesIO()
-    writer = pytnl.mpi.PVTUWriter_MeshOfTriangles(f)
+    writer = pytnl.meshes.PVTUWriter_MeshOfTriangles(f)
     writer.writeCells(mesh)
     writer.writeMetadata(cycle=0, time=1.0)
     array = [42] * local_mesh.getEntitiesCount(mesh.Cell)

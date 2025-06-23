@@ -15,28 +15,24 @@ set(src_meshes
     meshes/MeshWriters.cpp
     meshes/VTKTraits.cpp
     meshes/resolveMeshType.cpp
+    meshes/DistributedMesh.cpp
+    meshes/DistributedMeshReaders.cpp
+    meshes/DistributedMeshWriters.cpp
+    meshes/distributeSubentities.cpp
     meshes/meshes.cpp
 )
 nanobind_add_module(meshes ${src_meshes})
-set(src_mpi
-    mpi/DistributedMesh.cpp
-    mpi/DistributedMeshReaders.cpp
-    mpi/DistributedMeshWriters.cpp
-    mpi/mpi.cpp
-)
-nanobind_add_module(mpi ${src_mpi})
 
 # enable MPI
 find_package(MPI COMPONENTS CXX REQUIRED)
-target_compile_definitions(mpi PUBLIC "-DHAVE_MPI")
-target_link_libraries(mpi PUBLIC MPI::MPI_CXX)
+target_compile_definitions(meshes PUBLIC "-DHAVE_MPI")
+target_link_libraries(meshes PUBLIC MPI::MPI_CXX)
 
 # set common properties
 set(modules
     _containers
     matrices
     meshes
-    mpi
 )
 foreach(target IN ITEMS ${modules})
     # enable position-independent code
