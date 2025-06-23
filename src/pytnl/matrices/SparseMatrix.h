@@ -6,37 +6,6 @@
 #include <TNL/TypeTraits.h>
 
 template< typename RowView, typename Scope >
-std::enable_if_t< ! std::is_const< typename RowView::RealType >::value >
-export_RowView_nonconst( Scope& s )
-{
-   using RealType = typename RowView::RealType;
-   using IndexType = typename RowView::IndexType;
-
-   s.def(
-       "getColumnIndex",
-       []( RowView& row, IndexType localIdx ) -> IndexType&
-       {
-          return row.getColumnIndex( localIdx );
-       },
-       nb::rv_policy::reference_internal )
-      .def(
-         "getValue",
-         []( RowView& row, IndexType localIdx ) -> RealType&
-         {
-            return row.getValue( localIdx );
-         },
-         nb::rv_policy::reference_internal )
-      .def( "setValue", &RowView::setValue )
-      .def( "setColumnIndex", &RowView::setColumnIndex )
-      .def( "setElement", &RowView::setElement );
-}
-
-template< typename RowView, typename Scope >
-std::enable_if_t< std::is_const< typename RowView::RealType >::value >
-export_RowView_nonconst( Scope& s )
-{}
-
-template< typename RowView, typename Scope >
 void
 export_RowView( Scope& s, const char* name )
 {
@@ -63,7 +32,12 @@ export_RowView( Scope& s, const char* name )
                      .def( nb::self == nb::self )
       //      .def(nb::self_ns::str(nb::self_ns::self))
       ;
-   export_RowView_nonconst< RowView >( rowView );
+
+   if constexpr( ! std::is_const_v< typename RowView::RealType > ) {
+      s.def( "setValue", &RowView::setValue )
+         .def( "setColumnIndex", &RowView::setColumnIndex )
+         .def( "setElement", &RowView::setElement );
+   }
 }
 
 template< typename Segments, typename Enable = void >
@@ -164,12 +138,6 @@ export_Matrix( nb::module_& m, const char* name )
          // TODO: implement bounds checking
          .def( "getRow",
                []( Matrix& matrix, IndexType rowIdx ) -> typename Matrix::RowView
-               {
-                  return matrix.getRow( rowIdx );
-               } )
-         // TODO: implement bounds checking
-         .def( "getRow",
-               []( const Matrix& matrix, IndexType rowIdx ) -> typename Matrix::ConstRowView
                {
                   return matrix.getRow( rowIdx );
                } )
