@@ -95,11 +95,6 @@ export_Mesh( nb::module_& m, const char* name )
                   return getEntityCenter( mesh, cell );
                } )
          .def( "getEntityCenter",
-               []( const Mesh& mesh, const typename Mesh::Face& face )
-               {
-                  return getEntityCenter( mesh, face );
-               } )
-         .def( "getEntityCenter",
                []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
                {
                   return getEntityCenter( mesh, vertex );
@@ -108,11 +103,6 @@ export_Mesh( nb::module_& m, const char* name )
                []( const Mesh& mesh, const typename Mesh::Cell& cell )
                {
                   return getEntityMeasure( mesh, cell );
-               } )
-         .def( "getEntityMeasure",
-               []( const Mesh& mesh, const typename Mesh::Face& face )
-               {
-                  return getEntityMeasure( mesh, face );
                } )
          .def( "getEntityMeasure",
                []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
@@ -125,11 +115,6 @@ export_Mesh( nb::module_& m, const char* name )
                   return mesh.template isBoundaryEntity< Mesh::Cell::getEntityDimension() >( cell.getIndex() );
                } )
          .def( "isBoundaryEntity",
-               []( const Mesh& mesh, const typename Mesh::Face& face )
-               {
-                  return mesh.template isBoundaryEntity< Mesh::Face::getEntityDimension() >( face.getIndex() );
-               } )
-         .def( "isBoundaryEntity",
                []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
                {
                   return mesh.template isBoundaryEntity< Mesh::Vertex::getEntityDimension() >( vertex.getIndex() );
@@ -138,11 +123,6 @@ export_Mesh( nb::module_& m, const char* name )
                []( const Mesh& mesh, const typename Mesh::Cell& cell )
                {
                   return mesh.template isGhostEntity< Mesh::Cell::getEntityDimension() >( cell.getIndex() );
-               } )
-         .def( "isGhostEntity",
-               []( const Mesh& mesh, const typename Mesh::Face& face )
-               {
-                  return mesh.template isGhostEntity< Mesh::Face::getEntityDimension() >( face.getIndex() );
                } )
          .def( "isGhostEntity",
                []( const Mesh& mesh, const typename Mesh::Vertex& vertex )
@@ -156,6 +136,31 @@ export_Mesh( nb::module_& m, const char* name )
 
       // TODO: more?
       ;
+
+   // avoid duplicate signature if the type is the same
+   if constexpr( ! std::is_same_v< typename Mesh::Face, typename Mesh::Vertex > ) {
+      mesh  //
+         .def( "getEntityCenter",
+               []( const Mesh& mesh, const typename Mesh::Face& face )
+               {
+                  return getEntityCenter( mesh, face );
+               } )
+         .def( "getEntityMeasure",
+               []( const Mesh& mesh, const typename Mesh::Face& face )
+               {
+                  return getEntityMeasure( mesh, face );
+               } )
+         .def( "isBoundaryEntity",
+               []( const Mesh& mesh, const typename Mesh::Face& face )
+               {
+                  return mesh.template isBoundaryEntity< Mesh::Face::getEntityDimension() >( face.getIndex() );
+               } )
+         .def( "isGhostEntity",
+               []( const Mesh& mesh, const typename Mesh::Face& face )
+               {
+                  return mesh.template isGhostEntity< Mesh::Face::getEntityDimension() >( face.getIndex() );
+               } );
+   }
 
    export_getEntitiesCount( mesh );
    export_getGhostEntitiesCount( mesh );

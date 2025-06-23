@@ -11,9 +11,6 @@ template< typename GridEntity, typename PyGrid >
 nb::class_< GridEntity >
 export_GridEntity( PyGrid& scope, const char* name )
 {
-   typename GridEntity::CoordinatesType const& ( GridEntity::*_getCoordinates1 )( void ) const = &GridEntity::getCoordinates;
-   typename GridEntity::CoordinatesType& ( GridEntity::*_getCoordinates2 )( void ) = &GridEntity::getCoordinates;
-
    auto entity =
       nb::class_< GridEntity >( scope, name )
          .def( nb::init< typename GridEntity::GridType >(), nb::rv_policy::reference_internal )
@@ -32,8 +29,7 @@ export_GridEntity( PyGrid& scope, const char* name )
          .def( "getEntityDimension", &GridEntity::getEntityDimension )
          .def( "getMeshDimension", &GridEntity::getMeshDimension )
          // TODO: constructors
-         .def( "getCoordinates", _getCoordinates1, nb::rv_policy::reference_internal )
-         .def( "getCoordinates", _getCoordinates2, nb::rv_policy::reference_internal )
+         .def( "getCoordinates", nb::overload_cast<>( &GridEntity::getCoordinates ), nb::rv_policy::reference_internal )
          .def( "setCoordinates", &GridEntity::setCoordinates )
          .def( "refresh", &GridEntity::refresh )
          .def( "getIndex", &GridEntity::getIndex )
@@ -86,7 +82,6 @@ export_Grid( nb::module_& m, const char* name )
                nb::overload_cast< const typename Grid::CoordinatesType& >( &Grid::template getEntity< typename Grid::Vertex >,
                                                                            nb::const_ ) )
          .def( "getEntityIndex", &Grid::template getEntityIndex< typename Grid::Cell > )
-         .def( "getEntityIndex", &Grid::template getEntityIndex< typename Grid::Face > )
          .def( "getEntityIndex", &Grid::template getEntityIndex< typename Grid::Vertex > )
          .def( "getCellMeasure", &Grid::getCellMeasure, nb::rv_policy::reference_internal )
          .def( "getSpaceSteps", &Grid::getSpaceSteps, nb::rv_policy::reference_internal )
@@ -98,6 +93,10 @@ export_Grid( nb::module_& m, const char* name )
 
       // TODO: more?
       ;
+
+   // avoid duplicate signature if the type is the same
+   if constexpr( ! std::is_same_v< typename Grid::Face, typename Grid::Vertex > )
+      grid.def( "getEntityIndex", &Grid::template getEntityIndex< typename Grid::Face > );
 
    // complicated methods
    export_getEntitiesCount( grid );
