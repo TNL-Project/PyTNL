@@ -15,7 +15,7 @@ protected:
    std::unique_ptr< pystreambuf::istream > value;
 
 public:
-   static constexpr auto Name = const_name( "istream" );
+   static constexpr auto Name = const_name( "typing.BinaryIO" );
 
    template< typename T_ >
    using Cast = movable_cast_t< T_ >;
@@ -82,7 +82,7 @@ protected:
    std::unique_ptr< pystreambuf::ostream > value;
 
 public:
-   static constexpr auto Name = const_name( "ostream" );
+   static constexpr auto Name = const_name( "typing.BinaryIO" );
 
    template< typename T_ >
    using Cast = movable_cast_t< T_ >;

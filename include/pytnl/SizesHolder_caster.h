@@ -16,7 +16,7 @@ private:
    static constexpr std::size_t dim = SizesHolderType::getDimension();
 
 public:
-   NB_TYPE_CASTER( SizesHolderType, const_name( "TNL::Containers::SizesHolder" ) );
+   NB_TYPE_CASTER( SizesHolderType, make_caster< decltype( std::make_tuple( sizes... ) ) >::Name );
 
    // Conversion from Python to C++
    bool

@@ -18,7 +18,7 @@ public:
     * This macro establishes the name 'TNL::String' in function signatures and
     * declares a local variable 'value' of type TNL::String
     */
-   NB_TYPE_CASTER( TNL::String, const_name( "TNL::String" ) );
+   NB_TYPE_CASTER( TNL::String, const_name( "str" ) );
 
    /**
     * Conversion from Python to C++: convert a PyObject into a TNL::String
