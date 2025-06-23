@@ -28,12 +28,19 @@ find_package(MPI COMPONENTS CXX REQUIRED)
 target_compile_definitions(meshes PUBLIC "-DHAVE_MPI")
 target_link_libraries(meshes PUBLIC MPI::MPI_CXX)
 
-# set common properties
+# define a list of modules
 set(modules
     _containers
     matrices
     meshes
 )
+
+# define a mapping for dependencies between the modules
+set(module_depends__containers)
+set(module_depends_matrices _containers)
+set(module_depends_meshes _containers)
+
+# set common properties
 foreach(target IN ITEMS ${modules})
     # enable position-independent code
     set_target_properties(${target} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
@@ -44,6 +51,24 @@ foreach(target IN ITEMS ${modules})
     # add TNL and PyTNL
     target_link_libraries(${target} PUBLIC PyTNL::PyTNL)
 
-    # install the module
+    # generate stub files for Python static type checking
+    nanobind_add_stub(
+        ${target}_stub
+        MODULE ${target}
+        OUTPUT ${target}.pyi
+        PYTHON_PATH $<TARGET_FILE_DIR:${target}> $<TARGET_FILE_DIR:${target}>/..
+        DEPENDS ${target} ${module_depends_${target}}
+    )
+
+    # install the module and stub file
     install(TARGETS ${target} DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}.pyi DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl)
 endforeach()
+
+# make the modules importable from the build directory
+# (needed for the stub generation due to binary modules importing themselves as `pytnl._containers` etc.)
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
+
+# one marker per module directory
+file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/py.typed)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/py.typed DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl)
