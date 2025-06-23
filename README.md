@@ -2,7 +2,7 @@
 
 Python bindings for the Template Numerical Library (TNL).
 
-> **Note:** pyproject.toml requires **Python 3.9 or later**.
+> **Note:** pyproject.toml requires **Python 3.12 or later**.
 
 ## Installation
 

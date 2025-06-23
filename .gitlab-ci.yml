@@ -44,7 +44,8 @@ Arch_cmake:
   needs: []
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
-    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy python-mpi4py
+    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py
+    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis
   script:
     - *env_setup
     - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX="$HOME/.local"
@@ -64,8 +65,9 @@ Arch_python_build:
   needs: []
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
+    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py
     - pacman -Suy --needed --noconfirm python-build python-installer python-scikit-build-core
-    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy python-mpi4py
+    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis
   script:
     - *env_setup
     - python -m build --no-isolation
@@ -87,6 +89,8 @@ Arch_pip:
     - source .venv/bin/activate
     - python -m pip install .[dev]
     - pytest
+    - mypy
+    - basedpyright
 
 Python_build:
   stage: build
@@ -104,21 +108,16 @@ Python_build:
       fi
   script:
     - *env_setup
-    - python -m venv .venv
-    - source .venv/bin/activate
-    # Note: psutil does not work on Alpine
-    # Note: mpi4py wheel takes a very long time to build
-    - python -m pip install build installer pytest pytest-xdist hypothesis numpy
+    - python -m pip install build installer pytest pytest-xdist hypothesis numpy mpi4py basedmypy basedpyright
     - python -m build --config-setting=cmake.define.PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION=${PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION}
     - python -m installer dist/*.whl
-    - pytest -m "not mpi"
+    - python -m pytest
+    - mypy
+    - basedpyright
   parallel:
     matrix:
       - DISTRO: "Alpine"
         IMAGE_TAG:
-          - "3.9-alpine"
-          - "3.10-alpine"
-          - "3.11-alpine"
           - "3.12-alpine"
           - "3.13-alpine"
         # IPO/LTO does not work on Alpine:
@@ -126,9 +125,6 @@ Python_build:
         PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION: "OFF"
       - DISTRO: "Debian"
         IMAGE_TAG:
-          - "3.9"
-          - "3.10"
-          - "3.11"
           - "3.12"
           - "3.13"
         PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION: "ON"
@@ -142,7 +138,8 @@ Ubuntu_cmake:
     - apt update
     - apt -y install build-essential git cmake ninja-build
     - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
-    - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis python3-numpy python3-mpi4py
+    - apt -y install python3-numpy python3-mpi4py
+    - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis
   script:
     - *env_setup
     - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX="$HOME/.local"
@@ -171,3 +168,5 @@ Ubuntu_pip:
     - source .venv/bin/activate
     - python3 -m pip install .[dev]
     - pytest
+    - mypy
+    - basedpyright
