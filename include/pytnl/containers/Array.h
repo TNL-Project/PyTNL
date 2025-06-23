@@ -25,7 +25,7 @@ export_Array( nb::module_& m, const char* name )
          // Typedefs
          .def_prop_ro_static(  //
             "IndexType",
-            []( nb::object ) -> nb::object
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
             {
                // nb::type<> does not handle generic types like int, float, etc.
                // https://github.com/wjakob/nanobind/discussions/1070
@@ -38,7 +38,7 @@ export_Array( nb::module_& m, const char* name )
             } )
          .def_prop_ro_static(  //
             "ValueType",
-            []( nb::object ) -> nb::object
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
             {
                // nb::type<> does not handle generic types like int, float, etc.
                // https://github.com/wjakob/nanobind/discussions/1070
@@ -100,8 +100,8 @@ export_Array( nb::module_& m, const char* name )
                } )
 
          // Comparison
-         .def( nb::self == nb::self )
-         .def( nb::self != nb::self )
+         .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
+         .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) )
 
          // Fill
          .def( "setValue", &ArrayType::setValue, nb::arg( "value" ), nb::arg( "begin" ) = 0, nb::arg( "end" ) = 0 )
@@ -128,7 +128,7 @@ export_Array( nb::module_& m, const char* name )
                } )
          .def(
             "__deepcopy__",
-            []( const ArrayType& self, nb::dict )
+            []( const ArrayType& self, nb::typed< nb::dict, nb::str, nb::any > )
             {
                return ArrayType( self );
             },
@@ -149,6 +149,7 @@ export_Array( nb::module_& m, const char* name )
                );
             },
             nb::rv_policy::reference_internal,
+            nb::sig( "def as_numpy(self) -> numpy.typing.NDArray[typing.Any]" ),
             "Returns a NumPy ndarray for this Array with shared memory (i.e. the data is not copied)" );
 
    def_indexing< ArrayType >( array );

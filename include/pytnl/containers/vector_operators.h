@@ -16,6 +16,7 @@ def_vector_operators( nb::class_< VectorType, Args... >& vector )
          {
             return self == other;
          },
+         nb::sig( "def __eq__(self, arg: object, /) -> bool" ),
          nb::is_operator() )
       .def(
          "__ne__",
@@ -23,6 +24,7 @@ def_vector_operators( nb::class_< VectorType, Args... >& vector )
          {
             return self != other;
          },
+         nb::sig( "def __ne__(self, arg: object, /) -> bool" ),
          nb::is_operator() )
       .def(
          "__lt__",

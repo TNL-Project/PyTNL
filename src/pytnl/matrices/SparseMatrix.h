@@ -29,7 +29,7 @@ export_RowView( Scope& s, const char* name )
                            return row.getValue( localIdx );
                         },
                         nb::rv_policy::reference_internal )
-                     .def( nb::self == nb::self )
+                     .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
       //      .def(nb::self_ns::str(nb::self_ns::self))
       ;
 
@@ -127,8 +127,8 @@ export_Matrix( nb::module_& m, const char* name )
          .def( "getRows", &Matrix::getRows )
          .def( "getColumns", &Matrix::getColumns )
          // TODO: export for more types
-         .def( nb::self == nb::self )
-         .def( nb::self != nb::self )
+         .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
+         .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) )
 
          // SparseMatrix
          .def( "setRowCapacities", &Matrix::template setRowCapacities< IndexVectorType > )

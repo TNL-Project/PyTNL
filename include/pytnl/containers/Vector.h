@@ -25,7 +25,7 @@ export_Vector( nb::module_& m, const char* name )
          // Typedefs
          .def_prop_ro_static(  //
             "RealType",
-            []( nb::object ) -> nb::object
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
             {
                // nb::type<> does not handle generic types like int, float, etc.
                // https://github.com/wjakob/nanobind/discussions/1070
@@ -54,7 +54,7 @@ export_Vector( nb::module_& m, const char* name )
                } )
          .def(
             "__deepcopy__",
-            []( const VectorType& self, nb::dict )
+            []( const VectorType& self, nb::typed< nb::dict, nb::str, nb::any > )
             {
                return VectorType( self );
             },

@@ -106,7 +106,7 @@ ndarray_iteration( nb::class_< ArrayType, Args... >& array )
    array
       .def(
          "forAll",
-         []( ArrayType& self, const nb::callable& f )
+         []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
          {
             self.template forAll< TNL::Devices::Sequential >( f );
          },
@@ -115,7 +115,7 @@ ndarray_iteration( nb::class_< ArrayType, Args... >& array )
          "The function is called with N indices, where N is the array dimension." )
       .def(
          "forInterior",
-         []( ArrayType& self, const nb::callable& f )
+         []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
          {
             self.template forInterior< TNL::Devices::Sequential >( f );
          },
@@ -124,7 +124,10 @@ ndarray_iteration( nb::class_< ArrayType, Args... >& array )
          "Excludes one element from each side of each dimension." )
       .def(
          "forInterior",
-         []( ArrayType& self, const SizesHolderType& begins, const SizesHolderType& ends, const nb::callable& f )
+         []( ArrayType& self,
+             const SizesHolderType& begins,
+             const SizesHolderType& ends,
+             const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
          {
             self.template forInterior< TNL::Devices::Sequential >( begins, ends, f );
          },
@@ -134,7 +137,7 @@ ndarray_iteration( nb::class_< ArrayType, Args... >& array )
          "Evaluates the function `f` for all elements inside the given N-dimensional range `[begins, ends)`." )
       .def(
          "forBoundary",
-         []( ArrayType& self, const nb::callable& f )
+         []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
          {
             self.template forBoundary< TNL::Devices::Sequential >( f );
          },
@@ -142,7 +145,10 @@ ndarray_iteration( nb::class_< ArrayType, Args... >& array )
          "Evaluates the function `f` for all boundary elements of the array." )
       .def(
          "forBoundary",
-         []( ArrayType& self, const SizesHolderType& skipBegins, const SizesHolderType& skipEnds, const nb::callable& f )
+         []( ArrayType& self,
+             const SizesHolderType& skipBegins,
+             const SizesHolderType& skipEnds,
+             const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
          {
             self.template forBoundary< TNL::Devices::Sequential >( skipBegins, skipEnds, f );
          },
@@ -167,7 +173,7 @@ export_NDArrayIndexer( nb::module_& m, const char* name )
          // Typedefs
          .def_prop_ro_static(  //
             "IndexType",
-            []( nb::object ) -> nb::object
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
             {
                // nb::type<> does not handle generic types like int, float, etc.
                // https://github.com/wjakob/nanobind/discussions/1070
@@ -230,6 +236,7 @@ export_NDArrayIndexer( nb::module_& m, const char* name )
                   },
                   indices_array );
             },
+            nb::sig( "def getStorageIndex(self, *indices: int) -> int" ),
             "Computes the linear storage index from N-dimensional indices" )
 
          // Contiguity check
@@ -278,13 +285,13 @@ export_NDArray( nb::module_& m, const char* name )
          // Typedefs
          .def_prop_ro_static(  //
             "IndexerType",
-            []( nb::handle ) -> nb::handle
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
             {
                return nb::type< IndexerType >();
             } )
          .def_prop_ro_static(  //
             "ValueType",
-            []( nb::object ) -> nb::object
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
             {
                // nb::type<> does not handle generic types like int, float, etc.
                // https://github.com/wjakob/nanobind/discussions/1070
@@ -335,6 +342,7 @@ export_NDArray( nb::module_& m, const char* name )
                   sizes_array );
             },
             nb::arg( "sizes" ),
+            nb::sig( "def setSizes(self, *sizes: int) -> None" ),
             "Set sizes of the array using a sequence of ints" )
          .def(
             "setLike",
@@ -356,8 +364,8 @@ export_NDArray( nb::module_& m, const char* name )
                } )
 
          // Comparison
-         .def( nb::self == nb::self )
-         .def( nb::self != nb::self )
+         .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
+         .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) )
 
          // Fill
          .def( "setValue", &ArrayType::setValue, nb::arg( "value" ) )
@@ -409,7 +417,7 @@ export_NDArray( nb::module_& m, const char* name )
                } )
          .def(
             "__deepcopy__",
-            []( const ArrayType& self, nb::dict )
+            []( const ArrayType& self, nb::typed< nb::dict, nb::str, nb::any > )
             {
                return ArrayType( self );
             },
@@ -448,6 +456,7 @@ export_NDArray( nb::module_& m, const char* name )
                   sizes );
             },
             nb::rv_policy::reference_internal,
+            nb::sig( "def as_numpy(self) -> numpy.typing.NDArray[typing.Any]" ),
             "Returns a NumPy ndarray for this NDArray with shared memory (i.e. the data is not copied)" );
 
    ndarray_indexing( array );

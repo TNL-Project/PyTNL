@@ -5,7 +5,10 @@
 void
 export_resolveMeshType( nb::module_& m )
 {
-   auto resolveMeshType = []( const std::string& file_name, const std::string& file_format = "auto" ) -> nb::tuple
+   using MeshReader = TNL::Meshes::Readers::MeshReader;
+
+   auto resolveMeshType = []( const std::string& file_name, const std::string& file_format = "auto" )  //
+      -> nb::typed< nb::tuple, MeshReader, nb::type_object >
    {
       // NOTE: We cannot get the reader with TNL::Meshes::resolveMeshType,
       // because it exposes it only *by value* and we can't make a copy of
@@ -45,7 +48,8 @@ export_resolveMeshType( nb::module_& m )
    };
 
    auto resolveAndLoadMesh = [ resolveMeshType ]( const std::string& file_name,
-                                                  const std::string& file_format = "auto" ) -> nb::tuple
+                                                  const std::string& file_format = "auto" )  //
+      -> nb::typed< nb::tuple, MeshReader, nb::type_object >
    {
       nb::tuple reader_and_mesh = resolveMeshType( file_name, file_format );
       reader_and_mesh[ 0 ].attr( "loadMesh" )( reader_and_mesh[ 1 ] );

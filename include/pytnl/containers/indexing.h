@@ -10,7 +10,11 @@ def_indexing( Scope& scope )
    using Index = typename Array::IndexType;
    using Value = typename Array::ValueType;
 
-   scope.def( "__len__", &Array::getSize );
+   scope.def( "__len__",
+              &Array::getSize,
+              // need to set custom signature because StaticArray has static setSize
+              // and .def() generates a signature without argument by default
+              nb::sig( "def __len__(self) -> int" ) );
 
    scope.def(
       "__iter__",

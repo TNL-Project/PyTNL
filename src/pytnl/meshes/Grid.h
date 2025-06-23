@@ -26,8 +26,8 @@ export_GridEntity( PyGrid& scope, const char* name )
                          typename GridEntity::IndexType >(),
                nb::rv_policy::reference_internal )
          .def( nb::init< typename GridEntity::GridType, typename GridEntity::IndexType >(), nb::rv_policy::reference_internal )
-         .def( "getEntityDimension", &GridEntity::getEntityDimension )
-         .def( "getMeshDimension", &GridEntity::getMeshDimension )
+         .def_static( "getEntityDimension", &GridEntity::getEntityDimension )
+         .def_static( "getMeshDimension", &GridEntity::getMeshDimension )
          // TODO: constructors
          .def( "getCoordinates", nb::overload_cast<>( &GridEntity::getCoordinates ), nb::rv_policy::reference_internal )
          .def( "setCoordinates", &GridEntity::setCoordinates )
@@ -88,8 +88,8 @@ export_Grid( nb::module_& m, const char* name )
          .def( "getSmallestSpaceStep", &Grid::getSmallestSpaceStep )
 
          // Comparison operators
-         .def( nb::self == nb::self )
-         .def( nb::self != nb::self )
+         .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
+         .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) )
 
       // TODO: more?
       ;
@@ -105,13 +105,13 @@ export_Grid( nb::module_& m, const char* name )
    // nested types
    grid.def_prop_ro_static(  //
       "CoordinatesType",
-      []( nb::handle ) -> nb::handle
+      []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
       {
          return nb::type< typename Grid::CoordinatesType >();
       } );
    grid.def_prop_ro_static(  //
       "PointType",
-      []( nb::handle ) -> nb::handle
+      []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
       {
          return nb::type< typename Grid::PointType >();
       } );

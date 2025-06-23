@@ -131,8 +131,8 @@ export_Mesh( nb::module_& m, const char* name )
                } )
 
          // Comparison operators
-         .def( nb::self == nb::self )
-         .def( nb::self != nb::self )
+         .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
+         .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) )
 
       // TODO: more?
       ;
