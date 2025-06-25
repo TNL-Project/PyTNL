@@ -1,9 +1,16 @@
 import copy
+from collections.abc import Callable
+from typing import Any, cast
 
 import numpy as np
 import pytest
 
+import pytnl._containers
+from pytnl._meta import DIMS, VT, is_dim_guard
 from pytnl.containers import NDArray
+
+# Type alias for indexer types
+type Indexer = pytnl._containers.NDArrayIndexer_1 | pytnl._containers.NDArrayIndexer_2 | pytnl._containers.NDArrayIndexer_3
 
 SHAPE_PARAMS = [
     (3,),
@@ -26,7 +33,7 @@ TYPEDEFS_PARAMS = [
 
 
 @pytest.mark.parametrize("dim, value_type", TYPEDEFS_PARAMS)
-def test_typedefs(dim, value_type):
+def test_typedefs(dim: DIMS, value_type: type[VT]) -> None:
     """
     Tests the static `IndexerType` and `ValueType` typedefs of the NDArray class.
 
@@ -35,10 +42,10 @@ def test_typedefs(dim, value_type):
     - `ValueType` matches the expected Python type (e.g., `int`, `float`, `bool`).
     - `IndexerType` is a valid NDArrayIndexer class for the specified dimension.
     """
-    ndarray_class = NDArray[dim, value_type]
+    ndarray_class = NDArray[dim, value_type]  # type: ignore[type-arg,valid-type]
 
     # Test IndexerType
-    indexer_type = ndarray_class.IndexerType
+    indexer_type = cast(Indexer, ndarray_class.IndexerType)
     assert isinstance(indexer_type, type)
     assert indexer_type.getDimension() == dim
     assert issubclass(ndarray_class, indexer_type)
@@ -52,39 +59,45 @@ def test_typedefs(dim, value_type):
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_setSizes(shape):
+def test_setSizes(shape: tuple[int, ...]) -> None:
     dim = len(shape)
-    a = NDArray[dim, int]()
-    a.setSizes(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+    a = NDArray[dim, int]()  # type: ignore[index]
+    a.setSizes(shape)  # type: ignore[arg-type]
     assert a.getSizes() == shape
     a.setSizes(*shape)
     assert a.getSizes() == shape
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_data_access(shape):
+def test_data_access(shape: tuple[int, ...]) -> None:
     dim = len(shape)
-    a = NDArray[dim, int]()
-    a.setSizes(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+    a = NDArray[dim, int]()  # type: ignore[index]
+    a.setSizes(shape)  # type: ignore[arg-type]
     a.setValue(42)
     for idx in np.ndindex(shape):
         assert a[idx] == 42
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_invalid_indices(shape):
+def test_invalid_indices(shape: tuple[int, ...]) -> None:
     dim = len(shape)
-    a = NDArray[dim, int]()
-    a.setSizes(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+    a = NDArray[dim, int]()  # type: ignore[index]
+    a.setSizes(shape)  # type: ignore[arg-type]
     a.setValue(42)
     for idx in np.ndindex(shape):
         low = tuple(-i - 1 for i in idx)
         high = tuple(i + s for i, s in zip(idx, shape))
         # __getitem__
         with pytest.raises(IndexError):
-            a[low] == 42
+            a[low]
         with pytest.raises(IndexError):
-            a[high] == 42
+            a[high]
         # __setitem__
         with pytest.raises(IndexError):
             a[low] = 0
@@ -93,36 +106,43 @@ def test_invalid_indices(shape):
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_setLike(shape):
+def test_setLike(shape: tuple[int, ...]) -> None:
     dim = len(shape)
-    a = NDArray[dim, int]()
-    a.setSizes(shape)
-    b = NDArray[dim, int]()
-    b.setLike(a)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+    a = NDArray[dim, int]()  # type: ignore[index]
+    a.setSizes(shape)  # type: ignore[arg-type]
+    b = NDArray[dim, int]()  # type: ignore[index]
+    b.setLike(a)  # pyright: ignore[reportArgumentType]
     assert b.getSizes() == shape
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_reset(shape):
+def test_reset(shape: tuple[int, ...]) -> None:
     dim = len(shape)
-    a = NDArray[dim, int]()
-    a.setSizes(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+    a = NDArray[dim, int]()  # type: ignore[index]
+    a.setSizes(shape)  # type: ignore[arg-type]
     a.reset()
     assert a.getSizes() == (0,) * dim
     assert a.getStorageSize() == 0
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_equality(shape):
+def test_equality(shape: tuple[int, ...]) -> None:
     dim = len(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
     # Create first array
-    a = NDArray[dim, int]()
-    a.setSizes(shape)
+    a = NDArray[dim, int]()  # type: ignore[index]
+    a.setSizes(shape)  # type: ignore[arg-type]
     a.setValue(0)
 
     # Create second array
-    b = NDArray[dim, int]()
-    b.setLike(a)
+    b = NDArray[dim, int]()  # type: ignore[index]
+    b.setLike(a)  # pyright: ignore[reportArgumentType]
     b.setValue(0)
 
     assert a == b, "Arrays with the same shape and value should be equal"
@@ -148,12 +168,16 @@ def test_equality(shape):
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_forAll(shape):
-    a = NDArray[len(shape), int]()
+def test_forAll(shape: tuple[int, ...]) -> None:
+    dim = len(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)
 
-    def setter(*idx):
+    def setter(*idx: int) -> None:
         a[idx] += 1
 
     a.forAll(setter)
@@ -164,12 +188,16 @@ def test_forAll(shape):
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_forInterior(shape):
-    a = NDArray[len(shape), int]()
+def test_forInterior(shape: tuple[int, ...]) -> None:
+    dim = len(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)
 
-    def setter(*idx):
+    def setter(*idx: int) -> None:
         a[idx] += 1
 
     a.forInterior(setter)
@@ -184,12 +212,16 @@ def test_forInterior(shape):
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_forBoundary(shape):
-    a = NDArray[len(shape), int]()
+def test_forBoundary(shape: tuple[int, ...]) -> None:
+    dim = len(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)
 
-    def setter(*idx):
+    def setter(*idx: int) -> None:
         a[idx] += 1
 
     a.forBoundary(setter)
@@ -203,7 +235,7 @@ def test_forBoundary(shape):
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_getStorageArray(shape):
+def test_getStorageArray(shape: tuple[int, ...]) -> None:
     """
     Tests the `getStorageArray()` method of the NDArray class.
 
@@ -213,7 +245,10 @@ def test_getStorageArray(shape):
     - Both const and non-const access behave as expected in Python.
     """
     dim = len(shape)
-    a = NDArray[dim, int]()
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)  # Initialize all elements to 0
 
@@ -248,12 +283,15 @@ def test_getStorageArray(shape):
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
 @pytest.mark.parametrize("copy_function", [copy.copy, copy.deepcopy])
-def test_copy(shape, copy_function):
+def test_copy(shape: tuple[int, ...], copy_function: Callable[[Any], Any]) -> None:
     """
     Tests the `__copy__` and `__deepcopy__` methods of the NDArray class.
     """
     dim = len(shape)
-    a = NDArray[dim, int]()
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)
 
@@ -279,7 +317,7 @@ def test_copy(shape, copy_function):
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_as_numpy(shape):
+def test_as_numpy(shape: tuple[int, ...]) -> None:
     """
     Tests the `as_numpy()` method of the NDArray class.
 
@@ -289,9 +327,12 @@ def test_as_numpy(shape):
     - The underlying memory is shared.
     - Changes in NumPy are reflected in the NDArray and vice versa.
     """
+    dim = len(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
 
     # Create and initialize the NDArray
-    array = NDArray[len(shape), int]()
+    array = NDArray[dim, int]()  # type: ignore[index]
     array.setSizes(*shape)
     array.setValue(42)  # Fill with known value
 
@@ -351,7 +392,7 @@ STR_REPR_TEST_PARAMS = [
 
 
 @pytest.mark.parametrize("value_type, shape", STR_REPR_TEST_PARAMS)
-def test_str_repr(value_type, shape):
+def test_str_repr(value_type: type[VT], shape: tuple[int, ...]) -> None:
     """
     Tests the `__str__` and `__repr__` methods of the NDArray class.
 
@@ -359,9 +400,12 @@ def test_str_repr(value_type, shape):
     - The `__str__` returns a readable string with value type and shape.
     - The `__repr__` returns a unique, unambiguous representation with memory address.
     """
-    # Create NDArray with the given value type and dimension
     dim = len(shape)
-    array_type = NDArray[dim, value_type]()
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    # Create NDArray with the given value type and dimension
+    array_type = NDArray[dim, value_type]()  # type: ignore[index]
     array_type.setSizes(*shape)
 
     # Check that `__str__` contains the correct value type and shape

@@ -1,25 +1,37 @@
 import copy
 import math
+from collections.abc import Sequence
+from typing import TypeVar, cast
 
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-import pytnl.containers
+import pytnl._containers
 
 # ----------------------
 # Configuration
 # ----------------------
 
+# Type variables constraining the vector types
+V = TypeVar(
+    "V",
+    pytnl._containers.StaticVector_1_int,
+    pytnl._containers.StaticVector_1_float,
+    pytnl._containers.StaticVector_2_int,
+    pytnl._containers.StaticVector_2_float,
+    pytnl._containers.StaticVector_3_int,
+    pytnl._containers.StaticVector_3_float,
+)
+Vint = TypeVar(
+    "Vint",
+    pytnl._containers.StaticVector_1_int,
+    pytnl._containers.StaticVector_2_int,
+    pytnl._containers.StaticVector_3_int,
+)
+
 # List of vector types to test
-vector_types = [
-    pytnl.containers.StaticVector[1, int],
-    pytnl.containers.StaticVector[2, int],
-    pytnl.containers.StaticVector[3, int],
-    pytnl.containers.StaticVector[1, float],
-    pytnl.containers.StaticVector[2, float],
-    pytnl.containers.StaticVector[3, float],
-]
+vector_types = V.__constraints__
 
 
 # ----------------------
@@ -27,7 +39,7 @@ vector_types = [
 # ----------------------
 
 
-def element_strategy(vector_type):
+def element_strategy(vector_type: type[V]) -> st.SearchStrategy[int | float]:
     """Return appropriate data strategy for the given vector type."""
     if vector_type.ValueType is int:
         # lower limits because C++ uses int64_t for IndexType and we test even multiplication
@@ -36,10 +48,10 @@ def element_strategy(vector_type):
         return st.floats(allow_nan=False, allow_infinity=False)
 
 
-def create_vector(data, vector_type):
+def create_vector(data: Sequence[int | float], vector_type: type[V]) -> V:
     """Create a vector of the given type from a list of values."""
     assert len(data) == vector_type.getSize()
-    return vector_type(data)
+    return vector_type(data)  # type: ignore[arg-type]
 
 
 # ----------------------
@@ -48,20 +60,20 @@ def create_vector(data, vector_type):
 
 
 @st.composite
-def vector_strategy(draw, vector_type):
+def vector_strategy(draw: st.DrawFn, vector_type: type[V]) -> V:
     """Generate a vector of the given type."""
     data = draw(st.lists(element_strategy(vector_type), min_size=vector_type.getSize(), max_size=vector_type.getSize()))
     return create_vector(data, vector_type)
 
 
 @st.composite
-def vector_pair_strategy(draw, vector_type):
+def vector_pair_strategy(draw: st.DrawFn, vector_type: type[V]) -> tuple[V, V]:
     """Generate two vectors of the same size and type."""
     return draw(vector_strategy(vector_type)), draw(vector_strategy(vector_type))
 
 
 @st.composite
-def vector_scalar_strategy(draw, vector_type):
+def vector_scalar_strategy(draw: st.DrawFn, vector_type: type[V]) -> tuple[V, int | float]:
     """Generate a vector and a scalar of the same type."""
     v = draw(vector_strategy(vector_type))
     s = draw(element_strategy(vector_type))
@@ -75,7 +87,7 @@ def vector_scalar_strategy(draw, vector_type):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_unary_plus(vector_type, data):
+def test_unary_plus(vector_type: type[V], data: st.DataObject) -> None:
     v = data.draw(vector_strategy(vector_type))
     v2 = +v
     for i in range(v.getSize()):
@@ -84,7 +96,7 @@ def test_unary_plus(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_unary_minus(vector_type, data):
+def test_unary_minus(vector_type: type[V], data: st.DataObject) -> None:
     v = data.draw(vector_strategy(vector_type))
     v2 = -v
     for i in range(v.getSize()):
@@ -98,7 +110,7 @@ def test_unary_minus(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_plus_vector(vector_type, data):
+def test_vector_plus_vector(vector_type: type[V], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     v3 = v1 + v2
     for i in range(v1.getSize()):
@@ -107,7 +119,7 @@ def test_vector_plus_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_minus_vector(vector_type, data):
+def test_vector_minus_vector(vector_type: type[V], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     v3 = v1 - v2
     for i in range(v1.getSize()):
@@ -116,7 +128,7 @@ def test_vector_minus_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_mult_vector(vector_type, data):
+def test_vector_mult_vector(vector_type: type[V], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     v3 = v1 * v2
     for i in range(v1.getSize()):
@@ -125,7 +137,7 @@ def test_vector_mult_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def teset_vector_div_vector(vector_type, data):
+def teset_vector_div_vector(vector_type: type[V], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     for i in range(v2.getSize()):
         if v2[i] == 0:
@@ -146,38 +158,38 @@ def teset_vector_div_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_plus_scalar(vector_type, data):
+def test_vector_plus_scalar(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
-    v2 = v + s
+    v2 = v + s  # type: ignore[operator]
     for i in range(v.getSize()):
         assert v2[i] == v[i] + s
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_minus_scalar(vector_type, data):
+def test_vector_minus_scalar(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
-    v2 = v - s
+    v2 = v - s  # type: ignore[operator]
     for i in range(v.getSize()):
         assert v2[i] == v[i] - s
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_mult_scalar(vector_type, data):
+def test_vector_mult_scalar(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
-    v2 = v * s
+    v2 = v * s  # type: ignore[operator]
     for i in range(v.getSize()):
         assert v2[i] == v[i] * s
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_div_scalar(vector_type, data):
+def test_vector_div_scalar(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     if s == 0:
         assume(False)
-    v2 = v / s
+    v2 = v / s  # type: ignore[operator]
     for i in range(v.getSize()):
         if vector_type.RealType is int:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
@@ -193,39 +205,39 @@ def test_vector_div_scalar(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_scalar_plus_vector(vector_type, data):
+def test_scalar_plus_vector(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
-    v2 = s + v
+    v2 = s + v  # type: ignore[operator]
     for i in range(v.getSize()):
         assert v2[i] == s + v[i]
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_scalar_minus_vector(vector_type, data):
+def test_scalar_minus_vector(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
-    v2 = s - v
+    v2 = s - v  # type: ignore[operator]
     for i in range(v.getSize()):
         assert v2[i] == s - v[i]
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_scalar_mult_vector(vector_type, data):
+def test_scalar_mult_vector(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
-    v2 = s * v
+    v2 = s * v  # type: ignore[operator]
     for i in range(v.getSize()):
         assert v2[i] == s * v[i]
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_scalar_div_vector(vector_type, data):
+def test_scalar_div_vector(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     for i in range(v.getSize()):
         if v[i] == 0:
             assume(False)
-    v2 = s / v
+    v2 = s / v  # type: ignore[operator]
     for i in range(v.getSize()):
         if vector_type.RealType is int:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
@@ -241,7 +253,7 @@ def test_scalar_div_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
-def test_vector_modulo_vector(vector_type, data):
+def test_vector_modulo_vector(vector_type: type[Vint], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     for i in range(v2.getSize()):
         if v2[i] == 0:
@@ -255,10 +267,11 @@ def test_vector_modulo_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
-def test_vector_modulo_scalar(vector_type, data):
+def test_vector_modulo_scalar(vector_type: type[Vint], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     if s == 0:
         assume(False)
+    assert isinstance(s, int)
     v2 = v % s
     for i in range(v.getSize()):
         # GOTCHA: Python uses the sign of the divisor, whereas C++ uses the sign of the dividend
@@ -268,11 +281,12 @@ def test_vector_modulo_scalar(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
-def test_scalar_modulo_vector(vector_type, data):
+def test_scalar_modulo_vector(vector_type: type[Vint], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     for i in range(v.getSize()):
         if v[i] == 0:
             assume(False)
+    assert isinstance(s, int)
     v2 = s % v
     for i in range(v.getSize()):
         # GOTCHA: Python uses the sign of the divisor, whereas C++ uses the sign of the dividend
@@ -287,7 +301,7 @@ def test_scalar_modulo_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_iadd_vector(vector_type, data):
+def test_iadd_vector(vector_type: type[V], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     original_v1 = copy.deepcopy(v1)
     v1 += v2
@@ -297,7 +311,7 @@ def test_iadd_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_isub_vector(vector_type, data):
+def test_isub_vector(vector_type: type[V], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     original_v1 = copy.deepcopy(v1)
     v1 -= v2
@@ -307,7 +321,7 @@ def test_isub_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_imul_vector(vector_type, data):
+def test_imul_vector(vector_type: type[V], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     original_v1 = copy.deepcopy(v1)
     v1 *= v2
@@ -317,7 +331,7 @@ def test_imul_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_idiv_vector(vector_type, data):
+def test_idiv_vector(vector_type: type[V], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     for i in range(v2.getSize()):
         if v2[i] == 0:
@@ -334,7 +348,7 @@ def test_idiv_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
-def test_imod_vector(vector_type, data):
+def test_imod_vector(vector_type: type[Vint], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     for i in range(v2.getSize()):
         if v2[i] == 0:
@@ -354,42 +368,50 @@ def test_imod_vector(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_iadd_scalar(vector_type, data):
+def test_iadd_scalar(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     original_v = copy.deepcopy(v)
-    v += s
+    v += s  # type: ignore[arg-type]
+    # workaround for pyright: the assignment makes the type of v partially unknown
+    v = cast(V, v)  # type: ignore[redundant-cast]
     for i in range(v.getSize()):
         assert v[i] == original_v[i] + s
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_isub_scalar(vector_type, data):
+def test_isub_scalar(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     original_v = copy.deepcopy(v)
-    v -= s
+    v -= s  # type: ignore[arg-type]
+    # workaround for pyright: the assignment makes the type of v partially unknown
+    v = cast(V, v)  # type: ignore[redundant-cast]
     for i in range(v.getSize()):
         assert v[i] == original_v[i] - s
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_imul_scalar(vector_type, data):
+def test_imul_scalar(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     original_v = copy.deepcopy(v)
-    v *= s
+    v *= s  # type: ignore[arg-type]
+    # workaround for pyright: the assignment makes the type of v partially unknown
+    v = cast(V, v)  # type: ignore[redundant-cast]
     for i in range(v.getSize()):
         assert v[i] == original_v[i] * s
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_idiv_scalar(vector_type, data):
+def test_idiv_scalar(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     if s == 0:
         assume(False)
     original_v = copy.deepcopy(v)
-    v /= s
+    v /= s  # type: ignore[operator]
+    # workaround for pyright: the assignment makes the type of v partially unknown
+    v = cast(V, v)  # type: ignore[redundant-cast]
     for i in range(v.getSize()):
         if vector_type.RealType is int:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
@@ -400,11 +422,12 @@ def test_idiv_scalar(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
 @given(data=st.data())
-def test_imod_scalar(vector_type, data):
+def test_imod_scalar(vector_type: type[Vint], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     if s == 0:
         assume(False)
     original_v = copy.deepcopy(v)
+    assert isinstance(s, int)
     v %= s
     for i in range(v.getSize()):
         # GOTCHA: Python uses the sign of the divisor, whereas C++ uses the sign of the dividend
@@ -419,7 +442,7 @@ def test_imod_scalar(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_eq(vector_type, data):
+def test_vector_eq(vector_type: type[V], data: st.DataObject) -> None:
     size = vector_type.getSize()
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
@@ -430,7 +453,7 @@ def test_vector_eq(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_ne(vector_type, data):
+def test_vector_ne(vector_type: type[V], data: st.DataObject) -> None:
     size = vector_type.getSize()
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
@@ -441,7 +464,7 @@ def test_vector_ne(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_lt(vector_type, data):
+def test_vector_lt(vector_type: type[V], data: st.DataObject) -> None:
     size = vector_type.getSize()
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
@@ -452,7 +475,7 @@ def test_vector_lt(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_le(vector_type, data):
+def test_vector_le(vector_type: type[V], data: st.DataObject) -> None:
     size = vector_type.getSize()
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
@@ -463,7 +486,7 @@ def test_vector_le(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_gt(vector_type, data):
+def test_vector_gt(vector_type: type[V], data: st.DataObject) -> None:
     size = vector_type.getSize()
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
@@ -474,7 +497,7 @@ def test_vector_gt(vector_type, data):
 
 @pytest.mark.parametrize("vector_type", vector_types)
 @given(data=st.data())
-def test_vector_ge(vector_type, data):
+def test_vector_ge(vector_type: type[V], data: st.DataObject) -> None:
     size = vector_type.getSize()
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))

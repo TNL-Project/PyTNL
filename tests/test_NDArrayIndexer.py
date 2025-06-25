@@ -1,9 +1,19 @@
+from typing import Any, cast
+
 import pytest
 
+import pytnl._containers
+from pytnl._meta import is_dim_guard
 from pytnl.containers import NDArrayIndexer
 
+# Type alias for indexer types
+type Indexer = pytnl._containers.NDArrayIndexer_1 | pytnl._containers.NDArrayIndexer_2 | pytnl._containers.NDArrayIndexer_3
+
+# Type alias for the case parameters
+type Case = dict[str, int | tuple[int, ...] | list[tuple[Any, ...]]]
+
 # Test cases grouped by dimension
-test_cases_1d = [
+test_cases_1d: list[Case] = [
     {
         "sizes": (3,),
         "strides": (1,),
@@ -22,7 +32,7 @@ test_cases_1d = [
     },
 ]
 
-test_cases_2d = [
+test_cases_2d: list[Case] = [
     {
         "sizes": (3, 4),
         "strides": (4, 1),
@@ -57,7 +67,7 @@ test_cases_2d = [
     },
 ]
 
-test_cases_3d = [
+test_cases_3d: list[Case] = [
     {
         "sizes": (2, 3, 4),
         "strides": (12, 4, 1),
@@ -112,16 +122,16 @@ test_cases = {
 
 
 @pytest.fixture(params=test_cases.keys())
-def indexer_class(request):
+def indexer_class(request: pytest.FixtureRequest) -> Indexer:
     """
     Provides the indexer class for each dimension specified in test_cases.
     """
     dim = request.param
-    return NDArrayIndexer[dim]
+    return cast(Indexer, NDArrayIndexer[dim])
 
 
 # Test the default constructor
-def test_default_constructor(indexer_class):
+def test_default_constructor(indexer_class: type[Indexer]) -> None:
     indexer = indexer_class()
     sizes = indexer.getSizes()
     strides = indexer.getStrides()
@@ -132,22 +142,23 @@ def test_default_constructor(indexer_class):
 
 
 # Parametrize the test function to run for each test case
-@pytest.mark.parametrize("dim,case", [(dim, case) for dim, cases in test_cases.items() for case in cases])
-def test_ndarray_indexer_methods(dim, case):
-    indexer_class = NDArrayIndexer[dim]
-    dimension = len(case["sizes"])
+@pytest.mark.parametrize("case", [case for cases in test_cases.values() for case in cases])
+def test_ndarray_indexer_methods(case: Case) -> None:
+    sizes = cast(tuple[int, ...], case["sizes"])
+    strides = cast(tuple[int, ...], case["strides"])
+    overlaps = cast(tuple[int, ...], case["overlaps"])
+    storage_size = cast(int, case["storage_size"])
+    index_cases = cast(list[tuple[tuple[int, ...], int]], case["index_cases"])
+    contiguous_cases = cast(list[tuple[tuple[int, ...], tuple[int, ...], bool]], case["contiguous_cases"])
 
-    sizes = case["sizes"]
-    strides = case["strides"]
-    overlaps = case["overlaps"]
-    storage_size = case["storage_size"]
-    index_cases = case["index_cases"]
-    contiguous_cases = case["contiguous_cases"]
+    dim = len(sizes)
+    assert is_dim_guard(dim)
+    indexer_class = NDArrayIndexer[dim]  # type: ignore[type-arg,valid-type]
 
-    indexer = indexer_class(sizes, strides, overlaps)
+    indexer = indexer_class(sizes, strides, overlaps)  # pyright: ignore[reportArgumentType]
 
     # Test getDimension
-    assert indexer_class.getDimension() == dimension
+    assert indexer_class.getDimension() == dim
 
     # Test getSizes
     assert indexer.getSizes() == sizes
@@ -167,18 +178,18 @@ def test_ndarray_indexer_methods(dim, case):
 
     # Test isContiguousBlock
     for begins, ends, expected in contiguous_cases:
-        assert indexer.isContiguousBlock(begins, ends) == expected
+        assert indexer.isContiguousBlock(begins, ends) == expected  # pyright: ignore[reportArgumentType]
 
 
 # Test invalid number of indices
-def test_invalid_indices(indexer_class):
+def test_invalid_indices(indexer_class: type[Indexer]) -> None:
     dimension = indexer_class.getDimension()
 
     # Create a basic indexer with default values
     sizes = (1,) * dimension
     strides = (1,) * dimension
     overlaps = (0,) * dimension
-    indexer = indexer_class(sizes, strides, overlaps)
+    indexer = indexer_class(sizes, strides, overlaps)  # type: ignore[arg-type]
 
     # Generate invalid indices
     with pytest.raises(ValueError):
@@ -188,31 +199,31 @@ def test_invalid_indices(indexer_class):
 
 
 # Test invalid begins or ends in isContiguousBlock
-def test_invalid_begins_ends(indexer_class):
+def test_invalid_begins_ends(indexer_class: type[Indexer]) -> None:
     dimension = indexer_class.getDimension()
 
     # Create a basic indexer with default values
     sizes = (1,) * dimension
     strides = (1,) * dimension
     overlaps = (0,) * dimension
-    indexer = indexer_class(sizes, strides, overlaps)
+    indexer = indexer_class(sizes, strides, overlaps)  # type: ignore[arg-type]
 
     # Test with incorrect dimensions
     with pytest.raises(TypeError):
-        indexer.isContiguousBlock((0,) * (dimension - 1), (1,) * (dimension - 1))
+        indexer.isContiguousBlock((0,) * (dimension - 1), (1,) * (dimension - 1))  # type: ignore[arg-type]
     with pytest.raises(TypeError):
-        indexer.isContiguousBlock((0,) * (dimension + 1), (1,) * (dimension + 1))
+        indexer.isContiguousBlock((0,) * (dimension + 1), (1,) * (dimension + 1))  # type: ignore[arg-type]
 
 
 # Test zero-sized dimensions
-def test_zero_sized(indexer_class):
+def test_zero_sized(indexer_class: type[Indexer]) -> None:
     dimension = indexer_class.getDimension()
 
     sizes = (0,) * dimension
     strides = (0,) * dimension
     overlaps = (0,) * dimension
 
-    indexer = indexer_class(sizes, strides, overlaps)
+    indexer = indexer_class(sizes, strides, overlaps)  # type: ignore[arg-type]
     assert indexer.getStorageSize() == 0
 
     with pytest.raises(IndexError):
@@ -220,12 +231,12 @@ def test_zero_sized(indexer_class):
 
 
 # Test dynamic overlaps
-def test_overlaps(indexer_class):
+def test_overlaps(indexer_class: type[Indexer]) -> None:
     dimension = indexer_class.getDimension()
 
     sizes = (2,) * dimension
     strides = (1,) * dimension
     overlaps = (1,) * dimension
 
-    indexer = indexer_class(sizes, strides, overlaps)
+    indexer = indexer_class(sizes, strides, overlaps)  # type: ignore[arg-type]
     assert indexer.getOverlaps() == overlaps

@@ -1,25 +1,32 @@
 import copy
 import os
 import tempfile
+from collections.abc import Collection
+from typing import TypeVar
 
 import numpy as np
 import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
+import pytnl._containers
 import pytnl.containers
 
 # ----------------------
 # Configuration
 # ----------------------
 
+# Type variable constraining the array types
+A = TypeVar(
+    "A",
+    pytnl._containers.Array_int,
+    pytnl._containers.Array_float,
+    pytnl._containers.Vector_int,
+    pytnl._containers.Vector_float,
+)
+
 # List of array types to test
-array_types = [
-    pytnl.containers.Array[int],
-    pytnl.containers.Array[float],
-    pytnl.containers.Vector[int],
-    pytnl.containers.Vector[float],
-]
+array_types = A.__constraints__
 
 
 # ----------------------
@@ -27,7 +34,7 @@ array_types = [
 # ----------------------
 
 
-def element_strategy(array_type):
+def element_strategy(array_type: type[A]) -> st.SearchStrategy[int | float]:
     """Return appropriate data strategy for the given array type."""
     if array_type.ValueType is int:
         # lower limits because C++ uses int64_t for IndexType
@@ -36,11 +43,11 @@ def element_strategy(array_type):
         return st.floats(allow_nan=False, allow_infinity=False)
 
 
-def create_array(data, array_type):
+def create_array(data: Collection[int | float], array_type: type[A]) -> A:
     """Create an array of the given type from a list of values."""
     v = array_type(len(data))
     for i, val in enumerate(data):
-        v[i] = val
+        v[i] = val  # type: ignore[assignment]
     return v
 
 
@@ -50,7 +57,7 @@ def create_array(data, array_type):
 
 
 @st.composite
-def array_strategy(draw, array_type):
+def array_strategy(draw: st.DrawFn, array_type: type[A]) -> A:
     """Generate an array of the given type."""
     data = draw(st.lists(element_strategy(array_type), max_size=20))
     return create_array(data, array_type)
@@ -61,7 +68,7 @@ def array_strategy(draw, array_type):
 # ----------------------
 
 
-def test_pythonization():
+def test_pythonization() -> None:
     assert pytnl.containers.Array[bool] is pytnl._containers.Array_bool
     assert pytnl.containers.Array[int] is pytnl._containers.Array_int
     assert pytnl.containers.Array[float] is pytnl._containers.Array_float
@@ -69,7 +76,7 @@ def test_pythonization():
     assert pytnl.containers.Vector[float] is pytnl._containers.Vector_float
 
 
-def test_typedefs():
+def test_typedefs() -> None:
     for array_type in array_types:
         assert array_type.IndexType is int
 
@@ -82,7 +89,7 @@ def test_typedefs():
 
 
 @pytest.mark.parametrize("array_type", array_types)
-def test_constructors(array_type):
+def test_constructors(array_type: type[A]) -> None:
     v1 = array_type()
     assert v1.getSize() == 0
 
@@ -90,7 +97,7 @@ def test_constructors(array_type):
     assert v2.getSize() == 10
 
     value = 3.14 if array_type.ValueType is float else 3
-    v3 = array_type(5, value)
+    v3 = array_type(5, value)  # type: ignore[arg-type]
     assert v3.getSize() == 5
     for i in range(5):
         assert v3[i] == value
@@ -106,7 +113,7 @@ def test_constructors(array_type):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(size=st.integers(min_value=0, max_value=20))
-def test_setSize(array_type, size):
+def test_setSize(array_type: type[A], size: int) -> None:
     v = array_type()
     v.setSize(size)
     assert v.getSize() == size
@@ -114,7 +121,7 @@ def test_setSize(array_type, size):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(size=st.integers(min_value=-20, max_value=-1))
-def test_setSize_negative(array_type, size):
+def test_setSize_negative(array_type: type[A], size: int) -> None:
     v = array_type()
     with pytest.raises(ValueError):
         v.setSize(size)
@@ -122,7 +129,7 @@ def test_setSize_negative(array_type, size):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(size=st.integers(min_value=0, max_value=20))
-def test_resize(array_type, size):
+def test_resize(array_type: type[A], size: int) -> None:
     v = array_type()
     v.resize(size)
     assert v.getSize() == size
@@ -130,7 +137,7 @@ def test_resize(array_type, size):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(size=st.integers(min_value=-20, max_value=-1))
-def test_resize_negative(array_type, size):
+def test_resize_negative(array_type: type[A], size: int) -> None:
     v = array_type()
     with pytest.raises(ValueError):
         v.resize(size)
@@ -138,18 +145,18 @@ def test_resize_negative(array_type, size):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(size=st.integers(min_value=0, max_value=20), value=st.integers(min_value=-(2**63), max_value=2**63 - 1))
-def test_resize_with_value(array_type, size, value):
+def test_resize_with_value(array_type: type[A], size: int, value: int | float) -> None:
     if array_type.ValueType is float:
         value = float(value)
     v = array_type()
-    v.resize(size, value)
+    v.resize(size, value)  # type: ignore[arg-type]
     assert v.getSize() == size
     for i in range(size):
         assert v[i] == value
 
 
 @pytest.mark.parametrize("array_type", array_types)
-def test_swap(array_type):
+def test_swap(array_type: type[A]) -> None:
     v1 = array_type(5)
     v2 = array_type(10)
     v1.swap(v2)
@@ -158,14 +165,14 @@ def test_swap(array_type):
 
 
 @pytest.mark.parametrize("array_type", array_types)
-def test_reset(array_type):
+def test_reset(array_type: type[A]) -> None:
     v = array_type(10)
     v.reset()
     assert v.getSize() == 0
 
 
 @pytest.mark.parametrize("array_type", array_types)
-def test_empty(array_type):
+def test_empty(array_type: type[A]) -> None:
     v = array_type()
     assert v.empty()
     v.setSize(1)
@@ -179,7 +186,7 @@ def test_empty(array_type):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
-def test_set_get_element(array_type, data):
+def test_set_get_element(array_type: type[A], data: st.DataObject) -> None:
     elements = data.draw(st.lists(element_strategy(array_type), min_size=0, max_size=20))
     v = create_array(elements, array_type)
     for i in range(len(elements)):
@@ -194,7 +201,7 @@ def test_set_get_element(array_type, data):
 
 
 @pytest.mark.parametrize("array_type", array_types)
-def test_out_of_bounds_access(array_type):
+def test_out_of_bounds_access(array_type: type[A]) -> None:
     v = array_type(1)
     with pytest.raises(IndexError):
         v[-1]
@@ -218,7 +225,7 @@ def test_out_of_bounds_access(array_type):
     stop=st.integers(min_value=0, max_value=20),
     step=st.integers(min_value=1, max_value=5),
 )
-def test_slicing(array_type, data, size, start, stop, step):
+def test_slicing(array_type: type[A], data: st.DataObject, size: int, start: int, stop: int, step: int) -> None:
     assume(start < stop)
     elements = data.draw(st.lists(element_strategy(array_type), min_size=size, max_size=size))
     v = create_array(elements, array_type)
@@ -237,7 +244,7 @@ def test_slicing(array_type, data, size, start, stop, step):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
-def test_assign(array_type, data):
+def test_assign(array_type: type[A], data: st.DataObject) -> None:
     v1 = data.draw(array_strategy(array_type))
     v2 = array_type()
     v2.assign(v1)
@@ -253,7 +260,7 @@ def test_assign(array_type, data):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
-def test_comparison_operators(array_type, data):
+def test_comparison_operators(array_type: type[A], data: st.DataObject) -> None:
     size = data.draw(st.integers(min_value=0, max_value=20))
     elements1 = data.draw(st.lists(element_strategy(array_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(array_type), min_size=size, max_size=size))
@@ -276,13 +283,13 @@ def test_comparison_operators(array_type, data):
     begin=st.integers(min_value=0, max_value=20),
     end=st.integers(min_value=0, max_value=20),
 )
-def test_setValue(array_type, data, size, begin, end):
+def test_setValue(array_type: type[A], data: st.DataObject, size: int, begin: int, end: int) -> None:
     assume(begin <= end <= size)
     elements = data.draw(st.lists(element_strategy(array_type), min_size=size, max_size=size))
     value = data.draw(element_strategy(array_type))
 
     v = create_array(elements, array_type)
-    v.setValue(value, begin, end)
+    v.setValue(value, begin, end)  # type: ignore[arg-type]
     # adjust according to C++ behavior
     if end == 0:
         end = size
@@ -299,13 +306,13 @@ def test_setValue(array_type, data, size, begin, end):
 
 
 @pytest.mark.parametrize("array_type", array_types)
-def test_serialization_type(array_type):
+def test_serialization_type(array_type: type[A]) -> None:
     assert array_type.getSerializationType().startswith("TNL::Containers::Array<")
 
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
-def test_save_load(array_type, data):
+def test_save_load(array_type: type[A], data: st.DataObject) -> None:
     # Unfortunately functions-scoped fixtures like tmp_path do not work with Hypothesis
     # https://hypothesis.readthedocs.io/en/latest/reference/api.html#hypothesis.HealthCheck.function_scoped_fixture
     # Create a temporary file that will not be deleted automatically
@@ -332,7 +339,7 @@ def test_save_load(array_type, data):
 
 
 @pytest.mark.parametrize("array_type", array_types)
-def test_str(array_type):
+def test_str(array_type: type[A]) -> None:
     v = array_type(5)
     for i in range(5):
         v[i] = i
@@ -348,29 +355,29 @@ def test_str(array_type):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
-def test_copy(array_type, data):
+def test_copy(array_type: type[A], data: st.DataObject) -> None:
     v = data.draw(array_strategy(array_type))
     v_copy = copy.copy(v)
     assert v == v_copy
     if v.getSize() > 0:
         if array_type.ValueType is int:
-            v_copy[0] = -v_copy[0] - 1
+            v_copy[0] = -v_copy[0] - 1  # pyright: ignore[reportArgumentType, reportCallIssue]
         else:
-            v_copy[0] = -v_copy[0] or 1
+            v_copy[0] = -v_copy[0] or 1  # pyright: ignore[reportArgumentType, reportCallIssue]
         assert v_copy != v
 
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
-def test_deepcopy(array_type, data):
+def test_deepcopy(array_type: type[A], data: st.DataObject) -> None:
     v = data.draw(array_strategy(array_type))
     v_copy = copy.deepcopy(v)
     assert v == v_copy
     if v.getSize() > 0:
         if array_type.ValueType is int:
-            v_copy[0] = -v_copy[0] - 1
+            v_copy[0] = -v_copy[0] - 1  # pyright: ignore[reportArgumentType, reportCallIssue]
         else:
-            v_copy[0] = -v_copy[0] or 1
+            v_copy[0] = -v_copy[0] or 1  # pyright: ignore[reportArgumentType, reportCallIssue]
         assert v_copy != v
 
 
@@ -381,7 +388,7 @@ def test_deepcopy(array_type, data):
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
-def test_as_numpy(array_type, data):
+def test_as_numpy(array_type: type[A], data: st.DataObject) -> None:
     """
     Tests the `as_numpy()` method of the Array class.
 

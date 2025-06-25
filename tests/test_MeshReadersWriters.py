@@ -1,13 +1,13 @@
-from __future__ import annotations
-
 import io
 import shutil
 import subprocess
 from pathlib import Path
 from types import ModuleType
+from typing import Literal
 
 import pytest
 
+import pytnl._meshes
 import pytnl.meshes
 
 mpi4py: ModuleType | None
@@ -17,10 +17,45 @@ try:
 except ImportError:
     mpi4py = None
 
+# Aliases for tested types
+type Mesh = (
+    pytnl._meshes.Grid_1
+    | pytnl._meshes.Grid_2
+    | pytnl._meshes.Grid_3
+    | pytnl._meshes.MeshOfEdges
+    | pytnl._meshes.MeshOfTriangles
+    | pytnl._meshes.MeshOfQuadrangles
+    | pytnl._meshes.MeshOfPolygons
+    | pytnl._meshes.MeshOfHexahedrons
+    | pytnl._meshes.MeshOfTetrahedrons
+    | pytnl._meshes.MeshOfPolyhedrons
+)
+type MeshWriter = (
+    pytnl._meshes.VTIWriter_Grid_1
+    | pytnl._meshes.VTIWriter_Grid_2
+    | pytnl._meshes.VTIWriter_Grid_3
+    | pytnl._meshes.VTKWriter_Grid_1
+    | pytnl._meshes.VTKWriter_Grid_2
+    | pytnl._meshes.VTKWriter_Grid_3
+    | pytnl._meshes.VTKWriter_MeshOfEdges
+    | pytnl._meshes.VTKWriter_MeshOfTriangles
+    | pytnl._meshes.VTKWriter_MeshOfQuadrangles
+    | pytnl._meshes.VTKWriter_MeshOfPolygons
+    | pytnl._meshes.VTKWriter_MeshOfHexahedrons
+    | pytnl._meshes.VTKWriter_MeshOfTetrahedrons
+    | pytnl._meshes.VTKWriter_MeshOfPolyhedrons
+    | pytnl._meshes.VTUWriter_MeshOfEdges
+    | pytnl._meshes.VTUWriter_MeshOfTriangles
+    | pytnl._meshes.VTUWriter_MeshOfQuadrangles
+    | pytnl._meshes.VTUWriter_MeshOfPolygons
+    | pytnl._meshes.VTUWriter_MeshOfHexahedrons
+    | pytnl._meshes.VTUWriter_MeshOfTetrahedrons
+    | pytnl._meshes.VTUWriter_MeshOfPolyhedrons
+)
+
 # Global flags
 TNL_DECOMPOSE_CMD = "tnl-decompose-mesh"
 TNL_DECOMPOSE_FLAGS = "--ghost-levels 1"
-
 
 # Mapping from dimension to grid class
 grid_classes = {
@@ -89,7 +124,12 @@ test_cases = [
 
 
 # Generic function for testing mesh readers and writers
-def _test_reader_writer(reader_class, writer_class, mesh, tmp_path):
+def _test_reader_writer(
+    reader_class: type[pytnl.meshes.MeshReader],
+    writer_class: type[MeshWriter],
+    mesh: Mesh,
+    tmp_path: Path,
+) -> None:
     """
     Test that writing a mesh to a file with the given writer and reading it back
     with the given reader preserves the mesh structure.
@@ -105,8 +145,8 @@ def _test_reader_writer(reader_class, writer_class, mesh, tmp_path):
     # Write the mesh to a temporary file
     with open(output_file, "wb") as file:
         writer = writer_class(file)
-        writer.writeMetadata(cycle=0, time=1.0)  # Write metadata header
-        writer.writeCells(mesh)  # Write the mesh structure
+        writer.writeMetadata(cycle=0, time=1.0)
+        writer.writeCells(mesh)  # type: ignore[arg-type]
         del writer  # Force flush
 
     # Check that the writer produced output
@@ -127,16 +167,24 @@ def _test_reader_writer(reader_class, writer_class, mesh, tmp_path):
 
 
 # Generic function for testing mesh readers and writers with data arrays
-def _test_meshfunction(reader_class, writer_class, mesh, tmp_path, data_type="PointData"):
+def _test_meshfunction(
+    reader_class: type[pytnl.meshes.MeshReader],
+    writer_class: type[MeshWriter],
+    mesh: Mesh,
+    tmp_path: Path,
+    data_type: Literal["PointData", "CellData"] = "PointData",
+) -> None:
     """
     Tests writing and reading point/cell data arrays with the mesh.
     """
     if data_type == "PointData":
-        n_points = mesh.getEntitiesCount(mesh.Vertex)
+        n_points = mesh.getEntitiesCount(mesh.Vertex)  # type: ignore[arg-type]
+        assert isinstance(n_points, int)
         scalar_data = list(range(n_points))
         vector_data = list(range(3 * n_points))
     else:
-        n_cells = mesh.getEntitiesCount(mesh.Cell)
+        n_cells = mesh.getEntitiesCount(mesh.Cell)  # type: ignore[arg-type]
+        assert isinstance(n_cells, int)
         scalar_data = list(range(n_cells))
         vector_data = list(range(3 * n_cells))
 
@@ -146,7 +194,7 @@ def _test_meshfunction(reader_class, writer_class, mesh, tmp_path, data_type="Po
     with open(output_file, "wb") as file:
         writer = writer_class(file)
         writer.writeMetadata(cycle=42, time=3.14)
-        writer.writeCells(mesh)
+        writer.writeCells(mesh)  # type: ignore[arg-type]
         if data_type == "PointData":
             writer.writePointData(scalar_data, "foo", 1)
             writer.writePointData(vector_data, "bar", 3)
@@ -180,7 +228,7 @@ def _test_meshfunction(reader_class, writer_class, mesh, tmp_path, data_type="Po
         (3, [1, 2, 3], [4, 5, 6], [10, 20, 30]),
     ],
 )
-def test_vti_reader_synthetic(dim, origin, proportions, dimensions, tmp_path):
+def test_vti_reader_synthetic(dim: int, origin: list[int], proportions: list[int], dimensions: list[int], tmp_path: Path) -> None:
     # Choose appropriate grid, reader and writer based on dimension
     grid_class = grid_classes[dim]
     reader_class = pytnl.meshes.VTIReader
@@ -199,7 +247,7 @@ def test_vti_reader_synthetic(dim, origin, proportions, dimensions, tmp_path):
 
 # Parametrize test cases with file path, expected vertices, expected cells
 @pytest.mark.parametrize("file_path, expected_vertices, expected_cells", test_cases)
-def test_mesh_file(file_path, expected_vertices, expected_cells, tmp_path):
+def test_mesh_file(file_path: str, expected_vertices: int, expected_cells: int, tmp_path: Path) -> None:
     data_dir = Path(__file__).parent / "data"
     full_path = (data_dir / file_path).resolve()
     suffix = full_path.suffix
@@ -214,8 +262,8 @@ def test_mesh_file(file_path, expected_vertices, expected_cells, tmp_path):
     if suffix == ".vti":
         # Choose appropriate grid class and writer class based on dimension
         dim = 2 if "quadrangles" in file_path else 3
-        mesh_class = grid_classes[dim]
-        writer_class = grid_writers[dim]
+        mesh_class: type[Mesh] = grid_classes[dim]
+        writer_class: type[MeshWriter] = grid_writers[dim]
     else:
         # Get mesh class and writer class based on directory
         try:
@@ -232,8 +280,8 @@ def test_mesh_file(file_path, expected_vertices, expected_cells, tmp_path):
     reader.loadMesh(mesh)
 
     # Check mesh entities
-    assert mesh.getEntitiesCount(mesh.Vertex) == expected_vertices, f"Expected {expected_vertices} points in {file_path}"
-    assert mesh.getEntitiesCount(mesh.Cell) == expected_cells, f"Expected {expected_cells} cells in {file_path}"
+    assert mesh.getEntitiesCount(mesh.Vertex) == expected_vertices, f"Expected {expected_vertices} points in {file_path}"  # type: ignore[arg-type]
+    assert mesh.getEntitiesCount(mesh.Cell) == expected_cells, f"Expected {expected_cells} cells in {file_path}"  # type: ignore[arg-type]
 
     # Round-trip tests
     _test_reader_writer(reader_class, writer_class, mesh, tmp_path)
@@ -248,7 +296,7 @@ def test_mesh_file(file_path, expected_vertices, expected_cells, tmp_path):
 #       with the given file name (using `getMeshReader`) and `mesh` is empty
 # 3. resolveAndLoadMesh - same plus loads the mesh using `reader.loadMesh`
 @pytest.mark.parametrize("file_path, expected_vertices, expected_cells", test_cases)
-def test_resolveMeshType(file_path, expected_vertices, expected_cells, tmp_path):
+def test_resolveMeshType(file_path: str, expected_vertices: int, expected_cells: int) -> None:
     data_dir = Path(__file__).parent / "data"
     full_path = (data_dir / file_path).resolve()
     suffix = full_path.suffix
@@ -263,7 +311,7 @@ def test_resolveMeshType(file_path, expected_vertices, expected_cells, tmp_path)
     if suffix == ".vti":
         # Choose appropriate grid class based on dimension
         dim = 2 if "quadrangles" in file_path else 3
-        mesh_class = grid_classes[dim]
+        mesh_class: type[Mesh] = grid_classes[dim]
     else:
         # Get mesh class based on directory
         try:
@@ -284,8 +332,8 @@ def test_resolveMeshType(file_path, expected_vertices, expected_cells, tmp_path)
     assert isinstance(reader, reader_class), reader
     assert isinstance(mesh, mesh_class), mesh
     # Check mesh entities
-    assert mesh.getEntitiesCount(mesh.Vertex) == 0
-    assert mesh.getEntitiesCount(mesh.Cell) == 0
+    assert mesh.getEntitiesCount(mesh.Vertex) == 0  # type: ignore[attr-defined]
+    assert mesh.getEntitiesCount(mesh.Cell) == 0  # type: ignore[attr-defined]
 
     # Test resolveAndLoadMesh
     with pytest.raises(RuntimeError):
@@ -294,8 +342,8 @@ def test_resolveMeshType(file_path, expected_vertices, expected_cells, tmp_path)
     assert isinstance(reader, reader_class), reader
     assert isinstance(mesh, mesh_class), mesh
     # Check mesh entities
-    assert mesh.getEntitiesCount(mesh.Vertex) == expected_vertices, f"Expected {expected_vertices} points in {file_path}"
-    assert mesh.getEntitiesCount(mesh.Cell) == expected_cells, f"Expected {expected_cells} cells in {file_path}"
+    assert mesh.getEntitiesCount(mesh.Vertex) == expected_vertices, f"Expected {expected_vertices} points in {file_path}"  # type: ignore[attr-defined]
+    assert mesh.getEntitiesCount(mesh.Cell) == expected_cells, f"Expected {expected_cells} cells in {file_path}"  # type: ignore[attr-defined]
 
 
 # Test for PVTUReader and PVTUWriter (requires MPI)
@@ -303,7 +351,7 @@ def test_resolveMeshType(file_path, expected_vertices, expected_cells, tmp_path)
 @pytest.mark.skipif(not shutil.which("tnl-decompose-mesh"), reason="tnl-decompose-mesh is not available")
 @pytest.mark.skipif(mpi4py is None or mpi4py.MPI.COMM_WORLD.Get_size() < 2, reason="Needs at least 2 MPI processes")
 @pytest.mark.parametrize("file_path, expected_vertices, expected_cells", test_cases)
-def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cells: int, tmp_path: Path):
+def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cells: int, tmp_path: Path) -> None:
     data_dir = Path(__file__).parent / "data"
     full_path = (data_dir / file_path).resolve()
 
@@ -342,7 +390,7 @@ def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cel
     writer = pytnl.meshes.PVTUWriter[pytnl.meshes.MeshOfTriangles](f)
     writer.writeCells(mesh)
     writer.writeMetadata(cycle=0, time=1.0)
-    array = [42] * local_mesh.getEntitiesCount(mesh.Cell)
+    array = [42] * local_mesh.getEntitiesCount(local_mesh.Cell)
     writer.writePDataArray(array, "testArray", 1)
     for i in range(comm.Get_size()):
         path = writer.addPiece("pytnl_test.pvtu", i)
