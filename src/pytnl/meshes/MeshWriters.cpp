@@ -106,23 +106,23 @@ void
 export_MeshWriters( nb::module_& m )
 {
    export_MeshWriter< TNL::Meshes::Writers::VTKWriter< Grid1D >, TNL::Meshes::VTK::FileFormat::binary >( m,
-                                                                                                         "VTKWriter_Grid1D" );
+                                                                                                         "VTKWriter_Grid_1" );
    export_MeshWriter< TNL::Meshes::Writers::VTUWriter< Grid1D >, TNL::Meshes::VTK::FileFormat::zlib_compressed >(
-      m, "VTUWriter_Grid1D" );
+      m, "VTUWriter_Grid_1" );
    export_MeshWriter< TNL::Meshes::Writers::VTIWriter< Grid1D >, TNL::Meshes::VTK::FileFormat::zlib_compressed >(
-      m, "VTIWriter_Grid1D" );
+      m, "VTIWriter_Grid_1" );
    export_MeshWriter< TNL::Meshes::Writers::VTKWriter< Grid2D >, TNL::Meshes::VTK::FileFormat::binary >( m,
-                                                                                                         "VTKWriter_Grid2D" );
+                                                                                                         "VTKWriter_Grid_2" );
    export_MeshWriter< TNL::Meshes::Writers::VTUWriter< Grid2D >, TNL::Meshes::VTK::FileFormat::zlib_compressed >(
-      m, "VTUWriter_Grid2D" );
+      m, "VTUWriter_Grid_2" );
    export_MeshWriter< TNL::Meshes::Writers::VTIWriter< Grid2D >, TNL::Meshes::VTK::FileFormat::zlib_compressed >(
-      m, "VTIWriter_Grid2D" );
+      m, "VTIWriter_Grid_2" );
    export_MeshWriter< TNL::Meshes::Writers::VTKWriter< Grid3D >, TNL::Meshes::VTK::FileFormat::binary >( m,
-                                                                                                         "VTKWriter_Grid3D" );
+                                                                                                         "VTKWriter_Grid_3" );
    export_MeshWriter< TNL::Meshes::Writers::VTUWriter< Grid3D >, TNL::Meshes::VTK::FileFormat::zlib_compressed >(
-      m, "VTUWriter_Grid3D" );
+      m, "VTUWriter_Grid_3" );
    export_MeshWriter< TNL::Meshes::Writers::VTIWriter< Grid3D >, TNL::Meshes::VTK::FileFormat::zlib_compressed >(
-      m, "VTIWriter_Grid3D" );
+      m, "VTIWriter_Grid_3" );
 
    export_MeshWriter< TNL::Meshes::Writers::VTKWriter< MeshOfEdges >, TNL::Meshes::VTK::FileFormat::binary >(
       m, "VTKWriter_MeshOfEdges" );

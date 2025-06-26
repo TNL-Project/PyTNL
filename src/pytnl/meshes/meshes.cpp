@@ -31,7 +31,7 @@ void
 export_distributeSubentities( nb::module_& m );
 
 // Python module definition
-NB_MODULE( meshes, m )
+NB_MODULE( _meshes, m )
 {
    register_exceptions( m );
 

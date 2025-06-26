@@ -21,24 +21,24 @@ set(src_meshes
     meshes/distributeSubentities.cpp
     meshes/meshes.cpp
 )
-nanobind_add_module(meshes ${src_meshes})
+nanobind_add_module(_meshes ${src_meshes})
 
 # enable MPI
 find_package(MPI COMPONENTS CXX REQUIRED)
-target_compile_definitions(meshes PUBLIC "-DHAVE_MPI")
-target_link_libraries(meshes PUBLIC MPI::MPI_CXX)
+target_compile_definitions(_meshes PUBLIC "-DHAVE_MPI")
+target_link_libraries(_meshes PUBLIC MPI::MPI_CXX)
 
 # define a list of modules
 set(modules
     _containers
     matrices
-    meshes
+    _meshes
 )
 
 # define a mapping for dependencies between the modules
 set(module_depends__containers)
 set(module_depends_matrices _containers)
-set(module_depends_meshes _containers)
+set(module_depends__meshes _containers)
 
 # set common properties
 foreach(target IN ITEMS ${modules})

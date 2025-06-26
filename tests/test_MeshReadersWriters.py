@@ -24,16 +24,16 @@ TNL_DECOMPOSE_FLAGS = "--ghost-levels 1"
 
 # Mapping from dimension to grid class
 grid_classes = {
-    1: pytnl.meshes.Grid1D,
-    2: pytnl.meshes.Grid2D,
-    3: pytnl.meshes.Grid3D,
+    1: pytnl.meshes.Grid[1],
+    2: pytnl.meshes.Grid[2],
+    3: pytnl.meshes.Grid[3],
 }
 
 # Mapping from dimension to VTI writer class
 grid_writers = {
-    1: pytnl.meshes.VTIWriter_Grid1D,
-    2: pytnl.meshes.VTIWriter_Grid2D,
-    3: pytnl.meshes.VTIWriter_Grid3D,
+    1: pytnl.meshes.VTIWriter[pytnl.meshes.Grid[1]],
+    2: pytnl.meshes.VTIWriter[pytnl.meshes.Grid[2]],
+    3: pytnl.meshes.VTIWriter[pytnl.meshes.Grid[3]],
 }
 
 # Mapping from file suffix to reader class
@@ -43,15 +43,15 @@ suffix_to_reader = {
     ".vtu": pytnl.meshes.VTUReader,
 }
 
-# Mapping from topology directory to mesh and writer classes
-mesh_writer_map = {
-    "triangles": (pytnl.meshes.MeshOfTriangles, pytnl.meshes.VTKWriter_MeshOfTriangles, pytnl.meshes.VTUWriter_MeshOfTriangles),
-    "triangles_2x2x2": (pytnl.meshes.MeshOfTriangles, pytnl.meshes.VTKWriter_MeshOfTriangles, pytnl.meshes.VTUWriter_MeshOfTriangles),
-    "tetrahedrons": (pytnl.meshes.MeshOfTetrahedrons, pytnl.meshes.VTKWriter_MeshOfTetrahedrons, pytnl.meshes.VTUWriter_MeshOfTetrahedrons),
-    "quadrangles": (pytnl.meshes.MeshOfQuadrangles, pytnl.meshes.VTKWriter_MeshOfQuadrangles, pytnl.meshes.VTUWriter_MeshOfQuadrangles),
-    "hexahedrons": (pytnl.meshes.MeshOfHexahedrons, pytnl.meshes.VTKWriter_MeshOfHexahedrons, pytnl.meshes.VTUWriter_MeshOfHexahedrons),
-    "polygons": (pytnl.meshes.MeshOfPolygons, pytnl.meshes.VTKWriter_MeshOfPolygons, pytnl.meshes.VTUWriter_MeshOfPolygons),
-    "polyhedrons": (pytnl.meshes.MeshOfPolyhedrons, pytnl.meshes.VTKWriter_MeshOfPolyhedrons, pytnl.meshes.VTUWriter_MeshOfPolyhedrons),
+# Mapping from topology directory to mesh class
+mesh_class_map = {
+    "triangles": pytnl.meshes.MeshOfTriangles,
+    "triangles_2x2x2": pytnl.meshes.MeshOfTriangles,
+    "tetrahedrons": pytnl.meshes.MeshOfTetrahedrons,
+    "quadrangles": pytnl.meshes.MeshOfQuadrangles,
+    "hexahedrons": pytnl.meshes.MeshOfHexahedrons,
+    "polygons": pytnl.meshes.MeshOfPolygons,
+    "polyhedrons": pytnl.meshes.MeshOfPolyhedrons,
 }
 
 # Define test cases with expected vertex and cell counts
@@ -219,12 +219,12 @@ def test_mesh_file(file_path, expected_vertices, expected_cells, tmp_path):
     else:
         # Get mesh class and writer class based on directory
         try:
-            mesh_class, vtk_writer, vtu_writer = mesh_writer_map[directory]
+            mesh_class = mesh_class_map[directory]
         except KeyError:
             pytest.fail(f"Unsupported directory: {directory}")
 
         # Choose writer based on reader
-        writer_class = vtk_writer if reader_class == pytnl.meshes.VTKReader else vtu_writer
+        writer_class = pytnl.meshes.VTKWriter[mesh_class] if reader_class == pytnl.meshes.VTKReader else pytnl.meshes.VTUWriter[mesh_class]
 
     # Load mesh
     mesh = mesh_class()
@@ -267,7 +267,7 @@ def test_resolveMeshType(file_path, expected_vertices, expected_cells, tmp_path)
     else:
         # Get mesh class based on directory
         try:
-            mesh_class, _, _ = mesh_writer_map[directory]
+            mesh_class = mesh_class_map[directory]
         except KeyError:
             pytest.fail(f"Unsupported directory: {directory}")
 
@@ -339,7 +339,7 @@ def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cel
 
     # Write test
     f = io.BytesIO()
-    writer = pytnl.meshes.PVTUWriter_MeshOfTriangles(f)
+    writer = pytnl.meshes.PVTUWriter[pytnl.meshes.MeshOfTriangles](f)
     writer.writeCells(mesh)
     writer.writeMetadata(cycle=0, time=1.0)
     array = [42] * local_mesh.getEntitiesCount(mesh.Cell)
