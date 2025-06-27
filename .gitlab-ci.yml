@@ -37,6 +37,14 @@ ruff check:
     reports:
       codequality: $CI_PROJECT_DIR/code-quality-report.json
 
+typos:
+  stage: lint
+  image: "quay.io/archlinux/archlinux:base"
+  before_script:
+    - pacman -Syu --needed --noconfirm typos
+  script:
+    - typos --color always --sort
+
 Arch_cmake:
   stage: build
   image: "quay.io/archlinux/archlinux:base-devel"
