@@ -91,8 +91,17 @@ FetchContent_Declare(nanobind
 )
 FetchContent_MakeAvailable(nanobind)
 
-find_package(ZLIB)
-find_package(tinyxml2)
+FetchContent_Declare(
+    tinyxml2
+    GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
+    GIT_TAG 10.0.0
+    SYSTEM
+    FIND_PACKAGE_ARGS
+)
+set(tinyxml2_BUILD_TESTING OFF)
+FetchContent_MakeAvailable(tinyxml2)
+
+find_package(ZLIB REQUIRED)
 
 # Set the install path for Python modules
 find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
@@ -105,15 +114,8 @@ else()
 endif()
 
 # Add dependencies to the interface target
-target_link_libraries(PyTNL INTERFACE TNL::TNL)
-if(ZLIB_FOUND)
-    target_compile_definitions(PyTNL INTERFACE "-DHAVE_ZLIB")
-    target_link_libraries(PyTNL INTERFACE ZLIB::ZLIB)
-endif()
-if(tinyxml2_FOUND)
-    target_compile_definitions(PyTNL INTERFACE "-DHAVE_TINYXML2")
-    target_link_libraries(PyTNL INTERFACE tinyxml2::tinyxml2)
-endif()
+target_compile_definitions(PyTNL INTERFACE "-DHAVE_ZLIB -DHAVE_TINYXML2")
+target_link_libraries(PyTNL INTERFACE TNL::TNL ZLIB::ZLIB tinyxml2::tinyxml2)
 
 # Add subdirectories
 add_subdirectory(include)
