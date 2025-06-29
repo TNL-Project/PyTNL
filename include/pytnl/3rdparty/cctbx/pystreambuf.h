@@ -54,7 +54,7 @@
 #include <iostream>
 #include <streambuf>
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 namespace pystreambuf {
 
@@ -156,11 +156,11 @@ public:
    /// Construct from a Python file object
    /** if buffer_size is 0 the current default_buffer_size is used.
     */
-   streambuf( pybind11::object& python_file_obj, std::size_t buffer_size_ = 0 )
-   : py_read( getattr( python_file_obj, "read", pybind11::none() ) ),
-     py_write( getattr( python_file_obj, "write", pybind11::none() ) ),
-     py_seek( getattr( python_file_obj, "seek", pybind11::none() ) ),
-     py_tell( getattr( python_file_obj, "tell", pybind11::none() ) ),
+   streambuf( nanobind::object& python_file_obj, std::size_t buffer_size_ = 0 )
+   : py_read( getattr( python_file_obj, "read", nanobind::none() ) ),
+     py_write( getattr( python_file_obj, "write", nanobind::none() ) ),
+     py_seek( getattr( python_file_obj, "seek", nanobind::none() ) ),
+     py_tell( getattr( python_file_obj, "tell", nanobind::none() ) ),
      buffer_size( buffer_size_ != 0 ? buffer_size_ : default_buffer_size ), write_buffer( 0 ),
      pos_of_read_buffer_end_in_py_file( 0 ), pos_of_write_buffer_end_in_py_file( buffer_size ), farthest_pptr( 0 )
    {
@@ -173,9 +173,9 @@ public:
          try {
             py_tell();
          }
-         catch( pybind11::error_already_set& err ) {
-            py_tell = pybind11::none();
-            py_seek = pybind11::none();
+         catch( nanobind::python_error& err ) {
+            py_tell = nanobind::none();
+            py_seek = nanobind::none();
             err.restore();
             PyErr_Clear();
          }
@@ -193,7 +193,7 @@ public:
       }
 
       if( ! py_tell.is_none() ) {
-         off_type py_pos = py_tell().cast< off_type >();
+         off_type py_pos = nanobind::cast< off_type >( py_tell() );
          pos_of_read_buffer_end_in_py_file = py_pos;
          pos_of_write_buffer_end_in_py_file = py_pos;
       }
@@ -228,10 +228,10 @@ public:
       if( py_read.is_none() ) {
          throw std::invalid_argument( "That Python file object has no 'read' attribute" );
       }
-      read_buffer = py_read( buffer_size );
+      read_buffer = nanobind::bytes( py_read( buffer_size ) );
       char* read_buffer_data;
-      pybind11::ssize_t py_n_read;
-      if( PYBIND11_BYTES_AS_STRING_AND_SIZE( read_buffer.ptr(), &read_buffer_data, &py_n_read ) == -1 ) {
+      nanobind::ssize_t py_n_read;
+      if( PyBytes_AsStringAndSize( read_buffer.ptr(), &read_buffer_data, &py_n_read ) == -1 ) {
          setg( 0, 0, 0 );
          throw std::invalid_argument( "The method 'read' of the Python file object "
                                       "did not return a string." );
@@ -259,7 +259,7 @@ public:
          // (we have one extra byte just for that)
          write_buffer[ n_written++ ] = traits_type::to_char_type( c );
       }
-      pybind11::bytes chunk( pbase(), n_written );
+      nanobind::bytes chunk( pbase(), n_written );
       py_write( chunk );
       if( n_written ) {
          pos_of_write_buffer_end_in_py_file += n_written;
@@ -354,7 +354,7 @@ public:
                off += pptr() - pbase();
          }
          py_seek( off, whence );
-         result = off_type( py_tell().cast< off_type >() );
+         result = off_type( nanobind::cast< off_type >( py_tell() ) );
          if( which == std::ios_base::in )
             underflow();
       }
@@ -369,14 +369,14 @@ public:
    }
 
 private:
-   pybind11::object py_read, py_write, py_seek, py_tell;
+   nanobind::object py_read, py_write, py_seek, py_tell;
 
    std::size_t buffer_size;
 
    /* This is actually a Python bytes object and the actual read buffer is
       its internal data, i.e. an array of characters.
     */
-   pybind11::bytes read_buffer;
+   nanobind::bytes read_buffer;
 
    /* A mere array of char's allocated on the heap at construction time and
       de-allocated only at destruction time.
@@ -478,14 +478,14 @@ struct streambuf_capsule
 {
    streambuf python_streambuf;
 
-   streambuf_capsule( pybind11::object& python_file_obj, std::size_t buffer_size = 0 )
+   streambuf_capsule( nanobind::object& python_file_obj, std::size_t buffer_size = 0 )
    : python_streambuf( python_file_obj, buffer_size )
    {}
 };
 
 struct ostream : private streambuf_capsule, streambuf::ostream
 {
-   ostream( pybind11::object& python_file_obj, std::size_t buffer_size = 0 )
+   ostream( nanobind::object& python_file_obj, std::size_t buffer_size = 0 )
    : streambuf_capsule( python_file_obj, buffer_size ), streambuf::ostream( python_streambuf )
    {}
 
@@ -499,7 +499,7 @@ struct ostream : private streambuf_capsule, streambuf::ostream
 
 struct istream : private streambuf_capsule, streambuf::istream
 {
-   istream( pybind11::object& python_file_obj, std::size_t buffer_size = 0 )
+   istream( nanobind::object& python_file_obj, std::size_t buffer_size = 0 )
    : streambuf_capsule( python_file_obj, buffer_size ), streambuf::istream( python_streambuf )
    {}
 

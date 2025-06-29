@@ -2,10 +2,7 @@
 
 #include <stdexcept>
 
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
-
-#include <TNL/Assert.h>
+#include <nanobind/nanobind.h>
 
 struct NotImplementedError : public std::runtime_error
 {
@@ -13,14 +10,15 @@ struct NotImplementedError : public std::runtime_error
 };
 
 static void
-register_exceptions( py::module& m )
+register_exceptions( nanobind::module_& m )
 {
-   py::register_exception_translator(
-      []( std::exception_ptr p )
+   // Translate C++ exceptions to native Python exceptions without creating new objects in the module
+   // https://nanobind.readthedocs.io/en/latest/exceptions.html#handling-custom-exceptions
+   nanobind::register_exception_translator(
+      []( const std::exception_ptr& p, void* /* unused */ )
       {
          try {
-            if( p )
-               std::rethrow_exception( p );
+            std::rethrow_exception( p );
          }
          // translate exceptions used in the bindings
          catch( const NotImplementedError& e ) {

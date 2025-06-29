@@ -42,9 +42,9 @@ add_library(PyTNL::PyTNL ALIAS PyTNL)
 
 # add the include directory to the interface
 if(PROJECT_IS_TOP_LEVEL)
-   set(PyTNL_SYSTEM "")
+    set(PyTNL_SYSTEM "")
 else()
-   set(PyTNL_SYSTEM SYSTEM)
+    set(PyTNL_SYSTEM SYSTEM)
 endif()
 target_include_directories(PyTNL ${PyTNL_SYSTEM}
                            INTERFACE $<BUILD_INTERFACE:${PyTNL_INCLUDE_DIRS}>
@@ -83,13 +83,13 @@ FetchContent_Declare(TNL
 set(TNL_EXPORT_INTERFACE_TARGETS ON)  # needed for adding to the interface target
 FetchContent_MakeAvailable(TNL)
 
-FetchContent_Declare(pybind11
-    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+FetchContent_Declare(nanobind
+    GIT_REPOSITORY https://github.com/wjakob/nanobind.git
     GIT_TAG master
     SYSTEM
     FIND_PACKAGE_ARGS
 )
-FetchContent_MakeAvailable(pybind11)
+FetchContent_MakeAvailable(nanobind)
 
 find_package(ZLIB)
 find_package(tinyxml2)
@@ -105,7 +105,7 @@ else()
 endif()
 
 # Add dependencies to the interface target
-target_link_libraries(PyTNL INTERFACE TNL::TNL pybind11::pybind11)
+target_link_libraries(PyTNL INTERFACE TNL::TNL)
 if(ZLIB_FOUND)
     target_compile_definitions(PyTNL INTERFACE "-DHAVE_ZLIB")
     target_link_libraries(PyTNL INTERFACE ZLIB::ZLIB)

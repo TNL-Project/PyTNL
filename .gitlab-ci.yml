@@ -5,6 +5,14 @@ stages:
   - lint
   - build
 
+.env_setup: &env_setup
+  #
+  # do not use all cores for OpenMP
+  - export OMP_NUM_THREADS=4
+  # running as root does not matter inside Docker containers
+  - export OMPI_ALLOW_RUN_AS_ROOT=1
+  - export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
 ruff format:
   stage: lint
   image: "quay.io/archlinux/archlinux:base"
@@ -29,6 +37,14 @@ ruff check:
     reports:
       codequality: $CI_PROJECT_DIR/code-quality-report.json
 
+typos:
+  stage: lint
+  image: "quay.io/archlinux/archlinux:base"
+  before_script:
+    - pacman -Syu --needed --noconfirm typos
+  script:
+    - typos --color always --sort
+
 Arch_cmake:
   stage: build
   image: "quay.io/archlinux/archlinux:base-devel"
@@ -36,8 +52,10 @@ Arch_cmake:
   needs: []
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
-    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy
+    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py
+    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis
   script:
+    - *env_setup
     - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX="$HOME/.local"
     - cmake --build build
     - cmake --install build
@@ -55,9 +73,11 @@ Arch_python_build:
   needs: []
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
+    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py
     - pacman -Suy --needed --noconfirm python-build python-installer python-scikit-build-core
-    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis python-numpy
+    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis
   script:
+    - *env_setup
     - python -m build --no-isolation
     - python -m venv --system-site-packages .venv
     - source .venv/bin/activate
@@ -72,10 +92,13 @@ Arch_pip:
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
   script:
+    - *env_setup
     - python -m venv .venv
     - source .venv/bin/activate
     - python -m pip install .[dev]
     - pytest
+    - mypy
+    - basedpyright
 
 Python_build:
   stage: build
@@ -85,26 +108,24 @@ Python_build:
   before_script:
     - if [[ ${DISTRO} == "Alpine" ]]; then
       apk add build-base git cmake ninja openmpi-dev zlib-dev;
+      export OMPI_MCA_plm_rsh_agent=sh;
       fi
     - if [[ ${DISTRO} == "Debian" ]]; then
       apt update;
       apt -y install git cmake ninja-build libopenmpi-dev;
       fi
   script:
-    - python -m venv .venv
-    - source .venv/bin/activate
-    # Note: psutil does not work on Alpine
-    - python -m pip install build installer pytest pytest-xdist hypothesis numpy
+    - *env_setup
+    - python -m pip install build installer pytest pytest-xdist hypothesis numpy mpi4py basedmypy basedpyright
     - python -m build --config-setting=cmake.define.PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION=${PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION}
     - python -m installer dist/*.whl
-    - pytest
+    - python -m pytest
+    - mypy
+    - basedpyright
   parallel:
     matrix:
       - DISTRO: "Alpine"
         IMAGE_TAG:
-          - "3.9-alpine"
-          - "3.10-alpine"
-          - "3.11-alpine"
           - "3.12-alpine"
           - "3.13-alpine"
         # IPO/LTO does not work on Alpine:
@@ -112,9 +133,6 @@ Python_build:
         PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION: "OFF"
       - DISTRO: "Debian"
         IMAGE_TAG:
-          - "3.9"
-          - "3.10"
-          - "3.11"
           - "3.12"
           - "3.13"
         PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION: "ON"
@@ -128,9 +146,11 @@ Ubuntu_cmake:
     - apt update
     - apt -y install build-essential git cmake ninja-build
     - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
-    - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis python3-numpy
+    - apt -y install python3-numpy python3-mpi4py
+    - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis
   script:
-    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="$HOME/.local"
+    - *env_setup
+    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX="$HOME/.local"
     - cmake --build build
     - cmake --install build
     - pytest
@@ -151,7 +171,10 @@ Ubuntu_pip:
     - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
     - apt -y install python3-venv
   script:
+    - *env_setup
     - python3 -m venv .venv
     - source .venv/bin/activate
     - python3 -m pip install .[dev]
     - pytest
+    - mypy
+    - basedpyright
