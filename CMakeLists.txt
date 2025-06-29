@@ -77,7 +77,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(FetchContent)
 FetchContent_Declare(TNL
     GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git
-    GIT_TAG main
+    # TNL does not have any releases
+    GIT_TAG a0a944a8c8a9858752ea1860d9052c9bf129bc31
     EXCLUDE_FROM_ALL
 )
 set(TNL_EXPORT_INTERFACE_TARGETS ON)  # needed for adding to the interface target
@@ -85,14 +86,23 @@ FetchContent_MakeAvailable(TNL)
 
 FetchContent_Declare(nanobind
     GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-    GIT_TAG master
+    GIT_TAG v2.7.0
     SYSTEM
     FIND_PACKAGE_ARGS
 )
 FetchContent_MakeAvailable(nanobind)
 
-find_package(ZLIB)
-find_package(tinyxml2)
+FetchContent_Declare(
+    tinyxml2
+    GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
+    GIT_TAG 10.0.0
+    SYSTEM
+    FIND_PACKAGE_ARGS
+)
+set(tinyxml2_BUILD_TESTING OFF)
+FetchContent_MakeAvailable(tinyxml2)
+
+find_package(ZLIB REQUIRED)
 
 # Set the install path for Python modules
 find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
@@ -105,15 +115,8 @@ else()
 endif()
 
 # Add dependencies to the interface target
-target_link_libraries(PyTNL INTERFACE TNL::TNL)
-if(ZLIB_FOUND)
-    target_compile_definitions(PyTNL INTERFACE "-DHAVE_ZLIB")
-    target_link_libraries(PyTNL INTERFACE ZLIB::ZLIB)
-endif()
-if(tinyxml2_FOUND)
-    target_compile_definitions(PyTNL INTERFACE "-DHAVE_TINYXML2")
-    target_link_libraries(PyTNL INTERFACE tinyxml2::tinyxml2)
-endif()
+target_compile_definitions(PyTNL INTERFACE "-DHAVE_ZLIB -DHAVE_TINYXML2")
+target_link_libraries(PyTNL INTERFACE TNL::TNL ZLIB::ZLIB tinyxml2::tinyxml2)
 
 # Add subdirectories
 add_subdirectory(include)

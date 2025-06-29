@@ -14,6 +14,7 @@ classifiers = [
     "Natural Language :: English",
     "Topic :: Scientific/Engineering",
 ]
+dependencies = ["numpy"]
 
 [project.urls]
 Homepage = "https://gitlab.com/tnl-project/pytnl"
@@ -25,7 +26,6 @@ dev = [
     "pytest",
     "pytest-xdist[psutil]",
     "ruff",
-    "numpy",
     "mpi4py",
     "basedmypy",
     "basedpyright",

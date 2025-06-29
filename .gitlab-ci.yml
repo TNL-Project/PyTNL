@@ -145,7 +145,7 @@ Ubuntu_cmake:
   before_script:
     - apt update
     - apt -y install build-essential git cmake ninja-build
-    - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
+    - apt -y install python3-dev libopenmpi-dev
     - apt -y install python3-numpy python3-mpi4py
     - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis
   script:
@@ -168,7 +168,7 @@ Ubuntu_pip:
   before_script:
     - apt update
     - apt -y install build-essential git
-    - apt -y install python3-dev libopenmpi-dev #libtinyxml2-dev
+    - apt -y install python3-dev libopenmpi-dev
     - apt -y install python3-venv
   script:
     - *env_setup
