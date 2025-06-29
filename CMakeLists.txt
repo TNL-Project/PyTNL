@@ -77,7 +77,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(FetchContent)
 FetchContent_Declare(TNL
     GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git
-    GIT_TAG main
+    # TNL does not have any releases
+    GIT_TAG a0a944a8c8a9858752ea1860d9052c9bf129bc31
     EXCLUDE_FROM_ALL
 )
 set(TNL_EXPORT_INTERFACE_TARGETS ON)  # needed for adding to the interface target
@@ -85,7 +86,7 @@ FetchContent_MakeAvailable(TNL)
 
 FetchContent_Declare(nanobind
     GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-    GIT_TAG master
+    GIT_TAG v2.7.0
     SYSTEM
     FIND_PACKAGE_ARGS
 )
