@@ -184,11 +184,13 @@ public:
       if( ! py_write.is_none() ) {
          // add one extra byte for characters passed to the overflow() method
          write_buffer = new char[ buffer_size + 1 ];
+         // spellchecker:disable-next-line
          setp( write_buffer, write_buffer + buffer_size );  // 27.5.2.4.5 (5)
          farthest_pptr = pptr();
       }
       else {
          // The first attempt at output will result in a call to overflow
+         // spellchecker:disable-next-line
          setp( 0, 0 );
       }
 
@@ -263,6 +265,7 @@ public:
       py_write( chunk );
       if( n_written ) {
          pos_of_write_buffer_end_in_py_file += n_written;
+         // spellchecker:disable-next-line
          setp( pbase(), epptr() );
          // ^^^ 27.5.2.4.5 (5)
          farthest_pptr = pptr();
