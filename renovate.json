@@ -6,6 +6,7 @@
   ],
   "packageRules": [
     {
+      "description": "Do not pin digests for container images in GitLab CI configuration",
       "matchFileNames": [
         ".gitlab-ci.yml"
       ],
