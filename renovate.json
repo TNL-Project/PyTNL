@@ -6,7 +6,7 @@
   ],
   "packageRules": [
     {
-      "matchFiles": [
+      "matchFileNames": [
         ".gitlab-ci.yml"
       ],
       "pinDigests": false
