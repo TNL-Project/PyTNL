@@ -6,8 +6,8 @@
   ],
   "packageRules": [
     {
-      "matchDatasources": [
-        "gitlabci"
+      "matchFiles": [
+        ".gitlab-ci.yml"
       ],
       "pinDigests": false
     }
