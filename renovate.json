@@ -3,5 +3,13 @@
   "extends": [
     "config:best-practices",
     "gitlab>tnl-project/renovate-config:cmake"
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": [
+        "gitlabci"
+      ],
+      "pinDigests": false
+    }
   ]
 }
