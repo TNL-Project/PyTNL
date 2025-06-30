@@ -95,7 +95,7 @@ FetchContent_MakeAvailable(nanobind)
 FetchContent_Declare(
     tinyxml2
     GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
-    GIT_TAG 10.0.0
+    GIT_TAG 11.0.0
     SYSTEM
     FIND_PACKAGE_ARGS
 )
