@@ -32,7 +32,6 @@ set(PyTNL_SHARED_LINKER_FLAGS_RELEASE "@CMAKE_SHARED_LINKER_FLAGS_RELEASE@")
 
 # Find dependencies
 find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
-find_package(nanobind REQUIRED)
 find_package(TNL REQUIRED)
 
 # Set the install path for Python modules
