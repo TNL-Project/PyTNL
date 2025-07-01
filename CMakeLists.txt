@@ -17,6 +17,16 @@ else()
     set(PyTNL_TARGET_CMAKE_DIRECTORY "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 endif()
 
+# Set the install path for Python modules
+find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
+if (SKBUILD_PLATLIB_DIR)
+    set(PyTNL_PYTHON_SITE_PACKAGES_DIR "${SKBUILD_PLATLIB_DIR}")
+else()
+    # Make cache variable so it can be used in downstream projects
+    set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages
+        CACHE INTERNAL "Path where PyTNL Python packages are installed")
+endif()
+
 # Require C++17, and disable compiler-specific extensions (if possible).
 foreach(lang CXX)
     set(CMAKE_${lang}_STANDARD 17)
@@ -103,16 +113,6 @@ set(tinyxml2_BUILD_TESTING OFF)
 FetchContent_MakeAvailable(tinyxml2)
 
 find_package(ZLIB REQUIRED)
-
-# Set the install path for Python modules
-find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
-if (SKBUILD_PLATLIB_DIR)
-    set(PyTNL_PYTHON_SITE_PACKAGES_DIR "${SKBUILD_PLATLIB_DIR}")
-else()
-    # Make cache variable so it can be used in downstream projects
-    set(PyTNL_PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages
-        CACHE INTERNAL "Path where PyTNL Python packages are installed")
-endif()
 
 # Add dependencies to the interface target
 target_link_libraries(PyTNL INTERFACE TNL::TNL)
