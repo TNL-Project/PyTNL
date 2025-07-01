@@ -582,3 +582,24 @@ def test_vector_ge(vector_type: type[V], data: st.DataObject) -> None:
     v1 = create_vector(elements1, vector_type)
     v2 = create_vector(elements2, vector_type)
     assert (v1 >= v2) == (elements1 >= elements2)
+
+
+# ----------------------
+# Slicing with operators
+# ----------------------
+
+
+@pytest.mark.parametrize("vector_type", vector_types)
+@given(data=st.data())
+def test_slicing(vector_type: type[V], data: st.DataObject) -> None:
+    size = data.draw(st.integers(min_value=0, max_value=20))
+    elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
+    elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
+    v1 = create_vector(elements1, vector_type)
+    v2 = create_vector(elements2, vector_type)
+    v1[0 : size // 2] += 0 * v2[0 : size // 2] - v1[0 : size // 2]  # pyright: ignore[reportArgumentType,reportCallIssue]
+    for i in range(size):
+        if i < size // 2:
+            assert v1[i] == 0
+        else:
+            assert v1[i] == elements1[i]

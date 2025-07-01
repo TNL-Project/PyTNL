@@ -43,9 +43,9 @@ class Array(metaclass=_ArrayMeta):
 
     This class provides a Python interface to C++ arrays of a specific value type.
 
-    Example:
-        Array[float] → Array_float
-        Array[int] → Array_int
+    Examples:
+    - `Array[float]` → `Array_float`
+    - `Array[int]` → `Array_int`
     """
 
 
@@ -76,9 +76,9 @@ class Vector(metaclass=_VectorMeta):
 
     This class provides a Python interface to C++ vectors of a specific value type.
 
-    Example:
-        Vector[float] → Vector_float
-        Vector[int] → Vector_int
+    Examples:
+    - `Vector[float] → `Vector_float`
+    - `Vector[int]` → `Vector_int`
     """
 
 
@@ -124,9 +124,9 @@ class StaticVector(metaclass=_StaticVectorMeta):
 
     This class provides a Python interface to C++ static vectors with a fixed dimension and value type.
 
-    Example:
-        StaticVector[3, float] → StaticVector_3_float
-        StaticVector[2, int] → StaticVector_2_int
+    Examples:
+    - `StaticVector[3, float]` → `StaticVector_3_float`
+    - `StaticVector[2, int]` → `StaticVector_2_int`
     """
 
 
@@ -172,9 +172,9 @@ class NDArray(metaclass=_NDArrayMeta):
 
     This class provides a Python interface to C++ N-dimensional arrays with a fixed dimension and value type.
 
-    Example:
-        NDArray[3, float] → NDArray_3_float
-        NDArray[2, int] → NDArray_2_int
+    Examples:
+    - `NDArray[3, float]` → `NDArray_3_float`
+    - `NDArray[2, int]` → `NDArray_2_int`
     """
 
 
@@ -203,7 +203,7 @@ class NDArrayIndexer(metaclass=_NDArrayIndexerMeta):
 
     This class provides a Python interface to C++ indexers for N-dimensional arrays with a fixed dimension.
 
-    Example:
-        NDArrayIndexer[1] → NDArrayIndexer_1
-        NDArrayIndexer[2] → NDArrayIndexer_2
+    Examples:
+    - `NDArrayIndexer[1]` → `NDArrayIndexer_1`
+    - `NDArrayIndexer[2]` → `NDArrayIndexer_2`
     """

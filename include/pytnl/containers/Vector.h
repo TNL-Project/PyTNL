@@ -4,6 +4,7 @@
 
 #include <TNL/Containers/Vector.h>
 
+#include "indexing.h"
 #include "vector_operators.h"
 
 template< typename ArrayType, typename VectorType >
@@ -61,4 +62,8 @@ export_Vector( nb::module_& m, const char* name )
             nb::arg( "memo" ) );
 
    def_vector_operators( vector );
+
+   // override so slice indexing can be used with vector operators
+   def_indexing< VectorType >( vector );
+   def_slice_indexing< VectorType >( vector );
 }
