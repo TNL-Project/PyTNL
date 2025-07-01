@@ -115,8 +115,7 @@ else()
 endif()
 
 # Add dependencies to the interface target
-target_compile_definitions(PyTNL INTERFACE "-DHAVE_ZLIB -DHAVE_TINYXML2")
-target_link_libraries(PyTNL INTERFACE TNL::TNL ZLIB::ZLIB tinyxml2::tinyxml2)
+target_link_libraries(PyTNL INTERFACE TNL::TNL)
 
 # Add subdirectories
 add_subdirectory(include)

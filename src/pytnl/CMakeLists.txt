@@ -23,6 +23,10 @@ set(src_meshes
 )
 nanobind_add_module(_meshes ${src_meshes})
 
+# add dependencies
+target_compile_definitions(_meshes PUBLIC "-DHAVE_ZLIB -DHAVE_TINYXML2")
+target_link_libraries(_meshes PUBLIC ZLIB::ZLIB tinyxml2::tinyxml2)
+
 # enable MPI
 find_package(MPI COMPONENTS CXX REQUIRED)
 target_compile_definitions(_meshes PUBLIC "-DHAVE_MPI")
