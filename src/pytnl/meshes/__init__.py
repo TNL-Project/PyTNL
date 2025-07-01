@@ -110,10 +110,10 @@ class Grid(metaclass=_GridMeta):
 
     This class provides a Python interface to C++ orthogonal grids.
 
-    Example:
-        Grid[1] → Grid_1
-        Grid[2] → Grid_2
-        Grid[3] → Grid_3
+    Examples:
+    - `Grid[1]` → `Grid_1`
+    - `Grid[2]` → `Grid_2`
+    - `Grid[3]` → `Grid_3`
     """
 
 
@@ -150,9 +150,9 @@ class VTIWriter(metaclass=_VTIWriterMeta):
     This class provides a Python interface to C++ writers for orthogonal grids.
 
     Example:
-        VTIWriter[Grid[1]] → VTIWriter_Grid_1
-        VTIWriter[Grid[2]] → VTIWriter_Grid_2
-        VTIWriter[Grid[3]] → VTIWriter_Grid_3
+    - `VTIWriter[Grid[1]]` → `VTIWriter_Grid_1`
+    - `VTIWriter[Grid[2]]` → `VTIWriter_Grid_2`
+    - `VTIWriter[Grid[3]]` → `VTIWriter_Grid_3`
     """
 
 
@@ -221,9 +221,9 @@ class VTUWriter(metaclass=_VTUWriterMeta):
 
     This class provides a Python interface to C++ writers for orthogonal grids.
 
-    Example:
-        VTUWriter[MeshOfEdges] → VTUWriter_MeshOfEdges
-        VTUWriter[MeshOfPolygons] → VTUWriter_MeshOfPolygons
+    Examples:
+    - `VTUWriter[MeshOfEdges]` → `VTUWriter_MeshOfEdges`
+    - `VTUWriter[MeshOfPolygons]` → `VTUWriter_MeshOfPolygons`
     """
 
 
@@ -292,9 +292,9 @@ class VTKWriter(metaclass=_VTKWriterMeta):
 
     This class provides a Python interface to C++ writers for orthogonal grids.
 
-    Example:
-        VTKWriter[MeshOfEdges] → VTKWriter_MeshOfEdges
-        VTKWriter[MeshOfPolygons] → VTKWriter_MeshOfPolygons
+    Examples:
+    - `VTKWriter[MeshOfEdges]` → `VTKWriter_MeshOfEdges`
+    - `VTKWriter[MeshOfPolygons]` → `VTKWriter_MeshOfPolygons`
     """
 
 
@@ -344,6 +344,6 @@ class PVTUWriter(metaclass=_PVTUWriterMeta):
     This class provides a Python interface to C++ writers for orthogonal grids.
 
     Example:
-        PVTUWriter[MeshOfEdges] → PVTUWriter_MeshOfEdges
-        PVTUWriter[MeshOfPolygons] → PVTUWriter_MeshOfPolygons
+    - `PVTUWriter[MeshOfEdges]` → `PVTUWriter_MeshOfEdges`
+    - `PVTUWriter[MeshOfPolygons]` → `PVTUWriter_MeshOfPolygons`
     """
