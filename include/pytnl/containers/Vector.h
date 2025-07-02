@@ -39,6 +39,9 @@ export_Vector( nb::module_& m, const char* name )
                else if constexpr( std::is_floating_point_v< RealType > ) {
                   return nb::borrow( &PyFloat_Type );
                }
+               else if constexpr( TNL::is_complex_v< RealType > ) {
+                  return nb::borrow( &PyComplex_Type );
+               }
                else {
                   return nb::type< RealType >();
                }
