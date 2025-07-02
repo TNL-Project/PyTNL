@@ -19,11 +19,18 @@ V = TypeVar(
     "V",
     pytnl._containers.Vector_int,
     pytnl._containers.Vector_float,
+    pytnl._containers.Vector_complex,
+)
+Vreal = TypeVar(
+    "Vreal",
+    pytnl._containers.Vector_int,
+    pytnl._containers.Vector_float,
 )
 type Vint = pytnl._containers.Vector_int
 
 # List of vector types to test
 vector_types = V.__constraints__
+real_vector_types = Vreal.__constraints__
 
 
 # ----------------------
@@ -31,16 +38,30 @@ vector_types = V.__constraints__
 # ----------------------
 
 
-def element_strategy(vector_type: type[V]) -> st.SearchStrategy[int | float]:
+@st.composite
+def complex_numbers(draw: st.DrawFn) -> complex:
+    # avoid too small/large exponents
+    real: float | None = None
+    while real is None or 0 < abs(real) < 1e-30:
+        real = draw(st.floats(allow_nan=False, allow_infinity=False, min_value=-1e30, max_value=1e30))
+    imag: float | None = None
+    while imag is None or 0 < abs(imag) < 1e-30:
+        imag = draw(st.floats(allow_nan=False, allow_infinity=False, min_value=-1e30, max_value=1e30))
+    return complex(real, imag)
+
+
+def element_strategy(vector_type: type[V]) -> st.SearchStrategy[int | float | complex]:
     """Return appropriate data strategy for the given vector type."""
     if vector_type.ValueType is int:
         # lower limits because C++ uses int64_t for IndexType and we test even multiplication
         return st.integers(min_value=-(2**31), max_value=2**31)
-    else:
+    elif vector_type.ValueType is float:
         return st.floats(allow_nan=False, allow_infinity=False)
+    else:
+        return complex_numbers()
 
 
-def create_vector(data: Collection[int | float], vector_type: type[V]) -> V:
+def create_vector(data: Collection[int | float | complex], vector_type: type[V]) -> V:
     """Create a vector of the given type from a list of values."""
     v = vector_type(len(data))
     for i, val in enumerate(data):
@@ -69,7 +90,7 @@ def vector_pair_strategy(draw: st.DrawFn, vector_type: type[V]) -> tuple[V, V]:
 
 
 @st.composite
-def vector_scalar_strategy(draw: st.DrawFn, vector_type: type[V]) -> tuple[V, int | float]:
+def vector_scalar_strategy(draw: st.DrawFn, vector_type: type[V]) -> tuple[V, int | float | complex]:
     """Generate a vector and a scalar of the same type."""
     v = draw(vector_strategy(vector_type))
     s = draw(element_strategy(vector_type))
@@ -85,9 +106,11 @@ def test_typedefs() -> None:
     for vector_type in vector_types:
         assert vector_type.IndexType is int
 
+    assert pytnl.containers.Vector[complex].ValueType is complex
     assert pytnl.containers.Vector[float].ValueType is float
     assert pytnl.containers.Vector[int].ValueType is int
 
+    assert pytnl.containers.Vector[complex].RealType is complex
     assert pytnl.containers.Vector[float].RealType is float
     assert pytnl.containers.Vector[int].RealType is int
 
@@ -224,7 +247,7 @@ def test_vector_div_vector(vector_type: type[V], data: st.DataObject) -> None:
     for i in range(v1.getSize()):
         if vector_type.RealType is int:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
-            assert v3[i] == math.trunc(v1[i] / v2[i])
+            assert v3[i] == math.trunc(v1[i] / v2[i])  # type: ignore[arg-type]
         else:
             assert v3[i] == v1[i] / v2[i]
 
@@ -271,7 +294,7 @@ def test_vector_div_scalar(vector_type: type[V], data: st.DataObject) -> None:
     for i in range(v.getSize()):
         if vector_type.RealType is int:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
-            assert v2[i] == math.trunc(v[i] / s)
+            assert v2[i] == math.trunc(v[i] / s)  # type: ignore[arg-type]
         else:
             assert v2[i] == v[i] / s
 
@@ -319,7 +342,7 @@ def test_scalar_div_vector(vector_type: type[V], data: st.DataObject) -> None:
     for i in range(v.getSize()):
         if vector_type.RealType is int:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
-            assert v2[i] == math.trunc(s / v[i])
+            assert v2[i] == math.trunc(s / v[i])  # type: ignore[arg-type]
         else:
             assert v2[i] == s / v[i]
 
@@ -419,7 +442,7 @@ def test_idiv_vector(vector_type: type[V], data: st.DataObject) -> None:
     for i in range(v1.getSize()):
         if vector_type.RealType is int:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
-            assert v1[i] == math.trunc(original_v1[i] / v2[i])
+            assert v1[i] == math.trunc(original_v1[i] / v2[i])  # type: ignore[arg-type]
         else:
             assert v1[i] == original_v1[i] / v2[i]
 
@@ -493,7 +516,7 @@ def test_idiv_scalar(vector_type: type[V], data: st.DataObject) -> None:
     for i in range(v.getSize()):
         if vector_type.RealType is int:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
-            assert v[i] == math.trunc(original_v[i] / s)
+            assert v[i] == math.trunc(original_v[i] / s)  # type: ignore[arg-type]
         else:
             assert v[i] == original_v[i] / s
 
@@ -540,9 +563,9 @@ def test_vector_ne(vector_type: type[V], data: st.DataObject) -> None:
     assert (v1 != v2) == (elements1 != elements2)
 
 
-@pytest.mark.parametrize("vector_type", vector_types)
+@pytest.mark.parametrize("vector_type", real_vector_types)
 @given(data=st.data())
-def test_vector_lt(vector_type: type[V], data: st.DataObject) -> None:
+def test_vector_lt(vector_type: type[Vreal], data: st.DataObject) -> None:
     size = data.draw(st.integers(min_value=0, max_value=20))
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
@@ -551,9 +574,9 @@ def test_vector_lt(vector_type: type[V], data: st.DataObject) -> None:
     assert (v1 < v2) == (elements1 < elements2)
 
 
-@pytest.mark.parametrize("vector_type", vector_types)
+@pytest.mark.parametrize("vector_type", real_vector_types)
 @given(data=st.data())
-def test_vector_le(vector_type: type[V], data: st.DataObject) -> None:
+def test_vector_le(vector_type: type[Vreal], data: st.DataObject) -> None:
     size = data.draw(st.integers(min_value=0, max_value=20))
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
@@ -562,9 +585,9 @@ def test_vector_le(vector_type: type[V], data: st.DataObject) -> None:
     assert (v1 <= v2) == (elements1 <= elements2)
 
 
-@pytest.mark.parametrize("vector_type", vector_types)
+@pytest.mark.parametrize("vector_type", real_vector_types)
 @given(data=st.data())
-def test_vector_gt(vector_type: type[V], data: st.DataObject) -> None:
+def test_vector_gt(vector_type: type[Vreal], data: st.DataObject) -> None:
     size = data.draw(st.integers(min_value=0, max_value=20))
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
@@ -573,9 +596,9 @@ def test_vector_gt(vector_type: type[V], data: st.DataObject) -> None:
     assert (v1 > v2) == (elements1 > elements2)
 
 
-@pytest.mark.parametrize("vector_type", vector_types)
+@pytest.mark.parametrize("vector_type", real_vector_types)
 @given(data=st.data())
-def test_vector_ge(vector_type: type[V], data: st.DataObject) -> None:
+def test_vector_ge(vector_type: type[Vreal], data: st.DataObject) -> None:
     size = data.draw(st.integers(min_value=0, max_value=20))
     elements1 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))
     elements2 = data.draw(st.lists(element_strategy(vector_type), min_size=size, max_size=size))

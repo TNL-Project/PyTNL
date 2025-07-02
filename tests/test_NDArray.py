@@ -29,6 +29,9 @@ TYPEDEFS_PARAMS = [
     (1, float),
     (2, float),
     (3, float),
+    (1, complex),
+    (2, complex),
+    (3, complex),
 ]
 
 
@@ -385,6 +388,9 @@ STR_REPR_TEST_PARAMS = [
     (float, (5,)),
     (float, (5, 6)),
     (float, (2, 4, 5)),
+    (complex, (5,)),
+    (complex, (5, 6)),
+    (complex, (2, 4, 5)),
     (int, (0,)),  # Empty 1D array
     (int, (0, 0)),  # Empty 2D array
     (int, (0, 0, 0)),  # Empty 3D array

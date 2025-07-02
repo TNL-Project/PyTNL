@@ -21,8 +21,10 @@ A = TypeVar(
     "A",
     pytnl._containers.Array_int,
     pytnl._containers.Array_float,
+    pytnl._containers.Array_complex,
     pytnl._containers.Vector_int,
     pytnl._containers.Vector_float,
+    pytnl._containers.Vector_complex,
 )
 
 # List of array types to test
@@ -34,16 +36,18 @@ array_types = A.__constraints__
 # ----------------------
 
 
-def element_strategy(array_type: type[A]) -> st.SearchStrategy[int | float]:
+def element_strategy(array_type: type[A]) -> st.SearchStrategy[int | float | complex]:
     """Return appropriate data strategy for the given array type."""
     if array_type.ValueType is int:
         # lower limits because C++ uses int64_t for IndexType
         return st.integers(min_value=-(2**63), max_value=2**63 - 1)
-    else:
+    elif array_type.ValueType is float:
         return st.floats(allow_nan=False, allow_infinity=False)
+    else:
+        return st.complex_numbers(allow_nan=False, allow_infinity=False)
 
 
-def create_array(data: Collection[int | float], array_type: type[A]) -> A:
+def create_array(data: Collection[int | float | complex], array_type: type[A]) -> A:
     """Create an array of the given type from a list of values."""
     v = array_type(len(data))
     for i, val in enumerate(data):
@@ -72,8 +76,10 @@ def test_pythonization() -> None:
     assert pytnl.containers.Array[bool] is pytnl._containers.Array_bool
     assert pytnl.containers.Array[int] is pytnl._containers.Array_int
     assert pytnl.containers.Array[float] is pytnl._containers.Array_float
+    assert pytnl.containers.Array[complex] is pytnl._containers.Array_complex
     assert pytnl.containers.Vector[int] is pytnl._containers.Vector_int
     assert pytnl.containers.Vector[float] is pytnl._containers.Vector_float
+    assert pytnl.containers.Vector[complex] is pytnl._containers.Vector_complex
 
 
 def test_typedefs() -> None:
@@ -83,9 +89,11 @@ def test_typedefs() -> None:
     assert pytnl.containers.Array[bool].ValueType is bool
     assert pytnl.containers.Array[int].ValueType is int
     assert pytnl.containers.Array[float].ValueType is float
+    assert pytnl.containers.Array[complex].ValueType is complex
 
-    assert pytnl.containers.Vector[float].ValueType is float
     assert pytnl.containers.Vector[int].ValueType is int
+    assert pytnl.containers.Vector[float].ValueType is float
+    assert pytnl.containers.Vector[complex].ValueType is complex
 
 
 @pytest.mark.parametrize("array_type", array_types)
@@ -145,9 +153,12 @@ def test_resize_negative(array_type: type[A], size: int) -> None:
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(size=st.integers(min_value=0, max_value=20), value=st.integers(min_value=-(2**63), max_value=2**63 - 1))
-def test_resize_with_value(array_type: type[A], size: int, value: int | float) -> None:
+def test_resize_with_value(array_type: type[A], size: int, value: int | float | complex) -> None:
     if array_type.ValueType is float:
+        assert not isinstance(value, complex)
         value = float(value)
+    elif array_type.ValueType is complex:
+        value = complex(value)
     v = array_type()
     v.resize(size, value)  # type: ignore[arg-type]
     assert v.getSize() == size
@@ -413,8 +424,10 @@ def test_as_numpy(array_type: type[A], data: st.DataObject) -> None:
     # Check data type
     if array_type.ValueType is int:
         assert array_np.dtype == np.int_, f"Expected dtype {np.int_}, got {array_np.dtype}"
-    else:
+    elif array_type.ValueType is float:
         assert array_np.dtype == np.float64, f"Expected dtype {np.float64}, got {array_np.dtype}"
+    else:
+        assert array_np.dtype == np.complex128, f"Expected dtype {np.complex128}, got {array_np.dtype}"
 
     # Check element-wise equality
     assert np.all(array_np == list(array)), "Data mismatch in NumPy array"
