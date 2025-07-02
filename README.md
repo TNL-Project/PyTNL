@@ -1,6 +1,6 @@
 # PyTNL
 
-Python bindings for the Template Numerical Library (TNL).
+Python bindings for the [Template Numerical Library (TNL)][tnl-project].
 
 ## Installation
 
@@ -121,6 +121,7 @@ for objects in the `pytnl` package 🤩
 There is also an extension [for VSCode][pyright-vscode] and
 [for VSCodium][pyright-vscodium].
 
+[tnl-project]: https://tnl-project.gitlab.io/
 [sdist]: https://packaging.python.org/en/latest/discussions/package-formats/
 [gcc]: https://gcc.gnu.org/
 [clang]: https://clang.llvm.org/
@@ -129,7 +130,7 @@ There is also an extension [for VSCode][pyright-vscode] and
 [cmake-pkg]: https://pypi.org/project/cmake/
 [cmake-fetchcontent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
 [venv]: https://docs.python.org/3/library/venv.html
-[python-build]: <https://pypi.org/project/build/>
-[pyright]: <https://pypi.org/project/pyright/>
-[pyright-vscode]: <https://marketplace.visualstudio.com/items?itemName=ms-pyright.pyright>
-[pyright-vscodium]: <https://www.open-vsx.org/extension/ms-pyright/pyright>
+[python-build]: https://pypi.org/project/build/
+[pyright]: https://pypi.org/project/pyright/
+[pyright-vscode]: https://marketplace.visualstudio.com/items?itemName=ms-pyright.pyright
+[pyright-vscodium]: https://www.open-vsx.org/extension/ms-pyright/pyright
