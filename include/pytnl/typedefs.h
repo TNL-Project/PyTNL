@@ -16,6 +16,7 @@
 using RealType = double;
 using DeviceType = TNL::Devices::Host;
 using IndexType = std::int64_t;
+using ComplexType = std::complex< RealType >;
 
 using Grid1D = TNL::Meshes::Grid< 1, RealType, DeviceType, IndexType >;
 using Grid2D = TNL::Meshes::Grid< 2, RealType, DeviceType, IndexType >;

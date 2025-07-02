@@ -40,8 +40,10 @@ NB_MODULE( _containers, m )
    export_Array< _array< bool > >( m, "Array_bool" );
    export_Array< _array< IndexType > >( m, "Array_int" );
    export_Array< _array< RealType > >( m, "Array_float" );
+   export_Array< _array< ComplexType > >( m, "Array_complex" );
    export_Vector< _array< IndexType >, _vector< IndexType > >( m, "Vector_int" );
    export_Vector< _array< RealType >, _vector< RealType > >( m, "Vector_float" );
+   export_Vector< _array< ComplexType >, _vector< ComplexType > >( m, "Vector_complex" );
 
    export_StaticVector< StaticVector< 1, IndexType > >( m, "StaticVector_1_int" );
    export_StaticVector< StaticVector< 2, IndexType > >( m, "StaticVector_2_int" );
@@ -49,6 +51,9 @@ NB_MODULE( _containers, m )
    export_StaticVector< StaticVector< 1, RealType > >( m, "StaticVector_1_float" );
    export_StaticVector< StaticVector< 2, RealType > >( m, "StaticVector_2_float" );
    export_StaticVector< StaticVector< 3, RealType > >( m, "StaticVector_3_float" );
+   export_StaticVector< StaticVector< 1, ComplexType > >( m, "StaticVector_1_complex" );
+   export_StaticVector< StaticVector< 2, ComplexType > >( m, "StaticVector_2_complex" );
+   export_StaticVector< StaticVector< 3, ComplexType > >( m, "StaticVector_3_complex" );
 
    export_NDArrayIndexer< _ndindexer< 1 > >( m, "NDArrayIndexer_1" );
    export_NDArrayIndexer< _ndindexer< 2 > >( m, "NDArrayIndexer_2" );
@@ -60,4 +65,7 @@ NB_MODULE( _containers, m )
    export_NDArray< _ndarray< 1, RealType > >( m, "NDArray_1_float" );
    export_NDArray< _ndarray< 2, RealType > >( m, "NDArray_2_float" );
    export_NDArray< _ndarray< 3, RealType > >( m, "NDArray_3_float" );
+   export_NDArray< _ndarray< 1, ComplexType > >( m, "NDArray_1_complex" );
+   export_NDArray< _ndarray< 2, ComplexType > >( m, "NDArray_2_complex" );
+   export_NDArray< _ndarray< 3, ComplexType > >( m, "NDArray_3_complex" );
 }

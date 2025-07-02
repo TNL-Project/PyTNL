@@ -22,18 +22,24 @@ A = TypeVar(
     pytnl._containers.StaticVector_1_float,
     pytnl._containers.StaticVector_2_float,
     pytnl._containers.StaticVector_3_float,
+    pytnl._containers.StaticVector_1_complex,
+    pytnl._containers.StaticVector_2_complex,
+    pytnl._containers.StaticVector_3_complex,
 )
 A23 = TypeVar(
     "A23",
     pytnl._containers.StaticVector_2_int,
     pytnl._containers.StaticVector_2_float,
+    pytnl._containers.StaticVector_2_complex,
     pytnl._containers.StaticVector_3_int,
     pytnl._containers.StaticVector_3_float,
+    pytnl._containers.StaticVector_3_complex,
 )
 A3 = TypeVar(
     "A3",
     pytnl._containers.StaticVector_3_int,
     pytnl._containers.StaticVector_3_float,
+    pytnl._containers.StaticVector_3_complex,
 )
 
 # Lists of array types to test
@@ -46,16 +52,18 @@ array_types_3 = A3.__constraints__
 # ----------------------
 
 
-def element_strategy(array_type: type[A]) -> st.SearchStrategy[int | float]:
+def element_strategy(array_type: type[A]) -> st.SearchStrategy[int | float | complex]:
     """Return appropriate data strategy for the given array type."""
     if array_type.ValueType is int:
         # lower limits because C++ uses int64_t for IndexType
         return st.integers(min_value=-(2**63), max_value=2**63 - 1)
-    else:
+    elif array_type.ValueType is float:
         return st.floats(allow_nan=False, allow_infinity=False)
+    else:
+        return st.complex_numbers(allow_nan=False, allow_infinity=False)
 
 
-def create_array(data: Sequence[int | float], array_type: type[A]) -> A:
+def create_array(data: Sequence[int | float | complex], array_type: type[A]) -> A:
     """Create an array of the given type from a list of values."""
     assert len(data) == array_type.getSize()
     return array_type(data)  # type: ignore[arg-type]
@@ -85,6 +93,9 @@ def test_pythonization() -> None:
     assert pytnl.containers.StaticVector[1, float] is pytnl._containers.StaticVector_1_float
     assert pytnl.containers.StaticVector[2, float] is pytnl._containers.StaticVector_2_float
     assert pytnl.containers.StaticVector[3, float] is pytnl._containers.StaticVector_3_float
+    assert pytnl.containers.StaticVector[1, complex] is pytnl._containers.StaticVector_1_complex
+    assert pytnl.containers.StaticVector[2, complex] is pytnl._containers.StaticVector_2_complex
+    assert pytnl.containers.StaticVector[3, complex] is pytnl._containers.StaticVector_3_complex
 
 
 def test_typedefs() -> None:
@@ -93,9 +104,12 @@ def test_typedefs() -> None:
         if array_type.__name__.endswith("_int"):
             assert array_type.ValueType is int
             assert array_type.RealType is int
-        else:
+        elif array_type.__name__.endswith("_float"):
             assert array_type.ValueType is float
             assert array_type.RealType is float
+        else:
+            assert array_type.ValueType is complex
+            assert array_type.RealType is complex
 
 
 @pytest.mark.parametrize("array_type", array_types)
