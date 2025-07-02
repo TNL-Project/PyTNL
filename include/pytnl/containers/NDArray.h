@@ -396,6 +396,9 @@ export_NDArray( nb::module_& m, const char* name )
                else if constexpr( std::is_floating_point_v< ValueType > ) {
                   oss << "float";
                }
+               else if constexpr( TNL::is_complex_v< ValueType > ) {
+                  oss << "complex";
+               }
                else {
                   oss << TNL::getType( ValueType{} );
                }
