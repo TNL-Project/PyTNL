@@ -32,6 +32,9 @@ class _ArrayMeta(pytnl._meta.CPPClassTemplate):
     @overload
     def __getitem__(self, items: type[float]) -> type[pytnl._containers.Array_float]: ...
 
+    @overload
+    def __getitem__(self, items: type[complex]) -> type[pytnl._containers.Array_complex]: ...
+
     @override
     def __getitem__(self, items: type[bool | VT]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
         return super().__getitem__(items)
@@ -44,8 +47,9 @@ class Array(metaclass=_ArrayMeta):
     This class provides a Python interface to C++ arrays of a specific value type.
 
     Examples:
-    - `Array[float]` → `Array_float`
     - `Array[int]` → `Array_int`
+    - `Array[float]` → `Array_float`
+    - `Array[complex]` → `Array_complex`
     """
 
 
@@ -65,6 +69,9 @@ class _VectorMeta(pytnl._meta.CPPClassTemplate):
     @overload
     def __getitem__(self, items: type[float]) -> type[pytnl._containers.Vector_float]: ...
 
+    @overload
+    def __getitem__(self, items: type[complex]) -> type[pytnl._containers.Vector_complex]: ...
+
     @override
     def __getitem__(self, items: type[VT]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
         return super().__getitem__(items)
@@ -77,8 +84,9 @@ class Vector(metaclass=_VectorMeta):
     This class provides a Python interface to C++ vectors of a specific value type.
 
     Examples:
-    - `Vector[float] → `Vector_float`
     - `Vector[int]` → `Vector_int`
+    - `Vector[float] → `Vector_float`
+    - `Vector[complex] → `Vector_complex`
     """
 
 
@@ -112,6 +120,15 @@ class _StaticVectorMeta(pytnl._meta.CPPClassTemplate):
 
     @overload
     def __getitem__(self, items: tuple[Literal[3], type[float]]) -> type[pytnl._containers.StaticVector_3_float]: ...
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[1], type[complex]]) -> type[pytnl._containers.StaticVector_1_complex]: ...
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[2], type[complex]]) -> type[pytnl._containers.StaticVector_2_complex]: ...
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[3], type[complex]]) -> type[pytnl._containers.StaticVector_3_complex]: ...
 
     @override
     def __getitem__(self, items: tuple[DIMS, type[VT]]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
@@ -160,6 +177,15 @@ class _NDArrayMeta(pytnl._meta.CPPClassTemplate):
 
     @overload
     def __getitem__(self, items: tuple[Literal[3], type[float]]) -> type[pytnl._containers.NDArray_3_float]: ...
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[1], type[complex]]) -> type[pytnl._containers.NDArray_1_complex]: ...
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[2], type[complex]]) -> type[pytnl._containers.NDArray_2_complex]: ...
+
+    @overload
+    def __getitem__(self, items: tuple[Literal[3], type[complex]]) -> type[pytnl._containers.NDArray_3_complex]: ...
 
     @override
     def __getitem__(self, items: tuple[DIMS, type[VT]]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]

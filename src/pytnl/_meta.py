@@ -2,7 +2,7 @@ from types import ModuleType
 from typing import Any, Literal, TypeGuard, cast, get_args
 
 # value types
-type VT = int | float
+type VT = int | float | complex
 
 # static dimensions
 type DIMS = Literal[1, 2, 3]
