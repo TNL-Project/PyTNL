@@ -28,7 +28,7 @@ def_vector_operators( nb::class_< VectorType, Args... >& vector )
          nb::sig( "def __ne__(self, arg: object, /) -> bool" ),
          nb::is_operator() );
 
-   if constexpr( TNL::IsScalarType< RealType >::value ) {
+   if constexpr( TNL::IsScalarType< RealType >::value && ! TNL::is_complex_v< RealType > ) {
       vector
          .def(
             "__lt__",
@@ -60,7 +60,7 @@ def_vector_operators( nb::class_< VectorType, Args... >& vector )
             nb::is_operator() );
    }
 
-   if constexpr( TNL::IsScalarType< RealType >::value || TNL::is_complex_v< RealType > ) {
+   if constexpr( TNL::IsScalarType< RealType >::value ) {
       vector
          // In-place arithmetic operators (Vector OP Vector)
          .def(
