@@ -96,7 +96,7 @@ FetchContent_MakeAvailable(TNL)
 
 FetchContent_Declare(nanobind
     GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-    GIT_TAG v2.7.0
+    GIT_TAG v2.8.0
     SYSTEM
     FIND_PACKAGE_ARGS
 )
