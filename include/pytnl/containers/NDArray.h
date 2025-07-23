@@ -101,62 +101,63 @@ ndarray_iteration( nb::class_< ArrayType, Args... >& array )
 {
    using SizesHolderType = typename ArrayType::SizesHolderType;
 
-   // FIXME: calling Python functions will not work on CUDA (even using Devices::Host fails due to GIL...)
-
-   array
-      .def(
-         "forAll",
-         []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forAll< TNL::Devices::Sequential >( f );
-         },
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all elements of the array. "
-         "The function is called with N indices, where N is the array dimension." )
-      .def(
-         "forInterior",
-         []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forInterior< TNL::Devices::Sequential >( f );
-         },
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all interior elements of the array. "
-         "Excludes one element from each side of each dimension." )
-      .def(
-         "forInterior",
-         []( ArrayType& self,
-             const SizesHolderType& begins,
-             const SizesHolderType& ends,
-             const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forInterior< TNL::Devices::Sequential >( begins, ends, f );
-         },
-         nb::arg( "begins" ),
-         nb::arg( "ends" ),
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all elements inside the given N-dimensional range `[begins, ends)`." )
-      .def(
-         "forBoundary",
-         []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forBoundary< TNL::Devices::Sequential >( f );
-         },
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all boundary elements of the array." )
-      .def(
-         "forBoundary",
-         []( ArrayType& self,
-             const SizesHolderType& skipBegins,
-             const SizesHolderType& skipEnds,
-             const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forBoundary< TNL::Devices::Sequential >( skipBegins, skipEnds, f );
-         },
-         nb::arg( "skipBegins" ),
-         nb::arg( "skipEnds" ),
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all elements outside the given N-dimensional range "
-         "`[skipBegins, skipEnds)`." );
+   // FIXME: calling Python functions does not work on CUDA (even using Devices::Host fails due to GIL...)
+   if constexpr( ! std::is_same_v< typename ArrayType::DeviceType, TNL::Devices::GPU > ) {
+      array
+         .def(
+            "forAll",
+            []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forAll< TNL::Devices::Sequential >( f );
+            },
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all elements of the array. "
+            "The function is called with N indices, where N is the array dimension." )
+         .def(
+            "forInterior",
+            []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forInterior< TNL::Devices::Sequential >( f );
+            },
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all interior elements of the array. "
+            "Excludes one element from each side of each dimension." )
+         .def(
+            "forInterior",
+            []( ArrayType& self,
+                const SizesHolderType& begins,
+                const SizesHolderType& ends,
+                const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forInterior< TNL::Devices::Sequential >( begins, ends, f );
+            },
+            nb::arg( "begins" ),
+            nb::arg( "ends" ),
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all elements inside the given N-dimensional range `[begins, ends)`." )
+         .def(
+            "forBoundary",
+            []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forBoundary< TNL::Devices::Sequential >( f );
+            },
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all boundary elements of the array." )
+         .def(
+            "forBoundary",
+            []( ArrayType& self,
+                const SizesHolderType& skipBegins,
+                const SizesHolderType& skipEnds,
+                const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forBoundary< TNL::Devices::Sequential >( skipBegins, skipEnds, f );
+            },
+            nb::arg( "skipBegins" ),
+            nb::arg( "skipEnds" ),
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all elements outside the given N-dimensional range "
+            "`[skipBegins, skipEnds)`." );
+   }
 }
 
 template< typename IndexerType >
