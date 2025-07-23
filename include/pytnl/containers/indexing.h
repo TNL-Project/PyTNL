@@ -35,7 +35,8 @@ def_indexing( Scope& scope )
                     throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
                                              + std::to_string( a.getSize() ) )
                                               .c_str() );
-                 return a[ i ];
+                 // getElement is equivalent to operator[] on host but works on cuda
+                 return a.getElement( i );
               } );
 
    scope.def( "__setitem__",
@@ -45,7 +46,8 @@ def_indexing( Scope& scope )
                     throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
                                              + std::to_string( a.getSize() ) )
                                               .c_str() );
-                 a[ i ] = e;
+                 // setElement is equivalent to operator[] on host but works on cuda
+                 a.setElement( i, e );
               } );
 }
 
@@ -64,7 +66,8 @@ def_slice_indexing( Scope& scope )
          seq->setSize( slicelength );
 
          for( std::size_t i = 0; i < slicelength; ++i ) {
-            seq->operator[]( i ) = a[ start ];
+            // setElement/getElement is equivalent to operator[] on host but works on cuda
+            seq->setElement( i, a.getElement( start ) );
             start += step;
          }
          return seq;
@@ -82,7 +85,8 @@ def_slice_indexing( Scope& scope )
                                       "assignment have different sizes!" );
 
          for( std::size_t i = 0; i < slicelength; ++i ) {
-            a[ start ] = value[ i ];
+            // setElement/getElement is equivalent to operator[] on host but works on cuda
+            a.setElement( start, value.getElement( i ) );
             start += step;
          }
       },
