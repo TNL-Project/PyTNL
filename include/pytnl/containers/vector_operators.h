@@ -356,4 +356,25 @@ def_vector_operators( nb::class_< VectorType, Args... >& vector )
                   return VectorType( ~self );
                } );
    }
+
+   // While not operators, these functions are defined as expression templates
+   // in TNL and also exposed via dunder methods in Python.
+   vector.def( "__abs__",
+               []( const VectorType& self )
+               {
+                  return VectorType( TNL::abs( self ) );
+               } );
+   if constexpr( TNL::IsScalarType< RealType >::value && ! TNL::is_complex_v< RealType > ) {
+      vector  //
+         .def( "__floor__",
+               []( const VectorType& self )
+               {
+                  return VectorType( TNL::floor( self ) );
+               } )
+         .def( "__ceil__",
+               []( const VectorType& self )
+               {
+                  return VectorType( TNL::ceil( self ) );
+               } );
+   }
 }

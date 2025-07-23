@@ -531,3 +531,38 @@ def test_vector_ge(vector_type: type[Vreal], data: st.DataObject) -> None:
     v1 = create_vector(elements1, vector_type)
     v2 = create_vector(elements2, vector_type)
     assert (v1 >= v2) == (elements1 >= elements2)
+
+
+# ----------------------
+# Functions
+# ----------------------
+
+
+@pytest.mark.parametrize("vector_type", vector_types)
+@given(data=st.data())
+def test_abs(vector_type: type[V], data: st.DataObject) -> None:
+    v = data.draw(vector_strategy(vector_type))
+    v2 = abs(v)
+    assert isinstance(v2, vector_type)
+    for i in range(v.getSize()):
+        assert v2[i] == abs(v[i])
+
+
+@pytest.mark.parametrize("vector_type", real_vector_types)
+@given(data=st.data())
+def test_floor(vector_type: type[Vreal], data: st.DataObject) -> None:
+    v = data.draw(vector_strategy(vector_type))
+    v2 = math.floor(v)
+    assert isinstance(v2, vector_type)
+    for i in range(v.getSize()):
+        assert v2[i] == math.floor(v[i])
+
+
+@pytest.mark.parametrize("vector_type", real_vector_types)
+@given(data=st.data())
+def test_ceil(vector_type: type[Vreal], data: st.DataObject) -> None:
+    v = data.draw(vector_strategy(vector_type))
+    v2 = math.ceil(v)
+    assert isinstance(v2, vector_type)
+    for i in range(v.getSize()):
+        assert v2[i] == math.ceil(v[i])
