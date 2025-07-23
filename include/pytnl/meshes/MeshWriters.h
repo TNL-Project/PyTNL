@@ -11,12 +11,17 @@ struct PyOstreamHelper
    nb::object obj;
    pystreambuf::ostream str;
 
-   PyOstreamHelper( nb::object src ) : obj( nb::borrow( src ) ), str( obj ) {}
+   PyOstreamHelper( nb::object src )
+   : obj( nb::borrow( src ) ),
+     str( obj )
+   {}
 };
 
 template< typename Writer, TNL::Meshes::VTK::FileFormat default_format >
 struct PyMeshWriter : public PyOstreamHelper, public Writer
 {
-   PyMeshWriter( nb::object src, TNL::Meshes::VTK::FileFormat format = default_format ) : PyOstreamHelper( src ), Writer( str )
+   PyMeshWriter( nb::object src, TNL::Meshes::VTK::FileFormat format = default_format )
+   : PyOstreamHelper( src ),
+     Writer( str )
    {}
 };

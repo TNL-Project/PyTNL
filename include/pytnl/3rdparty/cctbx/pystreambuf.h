@@ -161,8 +161,11 @@ public:
      py_write( getattr( python_file_obj, "write", nanobind::none() ) ),
      py_seek( getattr( python_file_obj, "seek", nanobind::none() ) ),
      py_tell( getattr( python_file_obj, "tell", nanobind::none() ) ),
-     buffer_size( buffer_size_ != 0 ? buffer_size_ : default_buffer_size ), write_buffer( 0 ),
-     pos_of_read_buffer_end_in_py_file( 0 ), pos_of_write_buffer_end_in_py_file( buffer_size ), farthest_pptr( 0 )
+     buffer_size( buffer_size_ != 0 ? buffer_size_ : default_buffer_size ),
+     write_buffer( 0 ),
+     pos_of_read_buffer_end_in_py_file( 0 ),
+     pos_of_write_buffer_end_in_py_file( buffer_size ),
+     farthest_pptr( 0 )
    {
       assert( buffer_size != 0 );
       /* Some Python file objects (e.g. sys.stdout and sys.stdin)
@@ -449,7 +452,8 @@ public:
    class istream : public std::istream
    {
    public:
-      istream( streambuf& buf ) : std::istream( &buf )
+      istream( streambuf& buf )
+      : std::istream( &buf )
       {
          exceptions( std::ios_base::badbit | std::ios_base::failbit );
       }
@@ -464,7 +468,8 @@ public:
    class ostream : public std::ostream
    {
    public:
-      ostream( streambuf& buf ) : std::ostream( &buf )
+      ostream( streambuf& buf )
+      : std::ostream( &buf )
       {
          exceptions( std::ios_base::badbit | std::ios_base::failbit );
       }
@@ -489,7 +494,8 @@ struct streambuf_capsule
 struct ostream : private streambuf_capsule, streambuf::ostream
 {
    ostream( nanobind::object& python_file_obj, std::size_t buffer_size = 0 )
-   : streambuf_capsule( python_file_obj, buffer_size ), streambuf::ostream( python_streambuf )
+   : streambuf_capsule( python_file_obj, buffer_size ),
+     streambuf::ostream( python_streambuf )
    {}
 
    ~ostream()
@@ -503,7 +509,8 @@ struct ostream : private streambuf_capsule, streambuf::ostream
 struct istream : private streambuf_capsule, streambuf::istream
 {
    istream( nanobind::object& python_file_obj, std::size_t buffer_size = 0 )
-   : streambuf_capsule( python_file_obj, buffer_size ), streambuf::istream( python_streambuf )
+   : streambuf_capsule( python_file_obj, buffer_size ),
+     streambuf::istream( python_streambuf )
    {}
 
    ~istream()

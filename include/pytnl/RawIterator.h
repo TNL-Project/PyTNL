@@ -30,7 +30,7 @@ public:
    operator=( DataType* ptr )
    {
       m_ptr = ptr;
-      return ( *this );
+      return *this;
    }
 
    operator bool() const
@@ -44,37 +44,37 @@ public:
    bool
    operator==( const RawIterator< DataType >& rawIterator ) const
    {
-      return ( m_ptr == rawIterator.getConstPtr() );
+      return m_ptr == rawIterator.getConstPtr();
    }
    bool
    operator!=( const RawIterator< DataType >& rawIterator ) const
    {
-      return ( m_ptr != rawIterator.getConstPtr() );
+      return m_ptr != rawIterator.getConstPtr();
    }
 
    RawIterator< DataType >&
    operator+=( const ptrdiff_t& movement )
    {
       m_ptr += movement;
-      return ( *this );
+      return *this;
    }
    RawIterator< DataType >&
    operator-=( const ptrdiff_t& movement )
    {
       m_ptr -= movement;
-      return ( *this );
+      return *this;
    }
    RawIterator< DataType >&
    operator++()
    {
       ++m_ptr;
-      return ( *this );
+      return *this;
    }
    RawIterator< DataType >&
    operator--()
    {
       --m_ptr;
-      return ( *this );
+      return *this;
    }
    RawIterator< DataType >
    operator++( int )

@@ -6,7 +6,9 @@
 
 struct NotImplementedError : public std::runtime_error
 {
-   NotImplementedError( const char* msg ) : std::runtime_error( msg ) {}
+   NotImplementedError( const char* msg )
+   : std::runtime_error( msg )
+   {}
 };
 
 static void
