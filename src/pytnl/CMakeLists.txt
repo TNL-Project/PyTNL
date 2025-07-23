@@ -2,6 +2,12 @@ set(src_containers
     containers/containers.cpp
 )
 nanobind_add_module(_containers ${src_containers})
+set(src_containers_cuda
+    containers/containers.cu
+)
+if (PyTNL_BUILD_CUDA)
+    nanobind_add_module(_containers_cuda ${src_containers_cuda})
+endif()
 set(src_matrices
     matrices/matrices.cpp
 )
@@ -43,6 +49,14 @@ set(modules
 set(module_depends__containers)
 set(module_depends_matrices _containers)
 set(module_depends__meshes _containers)
+
+# add CUDA modules
+if (PyTNL_BUILD_CUDA)
+    list(APPEND modules
+            _containers_cuda
+    )
+    set(module_depends__containers_cuda _containers)
+endif()
 
 # set common properties
 foreach(target IN ITEMS ${modules})
