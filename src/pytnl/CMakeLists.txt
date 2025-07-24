@@ -12,6 +12,12 @@ set(src_matrices
     matrices/matrices.cpp
 )
 nanobind_add_module(matrices ${src_matrices})
+set(src_matrices_cuda
+    matrices/matrices.cu
+)
+if (PyTNL_BUILD_CUDA)
+    nanobind_add_module(matrices_cuda ${src_matrices_cuda})
+endif()
 set(src_meshes
     meshes/Grid1D.cpp
     meshes/Grid2D.cpp
@@ -54,8 +60,10 @@ set(module_depends__meshes _containers)
 if (PyTNL_BUILD_CUDA)
     list(APPEND modules
             _containers_cuda
+            matrices_cuda
     )
     set(module_depends__containers_cuda _containers)
+    set(module_depends_matrices_cuda _containers_cuda)
 endif()
 
 # set common properties
