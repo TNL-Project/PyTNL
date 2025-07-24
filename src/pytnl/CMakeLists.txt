@@ -19,19 +19,34 @@ if (PyTNL_BUILD_CUDA)
     nanobind_add_module(matrices_cuda ${src_matrices_cuda})
 endif()
 set(src_meshes
+    meshes/VTKTraits.cpp
     meshes/Grid1D.cpp
     meshes/Grid2D.cpp
     meshes/Grid3D.cpp
     meshes/Mesh.cpp
     meshes/MeshReaders.cpp
     meshes/MeshWriters.cpp
-    meshes/VTKTraits.cpp
     meshes/resolveMeshType.cpp
     meshes/DistributedMesh.cpp
     meshes/DistributedMeshReaders.cpp
     meshes/DistributedMeshWriters.cpp
     meshes/distributeSubentities.cpp
     meshes/meshes.cpp
+)
+set(src_meshes_cuda
+    # VTKTraits has no GPU code
+    meshes/Grid1D.cu
+    meshes/Grid2D.cu
+    meshes/Grid3D.cu
+    meshes/Mesh.cu
+    meshes/MeshReaders.cu
+    meshes/MeshWriters.cu
+    meshes/resolveMeshType.cu
+    meshes/DistributedMesh.cu
+    meshes/DistributedMeshReaders.cu
+    meshes/DistributedMeshWriters.cu
+    # distributeSubentities is host-only
+    meshes/meshes.cu
 )
 nanobind_add_module(_meshes ${src_meshes})
 
@@ -43,6 +58,19 @@ target_link_libraries(_meshes PUBLIC ZLIB::ZLIB tinyxml2::tinyxml2)
 find_package(MPI COMPONENTS CXX REQUIRED)
 target_compile_definitions(_meshes PUBLIC "-DHAVE_MPI")
 target_link_libraries(_meshes PUBLIC MPI::MPI_CXX)
+
+if (PyTNL_BUILD_CUDA)
+    nanobind_add_module(_meshes_cuda ${src_meshes_cuda})
+
+    # add dependencies
+    target_compile_definitions(_meshes_cuda PUBLIC "-DHAVE_ZLIB -DHAVE_TINYXML2")
+    target_link_libraries(_meshes_cuda PUBLIC ZLIB::ZLIB tinyxml2::tinyxml2)
+
+    # enable MPI
+    find_package(MPI COMPONENTS CXX REQUIRED)
+    target_compile_definitions(_meshes_cuda PUBLIC "-DHAVE_MPI")
+    target_link_libraries(_meshes_cuda PUBLIC MPI::MPI_CXX)
+endif()
 
 # define a list of modules
 set(modules
@@ -61,9 +89,11 @@ if (PyTNL_BUILD_CUDA)
     list(APPEND modules
             _containers_cuda
             matrices_cuda
+            _meshes_cuda
     )
     set(module_depends__containers_cuda _containers)
     set(module_depends_matrices_cuda _containers_cuda)
+    set(module_depends__meshes_cuda _containers_cuda _meshes)
 endif()
 
 # set common properties
