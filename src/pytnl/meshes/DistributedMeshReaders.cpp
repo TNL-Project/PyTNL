@@ -24,21 +24,21 @@ export_DistributedMeshReaders( nb::module_& m )
       nb::class_< PVTUReader, XMLVTK >( m, "PVTUReader" )
          .def( nb::init< std::string >() )
          // loadMesh is not virtual in PVTUReader
-         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfEdges > )
-         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTriangles > )
-         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfQuadrangles > )
-         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTetrahedrons > )
-         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfHexahedrons > );
+         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfEdges_host > )
+         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTriangles_host > )
+         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfQuadrangles_host > )
+         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTetrahedrons_host > )
+         .def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfHexahedrons_host > );
 
-   // Add overloads for all types that loadMesh in the base class can handle to make mypy happy,
-   export_dummy_loadMesh< Grid1D >( reader );
-   export_dummy_loadMesh< Grid2D >( reader );
-   export_dummy_loadMesh< Grid3D >( reader );
-   export_dummy_loadMesh< MeshOfEdges >( reader );
-   export_dummy_loadMesh< MeshOfTriangles >( reader );
-   export_dummy_loadMesh< MeshOfQuadrangles >( reader );
-   export_dummy_loadMesh< MeshOfTetrahedrons >( reader );
-   export_dummy_loadMesh< MeshOfHexahedrons >( reader );
-   export_dummy_loadMesh< MeshOfPolygons >( reader );
-   export_dummy_loadMesh< MeshOfPolyhedrons >( reader );
+   // Add overloads for all types that loadMesh in the base class can handle to make mypy happy
+   export_dummy_loadMesh< Grid_1_host >( reader );
+   export_dummy_loadMesh< Grid_2_host >( reader );
+   export_dummy_loadMesh< Grid_3_host >( reader );
+   export_dummy_loadMesh< MeshOfEdges_host >( reader );
+   export_dummy_loadMesh< MeshOfTriangles_host >( reader );
+   export_dummy_loadMesh< MeshOfQuadrangles_host >( reader );
+   export_dummy_loadMesh< MeshOfTetrahedrons_host >( reader );
+   export_dummy_loadMesh< MeshOfHexahedrons_host >( reader );
+   export_dummy_loadMesh< MeshOfPolygons_host >( reader );
+   export_dummy_loadMesh< MeshOfPolyhedrons_host >( reader );
 }

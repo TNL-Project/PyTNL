@@ -5,6 +5,7 @@
 void
 export_resolveMeshType( nb::module_& m )
 {
+   using DeviceType = TNL::Devices::Host;
    using MeshReader = TNL::Meshes::Readers::MeshReader;
 
    auto resolveMeshType = []( const std::string& file_name, const std::string& file_format = "auto" )  //

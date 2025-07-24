@@ -3,5 +3,5 @@
 void
 export_Grid3D( nb::module_& m )
 {
-   export_Grid< Grid3D >( m, "Grid_3" );
+   export_Grid< Grid_3_host >( m, "Grid_3" );
 }
