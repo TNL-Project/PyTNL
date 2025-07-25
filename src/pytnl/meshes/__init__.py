@@ -1,4 +1,4 @@
-from typing import Any, Literal, overload, override  # noqa: I001
+from typing import Any, Literal, overload  # noqa: I001
 
 import pytnl._meshes
 import pytnl._meta
@@ -90,18 +90,18 @@ class _GridMeta(pytnl._meta.CPPClassTemplate):
     # selects the first overload in a tie.
     # https://stackoverflow.com/a/62734976
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: Literal[1]) -> type[pytnl._meshes.Grid_1]: ...
+    @overload
+    def __getitem__(self, key: Literal[1]) -> type[pytnl._meshes.Grid_1]: ...
 
     @overload
-    def __getitem__(self, items: Literal[2]) -> type[pytnl._meshes.Grid_2]: ...
+    def __getitem__(self, key: Literal[2]) -> type[pytnl._meshes.Grid_2]: ...
 
     @overload
-    def __getitem__(self, items: Literal[3]) -> type[pytnl._meshes.Grid_3]: ...
+    def __getitem__(self, key: Literal[3]) -> type[pytnl._meshes.Grid_3]: ...
 
-    @override
-    def __getitem__(self, items: DIMS) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
-        return super().__getitem__(items)
+    def __getitem__(self, key: DIMS) -> type[Any]:
+        items = (key,)
+        return self._get_cpp_class(items)
 
 
 class Grid(metaclass=_GridMeta):
@@ -127,20 +127,18 @@ class _VTIWriterMeta(pytnl._meta.CPPClassTemplate):
     # selects the first overload in a tie.
     # https://stackoverflow.com/a/62734976
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: type[pytnl._meshes.Grid_1]) -> type[pytnl._meshes.VTIWriter_Grid_1]: ...
+    @overload
+    def __getitem__(self, key: type[pytnl._meshes.Grid_1]) -> type[pytnl._meshes.VTIWriter_Grid_1]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.Grid_2]) -> type[pytnl._meshes.VTIWriter_Grid_2]: ...
+    def __getitem__(self, key: type[pytnl._meshes.Grid_2]) -> type[pytnl._meshes.VTIWriter_Grid_2]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.Grid_3]) -> type[pytnl._meshes.VTIWriter_Grid_3]: ...
+    def __getitem__(self, key: type[pytnl._meshes.Grid_3]) -> type[pytnl._meshes.VTIWriter_Grid_3]: ...
 
-    @override
-    def __getitem__(  # pyright: ignore[reportIncompatibleMethodOverride]
-        self, items: type[pytnl._meshes.Grid_1 | pytnl._meshes.Grid_2 | pytnl._meshes.Grid_3]
-    ) -> type[Any]:
-        return super().__getitem__(items)
+    def __getitem__(self, key: type[pytnl._meshes.Grid_1 | pytnl._meshes.Grid_2 | pytnl._meshes.Grid_3]) -> type[Any]:
+        items = (key,)
+        return self._get_cpp_class(items)
 
 
 class VTIWriter(metaclass=_VTIWriterMeta):
@@ -166,40 +164,39 @@ class _VTUWriterMeta(pytnl._meta.CPPClassTemplate):
     # selects the first overload in a tie.
     # https://stackoverflow.com/a/62734976
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: type[pytnl._meshes.Grid_1]) -> type[pytnl._meshes.VTUWriter_Grid_1]: ...
+    @overload
+    def __getitem__(self, key: type[pytnl._meshes.Grid_1]) -> type[pytnl._meshes.VTUWriter_Grid_1]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.Grid_2]) -> type[pytnl._meshes.VTUWriter_Grid_2]: ...
+    def __getitem__(self, key: type[pytnl._meshes.Grid_2]) -> type[pytnl._meshes.VTUWriter_Grid_2]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.Grid_3]) -> type[pytnl._meshes.VTUWriter_Grid_3]: ...
+    def __getitem__(self, key: type[pytnl._meshes.Grid_3]) -> type[pytnl._meshes.VTUWriter_Grid_3]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfEdges]) -> type[pytnl._meshes.VTUWriter_MeshOfEdges]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfEdges]) -> type[pytnl._meshes.VTUWriter_MeshOfEdges]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfHexahedrons]) -> type[pytnl._meshes.VTUWriter_MeshOfHexahedrons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfHexahedrons]) -> type[pytnl._meshes.VTUWriter_MeshOfHexahedrons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfPolygons]) -> type[pytnl._meshes.VTUWriter_MeshOfPolygons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfPolygons]) -> type[pytnl._meshes.VTUWriter_MeshOfPolygons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfPolyhedrons]) -> type[pytnl._meshes.VTUWriter_MeshOfPolyhedrons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfPolyhedrons]) -> type[pytnl._meshes.VTUWriter_MeshOfPolyhedrons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfQuadrangles]) -> type[pytnl._meshes.VTUWriter_MeshOfQuadrangles]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfQuadrangles]) -> type[pytnl._meshes.VTUWriter_MeshOfQuadrangles]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfTetrahedrons]) -> type[pytnl._meshes.VTUWriter_MeshOfTetrahedrons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfTetrahedrons]) -> type[pytnl._meshes.VTUWriter_MeshOfTetrahedrons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfTriangles]) -> type[pytnl._meshes.VTUWriter_MeshOfTriangles]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfTriangles]) -> type[pytnl._meshes.VTUWriter_MeshOfTriangles]: ...
 
-    @override
-    def __getitem__(  # pyright: ignore[reportIncompatibleMethodOverride]
+    def __getitem__(
         self,
-        items: type[
+        key: type[
             pytnl._meshes.Grid_1
             | pytnl._meshes.Grid_2
             | pytnl._meshes.Grid_3
@@ -212,7 +209,8 @@ class _VTUWriterMeta(pytnl._meta.CPPClassTemplate):
             | pytnl._meshes.MeshOfTriangles
         ],
     ) -> type[Any]:
-        return super().__getitem__(items)
+        items = (key,)
+        return self._get_cpp_class(items)
 
 
 class VTUWriter(metaclass=_VTUWriterMeta):
@@ -237,40 +235,39 @@ class _VTKWriterMeta(pytnl._meta.CPPClassTemplate):
     # selects the first overload in a tie.
     # https://stackoverflow.com/a/62734976
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: type[pytnl._meshes.Grid_1]) -> type[pytnl._meshes.VTKWriter_Grid_1]: ...
+    @overload
+    def __getitem__(self, key: type[pytnl._meshes.Grid_1]) -> type[pytnl._meshes.VTKWriter_Grid_1]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.Grid_2]) -> type[pytnl._meshes.VTKWriter_Grid_2]: ...
+    def __getitem__(self, key: type[pytnl._meshes.Grid_2]) -> type[pytnl._meshes.VTKWriter_Grid_2]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.Grid_3]) -> type[pytnl._meshes.VTKWriter_Grid_3]: ...
+    def __getitem__(self, key: type[pytnl._meshes.Grid_3]) -> type[pytnl._meshes.VTKWriter_Grid_3]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfEdges]) -> type[pytnl._meshes.VTKWriter_MeshOfEdges]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfEdges]) -> type[pytnl._meshes.VTKWriter_MeshOfEdges]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfHexahedrons]) -> type[pytnl._meshes.VTKWriter_MeshOfHexahedrons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfHexahedrons]) -> type[pytnl._meshes.VTKWriter_MeshOfHexahedrons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfPolygons]) -> type[pytnl._meshes.VTKWriter_MeshOfPolygons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfPolygons]) -> type[pytnl._meshes.VTKWriter_MeshOfPolygons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfPolyhedrons]) -> type[pytnl._meshes.VTKWriter_MeshOfPolyhedrons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfPolyhedrons]) -> type[pytnl._meshes.VTKWriter_MeshOfPolyhedrons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfQuadrangles]) -> type[pytnl._meshes.VTKWriter_MeshOfQuadrangles]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfQuadrangles]) -> type[pytnl._meshes.VTKWriter_MeshOfQuadrangles]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfTetrahedrons]) -> type[pytnl._meshes.VTKWriter_MeshOfTetrahedrons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfTetrahedrons]) -> type[pytnl._meshes.VTKWriter_MeshOfTetrahedrons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfTriangles]) -> type[pytnl._meshes.VTKWriter_MeshOfTriangles]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfTriangles]) -> type[pytnl._meshes.VTKWriter_MeshOfTriangles]: ...
 
-    @override
-    def __getitem__(  # pyright: ignore[reportIncompatibleMethodOverride]
+    def __getitem__(
         self,
-        items: type[
+        key: type[
             pytnl._meshes.Grid_1
             | pytnl._meshes.Grid_2
             | pytnl._meshes.Grid_3
@@ -283,7 +280,8 @@ class _VTKWriterMeta(pytnl._meta.CPPClassTemplate):
             | pytnl._meshes.MeshOfTriangles
         ],
     ) -> type[Any]:
-        return super().__getitem__(items)
+        items = (key,)
+        return self._get_cpp_class(items)
 
 
 class VTKWriter(metaclass=_VTKWriterMeta):
@@ -308,25 +306,24 @@ class _PVTUWriterMeta(pytnl._meta.CPPClassTemplate):
     # selects the first overload in a tie.
     # https://stackoverflow.com/a/62734976
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfEdges]) -> type[pytnl._meshes.PVTUWriter_MeshOfEdges]: ...
+    @overload
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfEdges]) -> type[pytnl._meshes.PVTUWriter_MeshOfEdges]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfHexahedrons]) -> type[pytnl._meshes.PVTUWriter_MeshOfHexahedrons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfHexahedrons]) -> type[pytnl._meshes.PVTUWriter_MeshOfHexahedrons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfQuadrangles]) -> type[pytnl._meshes.PVTUWriter_MeshOfQuadrangles]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfQuadrangles]) -> type[pytnl._meshes.PVTUWriter_MeshOfQuadrangles]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfTetrahedrons]) -> type[pytnl._meshes.PVTUWriter_MeshOfTetrahedrons]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfTetrahedrons]) -> type[pytnl._meshes.PVTUWriter_MeshOfTetrahedrons]: ...
 
     @overload
-    def __getitem__(self, items: type[pytnl._meshes.MeshOfTriangles]) -> type[pytnl._meshes.PVTUWriter_MeshOfTriangles]: ...
+    def __getitem__(self, key: type[pytnl._meshes.MeshOfTriangles]) -> type[pytnl._meshes.PVTUWriter_MeshOfTriangles]: ...
 
-    @override
-    def __getitem__(  # pyright: ignore[reportIncompatibleMethodOverride]
+    def __getitem__(
         self,
-        items: type[
+        key: type[
             pytnl._meshes.MeshOfEdges
             | pytnl._meshes.MeshOfHexahedrons
             | pytnl._meshes.MeshOfQuadrangles
@@ -334,7 +331,8 @@ class _PVTUWriterMeta(pytnl._meta.CPPClassTemplate):
             | pytnl._meshes.MeshOfTriangles
         ],
     ) -> type[Any]:
-        return super().__getitem__(items)
+        items = (key,)
+        return self._get_cpp_class(items)
 
 
 class PVTUWriter(metaclass=_PVTUWriterMeta):

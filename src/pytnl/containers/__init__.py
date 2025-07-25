@@ -1,4 +1,4 @@
-from typing import Any, Literal, overload, override
+from typing import Any, Literal, overload
 
 import pytnl._containers
 import pytnl._meta
@@ -23,21 +23,21 @@ class _ArrayMeta(pytnl._meta.CPPClassTemplate):
     # selects the first overload in a tie.
     # https://stackoverflow.com/a/62734976
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: type[bool]) -> type[pytnl._containers.Array_bool]: ...  # type: ignore[overload-overlap]
+    @overload
+    def __getitem__(self, key: type[bool]) -> type[pytnl._containers.Array_bool]: ...  # type: ignore[overload-overlap]
 
     @overload
-    def __getitem__(self, items: type[int]) -> type[pytnl._containers.Array_int]: ...
+    def __getitem__(self, key: type[int]) -> type[pytnl._containers.Array_int]: ...
 
     @overload
-    def __getitem__(self, items: type[float]) -> type[pytnl._containers.Array_float]: ...
+    def __getitem__(self, key: type[float]) -> type[pytnl._containers.Array_float]: ...
 
     @overload
-    def __getitem__(self, items: type[complex]) -> type[pytnl._containers.Array_complex]: ...
+    def __getitem__(self, key: type[complex]) -> type[pytnl._containers.Array_complex]: ...
 
-    @override
-    def __getitem__(self, items: type[bool | VT]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
-        return super().__getitem__(items)
+    def __getitem__(self, key: type[bool | VT]) -> type[Any]:
+        items = (key,)
+        return self._get_cpp_class(items)
 
 
 class Array(metaclass=_ArrayMeta):
@@ -63,18 +63,18 @@ class _VectorMeta(pytnl._meta.CPPClassTemplate):
     # selects the first overload in a tie.
     # https://stackoverflow.com/a/62734976
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: type[int]) -> type[pytnl._containers.Vector_int]: ...  # pyright: ignore[reportOverlappingOverload]
+    @overload
+    def __getitem__(self, key: type[int]) -> type[pytnl._containers.Vector_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
     @overload
-    def __getitem__(self, items: type[float]) -> type[pytnl._containers.Vector_float]: ...
+    def __getitem__(self, key: type[float]) -> type[pytnl._containers.Vector_float]: ...
 
     @overload
-    def __getitem__(self, items: type[complex]) -> type[pytnl._containers.Vector_complex]: ...
+    def __getitem__(self, key: type[complex]) -> type[pytnl._containers.Vector_complex]: ...
 
-    @override
-    def __getitem__(self, items: type[VT]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
-        return super().__getitem__(items)
+    def __getitem__(self, key: type[VT]) -> type[Any]:
+        items = (key,)
+        return self._get_cpp_class(items)
 
 
 class Vector(metaclass=_VectorMeta):
@@ -103,36 +103,35 @@ class _StaticVectorMeta(pytnl._meta.CPPClassTemplate):
     # selects the first overload in a tie.
     # https://stackoverflow.com/a/62734976
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: tuple[Literal[1], type[int]]) -> type[pytnl._containers.StaticVector_1_int]: ...  # pyright: ignore[reportOverlappingOverload]
+    @overload
+    def __getitem__(self, key: tuple[Literal[1], type[int]]) -> type[pytnl._containers.StaticVector_1_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
     @overload
-    def __getitem__(self, items: tuple[Literal[2], type[int]]) -> type[pytnl._containers.StaticVector_2_int]: ...  # pyright: ignore[reportOverlappingOverload]
+    def __getitem__(self, key: tuple[Literal[2], type[int]]) -> type[pytnl._containers.StaticVector_2_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
     @overload
-    def __getitem__(self, items: tuple[Literal[3], type[int]]) -> type[pytnl._containers.StaticVector_3_int]: ...  # pyright: ignore[reportOverlappingOverload]
+    def __getitem__(self, key: tuple[Literal[3], type[int]]) -> type[pytnl._containers.StaticVector_3_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
     @overload
-    def __getitem__(self, items: tuple[Literal[1], type[float]]) -> type[pytnl._containers.StaticVector_1_float]: ...
+    def __getitem__(self, key: tuple[Literal[1], type[float]]) -> type[pytnl._containers.StaticVector_1_float]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[2], type[float]]) -> type[pytnl._containers.StaticVector_2_float]: ...
+    def __getitem__(self, key: tuple[Literal[2], type[float]]) -> type[pytnl._containers.StaticVector_2_float]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[3], type[float]]) -> type[pytnl._containers.StaticVector_3_float]: ...
+    def __getitem__(self, key: tuple[Literal[3], type[float]]) -> type[pytnl._containers.StaticVector_3_float]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[1], type[complex]]) -> type[pytnl._containers.StaticVector_1_complex]: ...
+    def __getitem__(self, key: tuple[Literal[1], type[complex]]) -> type[pytnl._containers.StaticVector_1_complex]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[2], type[complex]]) -> type[pytnl._containers.StaticVector_2_complex]: ...
+    def __getitem__(self, key: tuple[Literal[2], type[complex]]) -> type[pytnl._containers.StaticVector_2_complex]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[3], type[complex]]) -> type[pytnl._containers.StaticVector_3_complex]: ...
+    def __getitem__(self, key: tuple[Literal[3], type[complex]]) -> type[pytnl._containers.StaticVector_3_complex]: ...
 
-    @override
-    def __getitem__(self, items: tuple[DIMS, type[VT]]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
-        return super().__getitem__(items)
+    def __getitem__(self, key: tuple[DIMS, type[VT]]) -> type[Any]:
+        return self._get_cpp_class(key)
 
 
 class StaticVector(metaclass=_StaticVectorMeta):
@@ -160,36 +159,35 @@ class _NDArrayMeta(pytnl._meta.CPPClassTemplate):
     # selects the first overload in a tie.
     # https://stackoverflow.com/a/62734976
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: tuple[Literal[1], type[int]]) -> type[pytnl._containers.NDArray_1_int]: ...  # pyright: ignore[reportOverlappingOverload]
+    @overload
+    def __getitem__(self, key: tuple[Literal[1], type[int]]) -> type[pytnl._containers.NDArray_1_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
     @overload
-    def __getitem__(self, items: tuple[Literal[2], type[int]]) -> type[pytnl._containers.NDArray_2_int]: ...  # pyright: ignore[reportOverlappingOverload]
+    def __getitem__(self, key: tuple[Literal[2], type[int]]) -> type[pytnl._containers.NDArray_2_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
     @overload
-    def __getitem__(self, items: tuple[Literal[3], type[int]]) -> type[pytnl._containers.NDArray_3_int]: ...  # pyright: ignore[reportOverlappingOverload]
+    def __getitem__(self, key: tuple[Literal[3], type[int]]) -> type[pytnl._containers.NDArray_3_int]: ...  # pyright: ignore[reportOverlappingOverload]
 
     @overload
-    def __getitem__(self, items: tuple[Literal[1], type[float]]) -> type[pytnl._containers.NDArray_1_float]: ...
+    def __getitem__(self, key: tuple[Literal[1], type[float]]) -> type[pytnl._containers.NDArray_1_float]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[2], type[float]]) -> type[pytnl._containers.NDArray_2_float]: ...
+    def __getitem__(self, key: tuple[Literal[2], type[float]]) -> type[pytnl._containers.NDArray_2_float]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[3], type[float]]) -> type[pytnl._containers.NDArray_3_float]: ...
+    def __getitem__(self, key: tuple[Literal[3], type[float]]) -> type[pytnl._containers.NDArray_3_float]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[1], type[complex]]) -> type[pytnl._containers.NDArray_1_complex]: ...
+    def __getitem__(self, key: tuple[Literal[1], type[complex]]) -> type[pytnl._containers.NDArray_1_complex]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[2], type[complex]]) -> type[pytnl._containers.NDArray_2_complex]: ...
+    def __getitem__(self, key: tuple[Literal[2], type[complex]]) -> type[pytnl._containers.NDArray_2_complex]: ...
 
     @overload
-    def __getitem__(self, items: tuple[Literal[3], type[complex]]) -> type[pytnl._containers.NDArray_3_complex]: ...
+    def __getitem__(self, key: tuple[Literal[3], type[complex]]) -> type[pytnl._containers.NDArray_3_complex]: ...
 
-    @override
-    def __getitem__(self, items: tuple[DIMS, type[VT]]) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
-        return super().__getitem__(items)
+    def __getitem__(self, key: tuple[DIMS, type[VT]]) -> type[Any]:
+        return self._get_cpp_class(key)
 
 
 class NDArray(metaclass=_NDArrayMeta):
@@ -209,18 +207,18 @@ class _NDArrayIndexerMeta(pytnl._meta.CPPClassTemplate):
     _class_prefix = "NDArrayIndexer"
     _template_parameters = (("dimension", int),)
 
-    @overload  # type: ignore[override]
-    def __getitem__(self, items: Literal[1]) -> type[pytnl._containers.NDArrayIndexer_1]: ...
+    @overload
+    def __getitem__(self, key: Literal[1]) -> type[pytnl._containers.NDArrayIndexer_1]: ...
 
     @overload
-    def __getitem__(self, items: Literal[2]) -> type[pytnl._containers.NDArrayIndexer_2]: ...
+    def __getitem__(self, key: Literal[2]) -> type[pytnl._containers.NDArrayIndexer_2]: ...
 
     @overload
-    def __getitem__(self, items: Literal[3]) -> type[pytnl._containers.NDArrayIndexer_3]: ...
+    def __getitem__(self, key: Literal[3]) -> type[pytnl._containers.NDArrayIndexer_3]: ...
 
-    @override
-    def __getitem__(self, items: DIMS) -> type[Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
-        return super().__getitem__(items)
+    def __getitem__(self, key: DIMS) -> type[Any]:
+        items = (key,)
+        return self._get_cpp_class(items)
 
 
 class NDArrayIndexer(metaclass=_NDArrayIndexerMeta):
