@@ -1,8 +1,16 @@
+from __future__ import annotations
+
+import importlib
 from types import ModuleType
 from typing import Any, Literal, TypeGuard, cast, get_args
 
+import pytnl.devices
+
 # value types
 type VT = int | float | complex
+
+# device types
+type DT = pytnl.devices.Host | pytnl.devices.Cuda
 
 # static dimensions
 type DIMS = Literal[1, 2, 3]
@@ -41,6 +49,21 @@ class CPPClassTemplate(type):
         _template_parameters (tuple[str, type]):
             The arguments of the `__getitem__` method to validate and use for
             looking up the C++ class template.
+
+        _device_parameter (str):
+            Optional special template parameter that activates dispatching
+            the C++ class lookup into different device-specific modules.
+            Example: `_device_parameter = "device_type"` -> the `device_type`
+            template parameter decides the module (`Host` means use `_cpp_module`,
+            `Cuda` means use `_cpp_module + "_cuda"`, etc.)
+
+        _dispatch_same_module_parameter (str):
+            Optional special template parameter that activates dispatching
+            the C++ class lookup into the same module that contains the class
+            given as the specified template parameter.
+            Example: `_dispatch_same_module_parameter = "array_type"` -> the
+            module that contains the `array_type` given as argument to
+            `__getitem__` is used for lookup.
     """
 
     # Configurable module for C++ class resolution
@@ -51,6 +74,15 @@ class CPPClassTemplate(type):
 
     # Configurable tuple of arguments for the __getitem__ method
     _template_parameters: tuple[tuple[str, type], ...]
+
+    # Optional special template parameter that activates dispatching the C++
+    # class lookup into different device-specific modules.
+    _device_parameter: str = ""
+
+    # Optional special template parameter that activates dispatching
+    # the C++ class lookup into the same module that contains the class
+    # given as the specified template parameter.
+    _dispatch_same_module_parameter: str = ""
 
     def _get_cpp_class(self, items: tuple[ItemType, ...]) -> type[Any]:
         """
@@ -81,7 +113,23 @@ class CPPClassTemplate(type):
             if pair[1] is type:
                 if not isinstance(item, type):
                     raise TypeError(f"{pair[0]} must be a type, got {item}")
-                class_name += f"_{item.__name__}"
+                # device type handling and module dispatching
+                if pair[0] == self._device_parameter:
+                    # host is special - no suffix, use the configured module
+                    if item is pytnl.devices.Host:
+                        pass
+                    else:
+                        # add the suffix to the module and lazy-import it
+                        module_name = f"{module.__name__}_{item.__name__.lower()}"
+                        module = importlib.import_module(module_name)
+                elif pair[0] == self._dispatch_same_module_parameter:
+                    # dispatch lookup into the module that contains the given type
+                    module = importlib.import_module(item.__module__)
+                    # add the suffix to the class name as usual
+                    class_name += f"_{item.__name__}"
+                else:
+                    # normal handling - add the suffix to the class name
+                    class_name += f"_{item.__name__}"
             else:
                 if not isinstance(item, pair[1]):
                     raise TypeError(f"{pair[0]} must be an instance of {pair[1].__name__}, got {item}")

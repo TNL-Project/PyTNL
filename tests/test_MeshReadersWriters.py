@@ -272,7 +272,10 @@ def test_mesh_file(file_path: str, expected_vertices: int, expected_cells: int, 
             pytest.fail(f"Unsupported directory: {directory}")
 
         # Choose writer based on reader
-        writer_class = pytnl.meshes.VTKWriter[mesh_class] if reader_class == pytnl.meshes.VTKReader else pytnl.meshes.VTUWriter[mesh_class]
+        if reader_class == pytnl.meshes.VTKReader:
+            writer_class = pytnl.meshes.VTKWriter[mesh_class]  # pyright: ignore[reportUnknownVariableType]
+        else:
+            writer_class = pytnl.meshes.VTUWriter[mesh_class]  # pyright: ignore[reportUnknownVariableType]
 
     # Load mesh
     mesh = mesh_class()
