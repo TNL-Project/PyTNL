@@ -31,7 +31,7 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
 
    array.def(
       "__getitem__",
-      [ dim ]( ArrayType& self, nb::object indices ) -> ValueType&
+      [ dim ]( ArrayType& self, nb::object indices ) -> ValueType
       {
          nb::tuple tuple_indices;
 
@@ -54,9 +54,10 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
 
          // Unpack the array into the operator()
          return std::apply(
-            [ & ]( auto... indices ) -> ValueType&
+            [ & ]( auto... indices ) -> ValueType
             {
-               return self( indices... );
+               // getElement is equivalent to operator[] on host but works on cuda
+               return self.getElement( indices... );
             },
             indices_array );
       },
@@ -89,7 +90,9 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
          std::apply(
             [ & ]( auto... indices )
             {
-               self( indices... ) = value;
+               // setElement is equivalent to operator[] on host but works on cuda
+               const auto idx = self.getStorageIndex( indices... );
+               self.getStorageArray().setElement( idx, value );
             },
             indices_array );
       },
