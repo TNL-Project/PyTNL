@@ -399,6 +399,57 @@ def test_deepcopy(array_type: type[A], data: st.DataObject) -> None:
 
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
+def test_dlpack(array_type: type[A], data: st.DataObject) -> None:
+    """
+    Tests interoperability with NumPy using the DLPack API.
+
+    Verifies:
+    - The returned NumPy array has the correct shape and dtype.
+    - The array contains the same data as the Array.
+    - The underlying memory is shared.
+    - Changes in NumPy are reflected in the Array and vice versa.
+    """
+
+    # Create and initialize the Array
+    array = data.draw(array_strategy(array_type))
+    assume(array.getSize() > 1)
+    dims = (array.getSize(),)
+
+    # Convert to NumPy array
+    array_np = np.from_dlpack(array)
+
+    # Check that the array is writable
+    # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
+    # https://github.com/numpy/numpy/issues/29474
+    # https://github.com/wjakob/nanobind/issues/1122
+    # assert array_np.flags.writeable
+
+    # Check shape
+    assert array_np.shape == dims, f"Expected shape {dims}, got {array_np.shape}"
+
+    # Check data type
+    if array_type.ValueType is int:
+        assert array_np.dtype == np.int_, f"Expected dtype {np.int_}, got {array_np.dtype}"
+    elif array_type.ValueType is float:
+        assert array_np.dtype == np.float64, f"Expected dtype {np.float64}, got {array_np.dtype}"
+    else:
+        assert array_np.dtype == np.complex128, f"Expected dtype {np.complex128}, got {array_np.dtype}"
+
+    # Check element-wise equality
+    assert np.all(array_np == list(array)), "Data mismatch in NumPy array"
+
+    # Modify NumPy array and verify Array reflects the change
+    # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
+    # array_np.flat[0] = 99
+    # assert array[0] == 99, "NumPy array modification not reflected in Array"
+
+    # Modify Array and verify NumPy array reflects the change
+    array[1] = 77
+    assert array_np.flat[1] == 77, "Array modification not reflected in NumPy array"
+
+
+@pytest.mark.parametrize("array_type", array_types)
+@given(data=st.data())
 def test_as_numpy(array_type: type[A], data: st.DataObject) -> None:
     """
     Tests the `as_numpy()` method of the Array class.
@@ -417,6 +468,9 @@ def test_as_numpy(array_type: type[A], data: st.DataObject) -> None:
 
     # Convert to NumPy array
     array_np = array.as_numpy()
+
+    # Check that the array is writable
+    assert array_np.flags.writeable
 
     # Check shape
     assert array_np.shape == dims, f"Expected shape {dims}, got {array_np.shape}"
