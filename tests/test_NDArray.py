@@ -355,7 +355,7 @@ def test_str_repr(value_type: type[VT], shape: tuple[int, ...]) -> None:
 
     # Check that `__str__` contains the correct value type and shape
     str_output = str(array_type)
-    expected_str = f"NDArray[{dim}, {value_type.__name__}]({', '.join(str(x) for x in shape)})"
+    expected_str = f"NDArray[{dim}, {value_type.__name__}, Host]({', '.join(str(x) for x in shape)})"
     assert str_output == expected_str
 
     # Check that `__repr__` includes memory address

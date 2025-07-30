@@ -407,6 +407,11 @@ export_NDArray( nb::module_& m, const char* name )
                else {
                   oss << TNL::getType( ValueType{} );
                }
+               oss << ", ";
+               if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > )
+                  oss << "Cuda";
+               else
+                  oss << "Host";
                oss << "](";
                TNL::Algorithms::staticFor< std::size_t, 0, dim >(
                   [ & ]( auto i )
