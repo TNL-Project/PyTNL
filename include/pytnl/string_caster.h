@@ -14,10 +14,6 @@ struct type_caster< TNL::String >
    StdStringCaster _caster;
 
 public:
-   /**
-    * This macro establishes the name 'TNL::String' in function signatures and
-    * declares a local variable 'value' of type TNL::String
-    */
    NB_TYPE_CASTER( TNL::String, const_name( "str" ) );
 
    /**

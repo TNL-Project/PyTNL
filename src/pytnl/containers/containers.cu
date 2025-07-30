@@ -4,6 +4,8 @@
 #include <pytnl/containers/Array.h>
 #include <pytnl/containers/Vector.h>
 #include <pytnl/containers/NDArray.h>
+#include <pytnl/complex_caster.h>
+#include <TNL/Arithmetics/Complex.h>
 
 using namespace TNL::Containers;
 
@@ -30,6 +32,9 @@ NB_MODULE( _containers_cuda, m )
 
    // import depending modules
    nb::module_::import_( "pytnl._containers" );
+
+   // std::complex does not work with CUDA (even in C++20)
+   using ComplexType = TNL::Arithmetics::Complex< RealType >;
 
    export_Array< _array< bool > >( m, "Array_bool" );
    export_Array< _array< IndexType > >( m, "Array_int" );
