@@ -30,6 +30,7 @@ dev = [
     "basedmypy",
     "basedpyright",
 ]
+dev-cuda = ["cupy-cuda12x"]
 
 [build-system]
 requires = ["scikit-build-core>=0.10"]
@@ -43,8 +44,9 @@ wheel.packages = []
 build-dir = "build"
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers -n auto"
+addopts = "--strict-markers -n auto -m 'not cuda'"
 markers = [
+    "cuda: marks tests that require execution with CUDA",
     "mpi: marks tests that require the mpi4py package and execution through mpirun",
 ]
 log_level = "INFO"
