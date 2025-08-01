@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal, overload
 import pytnl._meshes
 import pytnl._meta
 import pytnl.devices
+from pytnl._meshes import topologies
 
 # Import objects where Pythonizations are not needed
 from pytnl._meshes import (
@@ -26,23 +27,6 @@ from pytnl._meshes import (
     resolveMeshType,
 )
 
-# Import mesh types
-# TODO: make some Pythonization for this
-from pytnl._meshes import (
-    DistributedMeshOfEdges,
-    DistributedMeshOfHexahedrons,
-    DistributedMeshOfQuadrangles,
-    DistributedMeshOfTetrahedrons,
-    DistributedMeshOfTriangles,
-    MeshOfEdges,
-    MeshOfHexahedrons,
-    MeshOfPolygons,
-    MeshOfPolyhedrons,
-    MeshOfQuadrangles,
-    MeshOfTetrahedrons,
-    MeshOfTriangles,
-)
-
 # Import type aliases/variables
 from pytnl._meta import DIMS, DT
 
@@ -53,19 +37,9 @@ if TYPE_CHECKING:
 
 __all__ = [
     "XMLVTK",
-    "DistributedMeshOfEdges",
-    "DistributedMeshOfHexahedrons",
-    "DistributedMeshOfQuadrangles",
-    "DistributedMeshOfTetrahedrons",
-    "DistributedMeshOfTriangles",
+    "DistributedMesh",
     "Grid",
-    "MeshOfEdges",
-    "MeshOfHexahedrons",
-    "MeshOfPolygons",
-    "MeshOfPolyhedrons",
-    "MeshOfQuadrangles",
-    "MeshOfTetrahedrons",
-    "MeshOfTriangles",
+    "Mesh",
     "MeshReader",
     "PVTUReader",
     "PVTUWriter",
@@ -85,7 +59,12 @@ __all__ = [
     "getMeshReader",
     "resolveAndLoadMesh",
     "resolveMeshType",
+    "topologies",
 ]
+
+type TopologiesType = (
+    topologies.Edge | topologies.Hexahedron | topologies.Polygon | topologies.Polyhedron | topologies.Quadrangle | topologies.Tetrahedron | topologies.Triangle
+)
 
 
 class _GridMeta(pytnl._meta.CPPClassTemplate):
@@ -154,17 +133,262 @@ class _GridMeta(pytnl._meta.CPPClassTemplate):
 
 class Grid(metaclass=_GridMeta):
     """
-    Allows `Grid[dimension, device_type]` syntax to resolve to the appropriate
-    C++ `Grid` class.
+    Allows `Grid[dimension, device_type]` syntax to resolve to
+    the appropriate C++ `Grid` class.
 
     This class provides a Python interface to C++ orthogonal grids.
 
-    The `device_type` argument is optional and defaults to `pytnl.devices.host`.
+    The `device_type` argument is optional and defaults to `pytnl.devices.Host`.
 
     Examples:
     - `Grid[1]` → `_meshes.Grid_1`
-    - `Grid[2, devices.cuda]` → `_meshes_cuda.Grid_2`
-    - `Grid[3, devices.host]` → `_meshes.Grid_3`
+    - `Grid[2, devices.Cuda]` → `_meshes_cuda.Grid_2`
+    - `Grid[3, devices.Host]` → `_meshes.Grid_3`
+    """
+
+
+class _MeshMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._meshes
+    _class_prefix = "Mesh"
+    _template_parameters = (
+        ("topology", type),
+        ("device_type", type),
+    )
+    _device_parameter = "device_type"
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[topologies.Edge] | tuple[type[topologies.Edge], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._meshes.Mesh_Edge]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[topologies.Hexahedron] | tuple[type[topologies.Hexahedron], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._meshes.Mesh_Hexahedron]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[topologies.Polygon] | tuple[type[topologies.Polygon], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._meshes.Mesh_Polygon]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[topologies.Polyhedron] | tuple[type[topologies.Polyhedron], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._meshes.Mesh_Polyhedron]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[topologies.Quadrangle] | tuple[type[topologies.Quadrangle], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._meshes.Mesh_Quadrangle]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[topologies.Tetrahedron] | tuple[type[topologies.Tetrahedron], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._meshes.Mesh_Tetrahedron]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[topologies.Triangle] | tuple[type[topologies.Triangle], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._meshes.Mesh_Triangle]: ...
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[topologies.Edge], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_meshes_cuda.Mesh_Edge]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[topologies.Hexahedron], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_meshes_cuda.Mesh_Hexahedron]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[topologies.Polygon], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_meshes_cuda.Mesh_Polygon]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[topologies.Polyhedron], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_meshes_cuda.Mesh_Polyhedron]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[topologies.Quadrangle], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_meshes_cuda.Mesh_Quadrangle]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[topologies.Tetrahedron], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_meshes_cuda.Mesh_Tetrahedron]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[topologies.Triangle], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_meshes_cuda.Mesh_Triangle]: ...  # pyright: ignore
+
+    def __getitem__(
+        self,
+        key: type[TopologiesType] | tuple[type[TopologiesType], type[DT]],
+        /,
+    ) -> type[Any]:
+        if isinstance(key, tuple):
+            items = key
+        else:
+            # make a tuple of arguments, use host as the default device
+            items = (key, pytnl.devices.Host)
+        return self._get_cpp_class(items)
+
+
+class Mesh(metaclass=_MeshMeta):
+    """
+    Allows `Mesh[topology_type, device_type]` syntax to resolve to
+    the appropriate C++ `Mesh` class.
+
+    This class provides a Python interface to C++ unstructured meshes.
+
+    The `device_type` argument is optional and defaults to `pytnl.devices.Host`.
+
+    Examples:
+    - `Mesh[topologies.Edge]` → `_meshes.Mesh_Edge`
+    - `Grid[topologies.Triangle, devices.Cuda]` → `_meshes_cuda.Mesh_Triangle`
+    - `Grid[topologies.Tetrahedron, devices.Host]` → `_meshes.Mesh_Tetrahedron`
+    """
+
+
+class _DistributedMeshMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._meshes
+    _class_prefix = "DistributedMesh"
+    _template_parameters = (("mesh_type", type),)
+    _dispatch_same_module_parameter = "mesh_type"
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Edge],
+        /,
+    ) -> type[pytnl._meshes.DistributedMesh_Edge]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Hexahedron],
+        /,
+    ) -> type[pytnl._meshes.DistributedMesh_Hexahedron]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Quadrangle],
+        /,
+    ) -> type[pytnl._meshes.DistributedMesh_Quadrangle]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Tetrahedron],
+        /,
+    ) -> type[pytnl._meshes.DistributedMesh_Tetrahedron]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Triangle],
+        /,
+    ) -> type[pytnl._meshes.DistributedMesh_Triangle]: ...
+
+    @overload
+    def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
+        self,
+        key: type[_meshes_cuda.Mesh_Edge],  # pyright: ignore
+        /,
+    ) -> type[_meshes_cuda.DistributedMesh_Edge]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
+        self,
+        key: type[_meshes_cuda.Mesh_Hexahedron],  # pyright: ignore
+        /,
+    ) -> type[_meshes_cuda.DistributedMesh_Hexahedron]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
+        self,
+        key: type[_meshes_cuda.Mesh_Quadrangle],  # pyright: ignore
+        /,
+    ) -> type[_meshes_cuda.DistributedMesh_Quadrangle]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
+        self,
+        key: type[_meshes_cuda.Mesh_Tetrahedron],  # pyright: ignore
+        /,
+    ) -> type[_meshes_cuda.DistributedMesh_Tetrahedron]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
+        self,
+        key: type[_meshes_cuda.Mesh_Triangle],  # pyright: ignore
+        /,
+    ) -> type[_meshes_cuda.DistributedMesh_Triangle]: ...  # pyright: ignore
+
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: type[  # pyright: ignore
+            pytnl._meshes.Mesh_Edge
+            | pytnl._meshes.Mesh_Hexahedron
+            | pytnl._meshes.Mesh_Quadrangle
+            | pytnl._meshes.Mesh_Tetrahedron
+            | pytnl._meshes.Mesh_Triangle
+            | _meshes_cuda.Mesh_Edge  # pyright: ignore
+            | _meshes_cuda.Mesh_Hexahedron  # pyright: ignore
+            | _meshes_cuda.Mesh_Quadrangle  # pyright: ignore
+            | _meshes_cuda.Mesh_Tetrahedron  # pyright: ignore
+            | _meshes_cuda.Mesh_Triangle  # pyright: ignore
+        ],
+        /,
+    ) -> type[Any]:
+        items = (key,)  # pyright: ignore
+        return self._get_cpp_class(items)  # pyright: ignore
+
+
+class DistributedMesh(metaclass=_DistributedMeshMeta):
+    """
+    Allows `DistributedMesh[mesh_type]` syntax to resolve to
+    the appropriate C++ `DistributedMesh` class.
+
+    This class provides a Python interface to C++ distributed unstructured meshes.
+
+    Example:
+    - `DistributedMesh[Mesh[topologies.Edge]]` → `DistributedMesh_Edge`
+    - `DistributedMesh[Mesh[topologies.Polygon]]` → `DistributedMesh_Polygon`
     """
 
 
@@ -234,7 +458,8 @@ class _VTIWriterMeta(pytnl._meta.CPPClassTemplate):
 
 class VTIWriter(metaclass=_VTIWriterMeta):
     """
-    Allows `VTIWriter[grid_type]` syntax to resolve to the appropriate C++ `VTIWriter` class.
+    Allows `VTIWriter[grid_type]` syntax to resolve to
+    the appropriate C++ `VTIWriter` class.
 
     This class provides a Python interface to C++ writers for orthogonal grids.
 
@@ -275,51 +500,51 @@ class _VTUWriterMeta(pytnl._meta.CPPClassTemplate):
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfEdges],
+        key: type[pytnl._meshes.Mesh_Edge],
         /,
-    ) -> type[pytnl._meshes.VTUWriter_MeshOfEdges]: ...
+    ) -> type[pytnl._meshes.VTUWriter_Mesh_Edge]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfHexahedrons],
+        key: type[pytnl._meshes.Mesh_Hexahedron],
         /,
-    ) -> type[pytnl._meshes.VTUWriter_MeshOfHexahedrons]: ...
+    ) -> type[pytnl._meshes.VTUWriter_Mesh_Hexahedron]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfPolygons],
+        key: type[pytnl._meshes.Mesh_Polygon],
         /,
-    ) -> type[pytnl._meshes.VTUWriter_MeshOfPolygons]: ...
+    ) -> type[pytnl._meshes.VTUWriter_Mesh_Polygon]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfPolyhedrons],
+        key: type[pytnl._meshes.Mesh_Polyhedron],
         /,
-    ) -> type[pytnl._meshes.VTUWriter_MeshOfPolyhedrons]: ...
+    ) -> type[pytnl._meshes.VTUWriter_Mesh_Polyhedron]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfQuadrangles],
+        key: type[pytnl._meshes.Mesh_Quadrangle],
         /,
-    ) -> type[pytnl._meshes.VTUWriter_MeshOfQuadrangles]: ...
+    ) -> type[pytnl._meshes.VTUWriter_Mesh_Quadrangle]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfTetrahedrons],
+        key: type[pytnl._meshes.Mesh_Tetrahedron],
         /,
-    ) -> type[pytnl._meshes.VTUWriter_MeshOfTetrahedrons]: ...
+    ) -> type[pytnl._meshes.VTUWriter_Mesh_Tetrahedron]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfTriangles],
+        key: type[pytnl._meshes.Mesh_Triangle],
         /,
-    ) -> type[pytnl._meshes.VTUWriter_MeshOfTriangles]: ...
+    ) -> type[pytnl._meshes.VTUWriter_Mesh_Triangle]: ...
 
     @overload
     def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
@@ -348,13 +573,13 @@ class _VTUWriterMeta(pytnl._meta.CPPClassTemplate):
             pytnl._meshes.Grid_1
             | pytnl._meshes.Grid_2
             | pytnl._meshes.Grid_3
-            | pytnl._meshes.MeshOfEdges
-            | pytnl._meshes.MeshOfHexahedrons
-            | pytnl._meshes.MeshOfPolygons
-            | pytnl._meshes.MeshOfPolyhedrons
-            | pytnl._meshes.MeshOfQuadrangles
-            | pytnl._meshes.MeshOfTetrahedrons
-            | pytnl._meshes.MeshOfTriangles
+            | pytnl._meshes.Mesh_Edge
+            | pytnl._meshes.Mesh_Hexahedron
+            | pytnl._meshes.Mesh_Polygon
+            | pytnl._meshes.Mesh_Polyhedron
+            | pytnl._meshes.Mesh_Quadrangle
+            | pytnl._meshes.Mesh_Tetrahedron
+            | pytnl._meshes.Mesh_Triangle
             | _meshes_cuda.Grid_1  # pyright: ignore
             | _meshes_cuda.Grid_2  # pyright: ignore
             | _meshes_cuda.Grid_3  # pyright: ignore
@@ -367,13 +592,14 @@ class _VTUWriterMeta(pytnl._meta.CPPClassTemplate):
 
 class VTUWriter(metaclass=_VTUWriterMeta):
     """
-    Allows `VTUWriter[mesh_type]` syntax to resolve to the appropriate C++ `VTUWriter` class.
+    Allows `VTUWriter[mesh_type]` syntax to resolve to
+    the appropriate C++ `VTUWriter` class.
 
-    This class provides a Python interface to C++ writers for orthogonal grids.
+    This class provides a Python interface to C++ mesh writers.
 
     Examples:
-    - `VTUWriter[MeshOfEdges]` → `VTUWriter_MeshOfEdges`
-    - `VTUWriter[MeshOfPolygons]` → `VTUWriter_MeshOfPolygons`
+    - `VTUWriter[Mesh[topologies.Edge]` → `VTUWriter_Mesh_Edge`
+    - `VTUWriter[Mesh[topologies.Polygon]` → `VTUWriter_Mesh_Polygon`
     """
 
 
@@ -407,51 +633,51 @@ class _VTKWriterMeta(pytnl._meta.CPPClassTemplate):
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfEdges],
+        key: type[pytnl._meshes.Mesh_Edge],
         /,
-    ) -> type[pytnl._meshes.VTKWriter_MeshOfEdges]: ...
+    ) -> type[pytnl._meshes.VTKWriter_Mesh_Edge]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfHexahedrons],
+        key: type[pytnl._meshes.Mesh_Hexahedron],
         /,
-    ) -> type[pytnl._meshes.VTKWriter_MeshOfHexahedrons]: ...
+    ) -> type[pytnl._meshes.VTKWriter_Mesh_Hexahedron]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfPolygons],
+        key: type[pytnl._meshes.Mesh_Polygon],
         /,
-    ) -> type[pytnl._meshes.VTKWriter_MeshOfPolygons]: ...
+    ) -> type[pytnl._meshes.VTKWriter_Mesh_Polygon]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfPolyhedrons],
+        key: type[pytnl._meshes.Mesh_Polyhedron],
         /,
-    ) -> type[pytnl._meshes.VTKWriter_MeshOfPolyhedrons]: ...
+    ) -> type[pytnl._meshes.VTKWriter_Mesh_Polyhedron]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfQuadrangles],
+        key: type[pytnl._meshes.Mesh_Quadrangle],
         /,
-    ) -> type[pytnl._meshes.VTKWriter_MeshOfQuadrangles]: ...
+    ) -> type[pytnl._meshes.VTKWriter_Mesh_Quadrangle]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfTetrahedrons],
+        key: type[pytnl._meshes.Mesh_Tetrahedron],
         /,
-    ) -> type[pytnl._meshes.VTKWriter_MeshOfTetrahedrons]: ...
+    ) -> type[pytnl._meshes.VTKWriter_Mesh_Tetrahedron]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfTriangles],
+        key: type[pytnl._meshes.Mesh_Triangle],
         /,
-    ) -> type[pytnl._meshes.VTKWriter_MeshOfTriangles]: ...
+    ) -> type[pytnl._meshes.VTKWriter_Mesh_Triangle]: ...
 
     @overload
     def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
@@ -480,13 +706,13 @@ class _VTKWriterMeta(pytnl._meta.CPPClassTemplate):
             pytnl._meshes.Grid_1
             | pytnl._meshes.Grid_2
             | pytnl._meshes.Grid_3
-            | pytnl._meshes.MeshOfEdges
-            | pytnl._meshes.MeshOfHexahedrons
-            | pytnl._meshes.MeshOfPolygons
-            | pytnl._meshes.MeshOfPolyhedrons
-            | pytnl._meshes.MeshOfQuadrangles
-            | pytnl._meshes.MeshOfTetrahedrons
-            | pytnl._meshes.MeshOfTriangles
+            | pytnl._meshes.Mesh_Edge
+            | pytnl._meshes.Mesh_Hexahedron
+            | pytnl._meshes.Mesh_Polygon
+            | pytnl._meshes.Mesh_Polyhedron
+            | pytnl._meshes.Mesh_Quadrangle
+            | pytnl._meshes.Mesh_Tetrahedron
+            | pytnl._meshes.Mesh_Triangle
             | _meshes_cuda.Grid_1  # pyright: ignore
             | _meshes_cuda.Grid_2  # pyright: ignore
             | _meshes_cuda.Grid_3  # pyright: ignore
@@ -499,13 +725,14 @@ class _VTKWriterMeta(pytnl._meta.CPPClassTemplate):
 
 class VTKWriter(metaclass=_VTKWriterMeta):
     """
-    Allows `VTKWriter[mesh_type]` syntax to resolve to the appropriate C++ `VTKWriter` class.
+    Allows `VTKWriter[mesh_type]` syntax to resolve to
+    the appropriate C++ `VTKWriter` class.
 
-    This class provides a Python interface to C++ writers for orthogonal grids.
+    This class provides a Python interface to C++ mesh writers.
 
     Examples:
-    - `VTKWriter[MeshOfEdges]` → `VTKWriter_MeshOfEdges`
-    - `VTKWriter[MeshOfPolygons]` → `VTKWriter_MeshOfPolygons`
+    - `VTKWriter[Mesh[topologies.Edge]]` → `VTKWriter_Mesh_Edge`
+    - `VTKWriter[Mesh[topologies.Polygon]]` → `VTKWriter_Mesh_Polygon`
     """
 
 
@@ -518,46 +745,46 @@ class _PVTUWriterMeta(pytnl._meta.CPPClassTemplate):
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfEdges],
+        key: type[pytnl._meshes.Mesh_Edge],
         /,
-    ) -> type[pytnl._meshes.PVTUWriter_MeshOfEdges]: ...
+    ) -> type[pytnl._meshes.PVTUWriter_Mesh_Edge]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfHexahedrons],
+        key: type[pytnl._meshes.Mesh_Hexahedron],
         /,
-    ) -> type[pytnl._meshes.PVTUWriter_MeshOfHexahedrons]: ...
+    ) -> type[pytnl._meshes.PVTUWriter_Mesh_Hexahedron]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfQuadrangles],
+        key: type[pytnl._meshes.Mesh_Quadrangle],
         /,
-    ) -> type[pytnl._meshes.PVTUWriter_MeshOfQuadrangles]: ...
+    ) -> type[pytnl._meshes.PVTUWriter_Mesh_Quadrangle]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfTetrahedrons],
+        key: type[pytnl._meshes.Mesh_Tetrahedron],
         /,
-    ) -> type[pytnl._meshes.PVTUWriter_MeshOfTetrahedrons]: ...
+    ) -> type[pytnl._meshes.PVTUWriter_Mesh_Tetrahedron]: ...
 
     @overload
     def __getitem__(
         self,
-        key: type[pytnl._meshes.MeshOfTriangles],
+        key: type[pytnl._meshes.Mesh_Triangle],
         /,
-    ) -> type[pytnl._meshes.PVTUWriter_MeshOfTriangles]: ...
+    ) -> type[pytnl._meshes.PVTUWriter_Mesh_Triangle]: ...
 
     def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
         self,
         key: type[  # pyright: ignore
-            pytnl._meshes.MeshOfEdges
-            | pytnl._meshes.MeshOfHexahedrons
-            | pytnl._meshes.MeshOfQuadrangles
-            | pytnl._meshes.MeshOfTetrahedrons
-            | pytnl._meshes.MeshOfTriangles
+            pytnl._meshes.Mesh_Edge
+            | pytnl._meshes.Mesh_Hexahedron
+            | pytnl._meshes.Mesh_Quadrangle
+            | pytnl._meshes.Mesh_Tetrahedron
+            | pytnl._meshes.Mesh_Triangle
         ],
         /,
     ) -> type[Any]:
@@ -567,11 +794,12 @@ class _PVTUWriterMeta(pytnl._meta.CPPClassTemplate):
 
 class PVTUWriter(metaclass=_PVTUWriterMeta):
     """
-    Allows `PVTUWriter[mesh_type]` syntax to resolve to the appropriate C++ `PVTUWriter` class.
+    Allows `PVTUWriter[mesh_type]` syntax to resolve to
+    the appropriate C++ `PVTUWriter` class.
 
-    This class provides a Python interface to C++ writers for orthogonal grids.
+    This class provides a Python interface to C++ writers for distributed meshes.
 
     Example:
-    - `PVTUWriter[MeshOfEdges]` → `PVTUWriter_MeshOfEdges`
-    - `PVTUWriter[MeshOfPolygons]` → `PVTUWriter_MeshOfPolygons`
+    - `PVTUWriter[Mesh[topologies.Edge]]` → `PVTUWriter_Mesh_Edge`
+    - `PVTUWriter[Mesh[topologies.Polygon]]` → `PVTUWriter_Mesh_Polygon`
     """

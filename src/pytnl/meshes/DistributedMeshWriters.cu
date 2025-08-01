@@ -1,17 +1,15 @@
 #include "DistributedMeshWriters.h"
 
+template< typename Mesh >
+using PVTUWriter = TNL::Meshes::Writers::PVTUWriter< Mesh >;
+
 void
 export_DistributedMeshWriters( nb::module_& m )
 {
    constexpr TNL::Meshes::VTK::FileFormat default_format = TNL::Meshes::VTK::FileFormat::zlib_compressed;
-   export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfEdges_cuda, default_format >(
-      m, "PVTUWriter_MeshOfEdges" );
-   export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfTriangles_cuda, default_format >(
-      m, "PVTUWriter_MeshOfTriangles" );
-   export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfQuadrangles_cuda, default_format >(
-      m, "PVTUWriter_MeshOfQuadrangles" );
-   export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfTetrahedrons_cuda, default_format >(
-      m, "PVTUWriter_MeshOfTetrahedrons" );
-   export_DistributedMeshWriter< TNL::Meshes::Writers::PVTUWriter, MeshOfHexahedrons_cuda, default_format >(
-      m, "PVTUWriter_MeshOfHexahedrons" );
+   export_DistributedMeshWriter< PVTUWriter, MeshOfEdges_cuda, default_format >( m, "PVTUWriter_Mesh_Edge" );
+   export_DistributedMeshWriter< PVTUWriter, MeshOfTriangles_cuda, default_format >( m, "PVTUWriter_Mesh_Triangle" );
+   export_DistributedMeshWriter< PVTUWriter, MeshOfQuadrangles_cuda, default_format >( m, "PVTUWriter_Mesh_Quadrangle" );
+   export_DistributedMeshWriter< PVTUWriter, MeshOfTetrahedrons_cuda, default_format >( m, "PVTUWriter_Mesh_Tetrahedron" );
+   export_DistributedMeshWriter< PVTUWriter, MeshOfHexahedrons_cuda, default_format >( m, "PVTUWriter_Mesh_Hexahedron" );
 }

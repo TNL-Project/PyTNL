@@ -6,11 +6,11 @@
 void
 export_DistributedMeshes( nb::module_& m )
 {
-   export_DistributedMesh< DistributedMeshOfEdges_host >( m, "DistributedMeshOfEdges" );
-   export_DistributedMesh< DistributedMeshOfTriangles_host >( m, "DistributedMeshOfTriangles" );
-   export_DistributedMesh< DistributedMeshOfQuadrangles_host >( m, "DistributedMeshOfQuadrangles" );
-   export_DistributedMesh< DistributedMeshOfTetrahedrons_host >( m, "DistributedMeshOfTetrahedrons" );
-   export_DistributedMesh< DistributedMeshOfHexahedrons_host >( m, "DistributedMeshOfHexahedrons" );
+   export_DistributedMesh< DistributedMeshOfEdges_host >( m, "DistributedMesh_Edge" );
+   export_DistributedMesh< DistributedMeshOfTriangles_host >( m, "DistributedMesh_Triangle" );
+   export_DistributedMesh< DistributedMeshOfQuadrangles_host >( m, "DistributedMesh_Quadrangle" );
+   export_DistributedMesh< DistributedMeshOfTetrahedrons_host >( m, "DistributedMesh_Tetrahedron" );
+   export_DistributedMesh< DistributedMeshOfHexahedrons_host >( m, "DistributedMesh_Hexahedron" );
 
    // export VTKTypesArrayType
    using VTKTypesArrayType = typename DistributedMeshOfEdges_host::VTKTypesArrayType;

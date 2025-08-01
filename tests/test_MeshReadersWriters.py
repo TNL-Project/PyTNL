@@ -9,6 +9,7 @@ import pytest
 
 import pytnl._meshes
 import pytnl.meshes
+from pytnl._meta import DIMS
 
 mpi4py: ModuleType | None
 try:
@@ -22,13 +23,13 @@ type Mesh = (
     pytnl._meshes.Grid_1
     | pytnl._meshes.Grid_2
     | pytnl._meshes.Grid_3
-    | pytnl._meshes.MeshOfEdges
-    | pytnl._meshes.MeshOfTriangles
-    | pytnl._meshes.MeshOfQuadrangles
-    | pytnl._meshes.MeshOfPolygons
-    | pytnl._meshes.MeshOfHexahedrons
-    | pytnl._meshes.MeshOfTetrahedrons
-    | pytnl._meshes.MeshOfPolyhedrons
+    | pytnl._meshes.Mesh_Edge
+    | pytnl._meshes.Mesh_Triangle
+    | pytnl._meshes.Mesh_Quadrangle
+    | pytnl._meshes.Mesh_Polygon
+    | pytnl._meshes.Mesh_Hexahedron
+    | pytnl._meshes.Mesh_Tetrahedron
+    | pytnl._meshes.Mesh_Polyhedron
 )
 type MeshWriter = (
     pytnl._meshes.VTIWriter_Grid_1
@@ -37,39 +38,28 @@ type MeshWriter = (
     | pytnl._meshes.VTKWriter_Grid_1
     | pytnl._meshes.VTKWriter_Grid_2
     | pytnl._meshes.VTKWriter_Grid_3
-    | pytnl._meshes.VTKWriter_MeshOfEdges
-    | pytnl._meshes.VTKWriter_MeshOfTriangles
-    | pytnl._meshes.VTKWriter_MeshOfQuadrangles
-    | pytnl._meshes.VTKWriter_MeshOfPolygons
-    | pytnl._meshes.VTKWriter_MeshOfHexahedrons
-    | pytnl._meshes.VTKWriter_MeshOfTetrahedrons
-    | pytnl._meshes.VTKWriter_MeshOfPolyhedrons
-    | pytnl._meshes.VTUWriter_MeshOfEdges
-    | pytnl._meshes.VTUWriter_MeshOfTriangles
-    | pytnl._meshes.VTUWriter_MeshOfQuadrangles
-    | pytnl._meshes.VTUWriter_MeshOfPolygons
-    | pytnl._meshes.VTUWriter_MeshOfHexahedrons
-    | pytnl._meshes.VTUWriter_MeshOfTetrahedrons
-    | pytnl._meshes.VTUWriter_MeshOfPolyhedrons
+    | pytnl._meshes.VTUWriter_Grid_1
+    | pytnl._meshes.VTUWriter_Grid_2
+    | pytnl._meshes.VTUWriter_Grid_3
+    | pytnl._meshes.VTKWriter_Mesh_Edge
+    | pytnl._meshes.VTKWriter_Mesh_Triangle
+    | pytnl._meshes.VTKWriter_Mesh_Quadrangle
+    | pytnl._meshes.VTKWriter_Mesh_Polygon
+    | pytnl._meshes.VTKWriter_Mesh_Hexahedron
+    | pytnl._meshes.VTKWriter_Mesh_Tetrahedron
+    | pytnl._meshes.VTKWriter_Mesh_Polyhedron
+    | pytnl._meshes.VTUWriter_Mesh_Edge
+    | pytnl._meshes.VTUWriter_Mesh_Triangle
+    | pytnl._meshes.VTUWriter_Mesh_Quadrangle
+    | pytnl._meshes.VTUWriter_Mesh_Polygon
+    | pytnl._meshes.VTUWriter_Mesh_Hexahedron
+    | pytnl._meshes.VTUWriter_Mesh_Tetrahedron
+    | pytnl._meshes.VTUWriter_Mesh_Polyhedron
 )
 
 # Global flags
 TNL_DECOMPOSE_CMD = "tnl-decompose-mesh"
 TNL_DECOMPOSE_FLAGS = "--ghost-levels 1"
-
-# Mapping from dimension to grid class
-grid_classes = {
-    1: pytnl.meshes.Grid[1],
-    2: pytnl.meshes.Grid[2],
-    3: pytnl.meshes.Grid[3],
-}
-
-# Mapping from dimension to VTI writer class
-grid_writers = {
-    1: pytnl.meshes.VTIWriter[pytnl.meshes.Grid[1]],
-    2: pytnl.meshes.VTIWriter[pytnl.meshes.Grid[2]],
-    3: pytnl.meshes.VTIWriter[pytnl.meshes.Grid[3]],
-}
 
 # Mapping from file suffix to reader class
 suffix_to_reader = {
@@ -78,15 +68,15 @@ suffix_to_reader = {
     ".vtu": pytnl.meshes.VTUReader,
 }
 
-# Mapping from topology directory to mesh class
-mesh_class_map = {
-    "triangles": pytnl.meshes.MeshOfTriangles,
-    "triangles_2x2x2": pytnl.meshes.MeshOfTriangles,
-    "tetrahedrons": pytnl.meshes.MeshOfTetrahedrons,
-    "quadrangles": pytnl.meshes.MeshOfQuadrangles,
-    "hexahedrons": pytnl.meshes.MeshOfHexahedrons,
-    "polygons": pytnl.meshes.MeshOfPolygons,
-    "polyhedrons": pytnl.meshes.MeshOfPolyhedrons,
+# Mapping from topology directory to mesh topology class
+topologies_map = {
+    "triangles": pytnl.meshes.topologies.Triangle,
+    "triangles_2x2x2": pytnl.meshes.topologies.Triangle,
+    "tetrahedrons": pytnl.meshes.topologies.Tetrahedron,
+    "quadrangles": pytnl.meshes.topologies.Quadrangle,
+    "hexahedrons": pytnl.meshes.topologies.Hexahedron,
+    "polygons": pytnl.meshes.topologies.Polygon,
+    "polyhedrons": pytnl.meshes.topologies.Polyhedron,
 }
 
 # Define test cases with expected vertex and cell counts
@@ -228,11 +218,11 @@ def _test_meshfunction(
         (3, [1, 2, 3], [4, 5, 6], [10, 20, 30]),
     ],
 )
-def test_vti_reader_synthetic(dim: int, origin: list[int], proportions: list[int], dimensions: list[int], tmp_path: Path) -> None:
+def test_vti_reader_synthetic(dim: DIMS, origin: list[int], proportions: list[int], dimensions: list[int], tmp_path: Path) -> None:
     # Choose appropriate grid, reader and writer based on dimension
-    grid_class = grid_classes[dim]
+    grid_class = pytnl.meshes.Grid[dim]  # type: ignore[type-arg, valid-type]
     reader_class = pytnl.meshes.VTIReader
-    writer_class = grid_writers[dim]
+    writer_class: type[MeshWriter] = pytnl.meshes.VTIWriter[grid_class]  # pyright: ignore[reportUnknownVariableType]
 
     # Create synthetic grid
     grid = grid_class()
@@ -261,15 +251,17 @@ def test_mesh_file(file_path: str, expected_vertices: int, expected_cells: int, 
 
     if suffix == ".vti":
         # Choose appropriate grid class and writer class based on dimension
-        dim = 2 if "quadrangles" in file_path else 3
-        mesh_class: type[Mesh] = grid_classes[dim]
-        writer_class: type[MeshWriter] = grid_writers[dim]
+        dim: Literal[2, 3] = 2 if "quadrangles" in file_path else 3
+        mesh_class: type[Mesh] = pytnl.meshes.Grid[dim]
+        writer_class: type[MeshWriter] = pytnl.meshes.VTIWriter[mesh_class]  # pyright: ignore[reportUnknownVariableType]
     else:
-        # Get mesh class and writer class based on directory
+        # Get mesh topology based on directory
         try:
-            mesh_class = mesh_class_map[directory]
+            topology = topologies_map[directory]
         except KeyError:
             pytest.fail(f"Unsupported directory: {directory}")
+
+        mesh_class = pytnl.meshes.Mesh[topology]
 
         # Choose writer based on reader
         if reader_class == pytnl.meshes.VTKReader:
@@ -313,14 +305,16 @@ def test_resolveMeshType(file_path: str, expected_vertices: int, expected_cells:
 
     if suffix == ".vti":
         # Choose appropriate grid class based on dimension
-        dim = 2 if "quadrangles" in file_path else 3
-        mesh_class: type[Mesh] = grid_classes[dim]
+        dim: Literal[2, 3] = 2 if "quadrangles" in file_path else 3
+        mesh_class: type[Mesh] = pytnl.meshes.Grid[dim]
     else:
-        # Get mesh class based on directory
+        # Get mesh topology based on directory
         try:
-            mesh_class = mesh_class_map[directory]
+            topology = topologies_map[directory]
         except KeyError:
             pytest.fail(f"Unsupported directory: {directory}")
+
+        mesh_class = pytnl.meshes.Mesh[topology]
 
     # Test getMeshReader
     reader = pytnl.meshes.getMeshReader(f"invalid{suffix}")
@@ -377,7 +371,8 @@ def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cel
     subprocess.run(cmd, shell=True, check=True)
 
     # Load mesh and read data
-    mesh = pytnl.meshes.DistributedMeshOfTriangles()
+    mesh_class = pytnl.meshes.Mesh[pytnl.meshes.topologies.Triangle]  # type: ignore[type-arg]
+    mesh = pytnl.meshes.DistributedMesh[mesh_class]()
     local_mesh = mesh.getLocalMesh()
     reader = pytnl.meshes.PVTUReader(str(output_pvtu))
     reader.loadMesh(mesh)
@@ -390,7 +385,7 @@ def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cel
 
     # Write test
     f = io.BytesIO()
-    writer = pytnl.meshes.PVTUWriter[pytnl.meshes.MeshOfTriangles](f)
+    writer = pytnl.meshes.PVTUWriter[mesh_class](f)
     writer.writeCells(mesh)
     writer.writeMetadata(cycle=0, time=1.0)
     array = [42] * local_mesh.getEntitiesCount(local_mesh.Cell)
