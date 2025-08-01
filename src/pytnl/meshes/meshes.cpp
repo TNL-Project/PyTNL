@@ -5,6 +5,8 @@
 #include <TNL/MPI/Wrappers.h>
 
 void
+export_topologies( nb::module_& m );
+void
 export_VTKTraits( nb::module_& m );
 
 void
@@ -55,6 +57,7 @@ NB_MODULE( _meshes, m )
       } ) );
 
    // bindings for traits
+   export_topologies( m );
    export_VTKTraits( m );
 
    // bindings for data structures

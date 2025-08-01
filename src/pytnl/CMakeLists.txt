@@ -19,6 +19,7 @@ if (PyTNL_BUILD_CUDA)
     nanobind_add_module(matrices_cuda ${src_matrices_cuda})
 endif()
 set(src_meshes
+    meshes/topologies.cpp
     meshes/VTKTraits.cpp
     meshes/Grid1D.cpp
     meshes/Grid2D.cpp
