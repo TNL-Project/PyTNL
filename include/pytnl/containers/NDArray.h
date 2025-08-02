@@ -5,6 +5,8 @@
 #include <pytnl/pytnl.h>
 
 #include <TNL/Containers/NDArray.h>
+#include <TNL/Allocators/CudaHost.h>
+#include <TNL/Allocators/CudaManaged.h>
 
 template< typename Index >
 void
@@ -29,7 +31,7 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
 
    array.def(
       "__getitem__",
-      [ dim ]( ArrayType& self, nb::object indices ) -> ValueType&
+      [ dim ]( ArrayType& self, nb::object indices ) -> ValueType
       {
          nb::tuple tuple_indices;
 
@@ -52,9 +54,10 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
 
          // Unpack the array into the operator()
          return std::apply(
-            [ & ]( auto... indices ) -> ValueType&
+            [ & ]( auto... indices ) -> ValueType
             {
-               return self( indices... );
+               // getElement is equivalent to operator[] on host but works on cuda
+               return self.getElement( indices... );
             },
             indices_array );
       },
@@ -87,7 +90,9 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
          std::apply(
             [ & ]( auto... indices )
             {
-               self( indices... ) = value;
+               // setElement is equivalent to operator[] on host but works on cuda
+               const auto idx = self.getStorageIndex( indices... );
+               self.getStorageArray().setElement( idx, value );
             },
             indices_array );
       },
@@ -101,62 +106,63 @@ ndarray_iteration( nb::class_< ArrayType, Args... >& array )
 {
    using SizesHolderType = typename ArrayType::SizesHolderType;
 
-   // FIXME: calling Python functions will not work on CUDA (even using Devices::Host fails due to GIL...)
-
-   array
-      .def(
-         "forAll",
-         []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forAll< TNL::Devices::Sequential >( f );
-         },
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all elements of the array. "
-         "The function is called with N indices, where N is the array dimension." )
-      .def(
-         "forInterior",
-         []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forInterior< TNL::Devices::Sequential >( f );
-         },
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all interior elements of the array. "
-         "Excludes one element from each side of each dimension." )
-      .def(
-         "forInterior",
-         []( ArrayType& self,
-             const SizesHolderType& begins,
-             const SizesHolderType& ends,
-             const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forInterior< TNL::Devices::Sequential >( begins, ends, f );
-         },
-         nb::arg( "begins" ),
-         nb::arg( "ends" ),
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all elements inside the given N-dimensional range `[begins, ends)`." )
-      .def(
-         "forBoundary",
-         []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forBoundary< TNL::Devices::Sequential >( f );
-         },
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all boundary elements of the array." )
-      .def(
-         "forBoundary",
-         []( ArrayType& self,
-             const SizesHolderType& skipBegins,
-             const SizesHolderType& skipEnds,
-             const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
-         {
-            self.template forBoundary< TNL::Devices::Sequential >( skipBegins, skipEnds, f );
-         },
-         nb::arg( "skipBegins" ),
-         nb::arg( "skipEnds" ),
-         nb::arg( "f" ),
-         "Evaluates the function `f` for all elements outside the given N-dimensional range "
-         "`[skipBegins, skipEnds)`." );
+   // FIXME: calling Python functions does not work on CUDA (even using Devices::Host fails due to GIL...)
+   if constexpr( ! std::is_same_v< typename ArrayType::DeviceType, TNL::Devices::GPU > ) {
+      array
+         .def(
+            "forAll",
+            []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forAll< TNL::Devices::Sequential >( f );
+            },
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all elements of the array. "
+            "The function is called with N indices, where N is the array dimension." )
+         .def(
+            "forInterior",
+            []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forInterior< TNL::Devices::Sequential >( f );
+            },
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all interior elements of the array. "
+            "Excludes one element from each side of each dimension." )
+         .def(
+            "forInterior",
+            []( ArrayType& self,
+                const SizesHolderType& begins,
+                const SizesHolderType& ends,
+                const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forInterior< TNL::Devices::Sequential >( begins, ends, f );
+            },
+            nb::arg( "begins" ),
+            nb::arg( "ends" ),
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all elements inside the given N-dimensional range `[begins, ends)`." )
+         .def(
+            "forBoundary",
+            []( ArrayType& self, const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forBoundary< TNL::Devices::Sequential >( f );
+            },
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all boundary elements of the array." )
+         .def(
+            "forBoundary",
+            []( ArrayType& self,
+                const SizesHolderType& skipBegins,
+                const SizesHolderType& skipEnds,
+                const nb::typed< nb::callable, nb::ellipsis, nb::any >& f )
+            {
+               self.template forBoundary< TNL::Devices::Sequential >( skipBegins, skipEnds, f );
+            },
+            nb::arg( "skipBegins" ),
+            nb::arg( "skipEnds" ),
+            nb::arg( "f" ),
+            "Evaluates the function `f` for all elements outside the given N-dimensional range "
+            "`[skipBegins, skipEnds)`." );
+   }
 }
 
 template< typename IndexerType >
@@ -279,6 +285,8 @@ export_NDArray( nb::module_& m, const char* name )
 {
    using IndexerType = typename ArrayType::IndexerType;
    using ValueType = typename ArrayType::ValueType;
+   using DeviceType = typename ArrayType::DeviceType;
+   using AllocatorType = typename ArrayType::AllocatorType;
 
    auto array =  //
       nb::class_< ArrayType, IndexerType >( m, name )
@@ -402,6 +410,11 @@ export_NDArray( nb::module_& m, const char* name )
                else {
                   oss << TNL::getType( ValueType{} );
                }
+               oss << ", ";
+               if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > )
+                  oss << "Cuda";
+               else
+                  oss << "Host";
                oss << "](";
                TNL::Algorithms::staticFor< std::size_t, 0, dim >(
                   [ & ]( auto i )
@@ -427,43 +440,83 @@ export_NDArray( nb::module_& m, const char* name )
             {
                return ArrayType( self );
             },
-            nb::arg( "memo" ) )
+            nb::arg( "memo" ) );
 
-         .def(
-            "as_numpy",
-            []( ArrayType& self )
-            {
-               constexpr std::size_t dim = ArrayType::getDimension();
-               std::array< std::size_t, dim > sizes;
-               //std::array< std::size_t, dim > strides;
-               TNL::Algorithms::staticFor< std::size_t, 0, dim >(
-                  [ & ]( auto i )
-                  {
-                     sizes[ i ] = self.template getSize< i >();
-                     //strides[ i ] = self.template getStride< i >();
-                  } );
+   // Interoperability with Python array API standard (DLPack)
+   auto dlpack_device = []()
+   {
+      // FIXME: DLPack supports switching CUDA devices but TNL does not
+      if constexpr( std::is_same_v< AllocatorType, TNL::Allocators::Cuda< ValueType > > )
+         return std::make_pair( nb::device::cuda::value, TNL::Backend::getDevice() );
+      else if constexpr( std::is_same_v< AllocatorType, TNL::Allocators::CudaHost< ValueType > > )
+         return std::make_pair( nb::device::cuda_host::value, TNL::Backend::getDevice() );
+      else if constexpr( std::is_same_v< AllocatorType, TNL::Allocators::CudaManaged< ValueType > > )
+         return std::make_pair( nb::device::cuda_managed::value, TNL::Backend::getDevice() );
+      else
+         return std::make_pair( nb::device::cpu::value, 0 );
+   };
+   array
+      .def(
+         "__dlpack__",
+         [ dlpack_device ]( ArrayType& self, nb::kwargs kwargs )
+         {
+            int device_id = 0;
+            // FIXME: DLPack support switching CUDA devices but TNL does not
+            if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > )
+               device_id = TNL::Backend::getDevice();
 
-               // stupid conversion from std::array to std::initializer_list because
-               // nb::ndarray does not have any different constructor
-               return std::apply(
-                  [ &self ]( auto... sizes ) mutable
-                  {
-                     return nb::ndarray< ValueType, nb::numpy, nb::ndim< dim > >(
-                        self.getData(),
-                        std::initializer_list{ sizes... },
-                        nb::find( self ),  // find the Python object associated with `self` and pass it as owner
-                        //make_initializer_list( strides ),
-                        {},  // FIXME: strides in the DLPack spec work differently than in our NDArray
-                        nb::dtype< ValueType >(),
-                        nb::device::cpu::value,
-                        0  // device_id
-                     );
-                  },
-                  sizes );
-            },
-            nb::rv_policy::reference_internal,
-            nb::sig( "def as_numpy(self) -> numpy.typing.NDArray[typing.Any]" ),
-            "Returns a NumPy ndarray for this NDArray with shared memory (i.e. the data is not copied)" );
+            constexpr std::size_t dim = ArrayType::getDimension();
+            std::array< std::size_t, dim > sizes;
+            std::array< std::int64_t, dim > strides;
+            TNL::Algorithms::staticFor< std::size_t, 0, dim >(
+               [ & ]( auto i )
+               {
+                  sizes[ i ] = self.template getSize< i >();
+                  strides[ i ] = self.template getStride< i >();
+               } );
+
+            return nb::ndarray<>( self.getData(),
+                                  dim,
+                                  sizes.data(),
+                                  nb::find( self ),  // find the Python object associated with `self` and pass it as owner
+                                  strides.data(),
+                                  nb::dtype< ValueType >(),
+                                  dlpack_device().first,
+                                  device_id );
+         },
+         nb::sig( "def __dlpack__(self, **kwargs: typing.Any) -> typing_extensions.CapsuleType" ) )
+      .def_static( "__dlpack_device__", dlpack_device );
+
+   // NOTE: this is needed only because NumPy does not support writable unversioned dlpacks
+   if constexpr( ! std::is_same_v< DeviceType, TNL::Devices::GPU > )
+      array.def(
+         "as_numpy",
+         []( ArrayType& self )
+         {
+            constexpr std::size_t dim = ArrayType::getDimension();
+            std::array< std::size_t, dim > sizes;
+            std::array< std::int64_t, dim > strides;
+            TNL::Algorithms::staticFor< std::size_t, 0, dim >(
+               [ & ]( auto i )
+               {
+                  sizes[ i ] = self.template getSize< i >();
+                  strides[ i ] = self.template getStride< i >();
+               } );
+
+            return nb::ndarray< ValueType, nb::numpy, nb::ndim< dim > >(
+               self.getData(),
+               dim,
+               sizes.data(),
+               nb::find( self ),  // find the Python object associated with `self` and pass it as owner
+               strides.data(),
+               nb::dtype< ValueType >(),
+               nb::device::cpu::value,
+               0  // device_id
+            );
+         },
+         nb::rv_policy::reference_internal,
+         nb::sig( "def as_numpy(self) -> numpy.typing.NDArray[typing.Any]" ),
+         "Returns a NumPy ndarray for this NDArray with shared memory (i.e. the data is not copied)" );
 
    ndarray_indexing( array );
    ndarray_iteration( array );

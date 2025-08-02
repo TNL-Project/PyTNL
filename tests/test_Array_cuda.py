@@ -1,30 +1,41 @@
+# mypy: disable-error-code="import-not-found, no-any-unimported, no-untyped-call, unused-ignore"
+# pyright: standard
+# pyright: reportMissingImports=information
+
 import copy
 import os
 import tempfile
 from collections.abc import Collection
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
-import numpy as np
 import pytest
-from hypothesis import assume, given
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-import pytnl._containers
 import pytnl.containers
+from pytnl.devices import Cuda
+
+if TYPE_CHECKING:
+    import pytnl._containers_cuda as _containers_cuda
+else:
+    _containers_cuda = pytest.importorskip("pytnl._containers_cuda")
 
 # ----------------------
 # Configuration
 # ----------------------
 
+# Mark all tests in this module
+pytestmark = pytest.mark.cuda
+
 # Type variable constraining the array types
 A = TypeVar(
     "A",
-    pytnl._containers.Array_int,
-    pytnl._containers.Array_float,
-    pytnl._containers.Array_complex,
-    pytnl._containers.Vector_int,
-    pytnl._containers.Vector_float,
-    pytnl._containers.Vector_complex,
+    _containers_cuda.Array_int,
+    _containers_cuda.Array_float,
+    _containers_cuda.Array_complex,
+    _containers_cuda.Vector_int,
+    _containers_cuda.Vector_float,
+    _containers_cuda.Vector_complex,
 )
 
 # List of array types to test
@@ -73,27 +84,27 @@ def array_strategy(draw: st.DrawFn, array_type: type[A]) -> A:
 
 
 def test_pythonization() -> None:
-    assert pytnl.containers.Array[bool] is pytnl._containers.Array_bool
-    assert pytnl.containers.Array[int] is pytnl._containers.Array_int
-    assert pytnl.containers.Array[float] is pytnl._containers.Array_float
-    assert pytnl.containers.Array[complex] is pytnl._containers.Array_complex
-    assert pytnl.containers.Vector[int] is pytnl._containers.Vector_int
-    assert pytnl.containers.Vector[float] is pytnl._containers.Vector_float
-    assert pytnl.containers.Vector[complex] is pytnl._containers.Vector_complex
+    assert pytnl.containers.Array[bool, Cuda] is _containers_cuda.Array_bool
+    assert pytnl.containers.Array[int, Cuda] is _containers_cuda.Array_int
+    assert pytnl.containers.Array[float, Cuda] is _containers_cuda.Array_float
+    assert pytnl.containers.Array[complex, Cuda] is _containers_cuda.Array_complex
+    assert pytnl.containers.Vector[int, Cuda] is _containers_cuda.Vector_int
+    assert pytnl.containers.Vector[float, Cuda] is _containers_cuda.Vector_float
+    assert pytnl.containers.Vector[complex, Cuda] is _containers_cuda.Vector_complex
 
 
 def test_typedefs() -> None:
     for array_type in array_types:
         assert array_type.IndexType is int
 
-    assert pytnl.containers.Array[bool].ValueType is bool
-    assert pytnl.containers.Array[int].ValueType is int
-    assert pytnl.containers.Array[float].ValueType is float
-    assert pytnl.containers.Array[complex].ValueType is complex
+    assert pytnl.containers.Array[bool, Cuda].ValueType is bool
+    assert pytnl.containers.Array[int, Cuda].ValueType is int
+    assert pytnl.containers.Array[float, Cuda].ValueType is float
+    assert pytnl.containers.Array[complex, Cuda].ValueType is complex
 
-    assert pytnl.containers.Vector[int].ValueType is int
-    assert pytnl.containers.Vector[float].ValueType is float
-    assert pytnl.containers.Vector[complex].ValueType is complex
+    assert pytnl.containers.Vector[int, Cuda].ValueType is int
+    assert pytnl.containers.Vector[float, Cuda].ValueType is float
+    assert pytnl.containers.Vector[complex, Cuda].ValueType is complex
 
 
 @pytest.mark.parametrize("array_type", array_types)
@@ -151,6 +162,8 @@ def test_resize_negative(array_type: type[A], size: int) -> None:
         v.resize(size)
 
 
+# FIXME: iteration over CUDA arrays is slow, even when done through `list(array)` - make some custom iterator for CUDA arrays with buffering on host
+@settings(deadline=500)
 @pytest.mark.parametrize("array_type", array_types)
 @given(size=st.integers(min_value=0, max_value=20), value=st.integers(min_value=-(2**63), max_value=2**63 - 1))
 def test_resize_with_value(array_type: type[A], size: int, value: int | float | complex) -> None:
@@ -228,6 +241,8 @@ def test_out_of_bounds_access(array_type: type[A]) -> None:
         v.setElement(1, 0)
 
 
+# FIXME: iteration over CUDA arrays is slow, even when done through `list(array)` - make some custom iterator for CUDA arrays with buffering on host
+@settings(deadline=500)
 @pytest.mark.parametrize("array_type", array_types)
 @given(
     data=st.data(),
@@ -253,6 +268,8 @@ def test_slicing(array_type: type[A], data: st.DataObject, size: int, start: int
 # ----------------------
 
 
+# FIXME: iteration over CUDA arrays is slow, even when done through `list(array)` - make some custom iterator for CUDA arrays with buffering on host
+@settings(deadline=500)
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
 def test_assign(array_type: type[A], data: st.DataObject) -> None:
@@ -393,106 +410,58 @@ def test_deepcopy(array_type: type[A], data: st.DataObject) -> None:
 
 
 # ----------------------
-# DLPack protocol (NumPy interoperability)
+# DLPack protocol (CuPy interoperability)
 # ----------------------
 
 
+@settings(deadline=2500)  # some cupy functions use JIT compilation which takes a while
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
 def test_dlpack(array_type: type[A], data: st.DataObject) -> None:
     """
-    Tests interoperability with NumPy using the DLPack API.
-
-    Verifies:
-    - The returned NumPy array has the correct shape and dtype.
-    - The array contains the same data as the Array.
-    - The underlying memory is shared.
-    - Changes in NumPy are reflected in the Array and vice versa.
-    """
-
-    # Create and initialize the Array
-    array = data.draw(array_strategy(array_type))
-    assume(array.getSize() > 1)
-    dims = (array.getSize(),)
-
-    # Convert to NumPy array
-    array_np = np.from_dlpack(array)
-
-    # Check that the array is writable
-    # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
-    # https://github.com/numpy/numpy/issues/29474
-    # https://github.com/wjakob/nanobind/issues/1122
-    # assert array_np.flags.writeable
-
-    # Check shape
-    assert array_np.shape == dims, f"Expected shape {dims}, got {array_np.shape}"
-
-    # Check data type
-    if array_type.ValueType is int:
-        assert array_np.dtype == np.int_, f"Expected dtype {np.int_}, got {array_np.dtype}"
-    elif array_type.ValueType is float:
-        assert array_np.dtype == np.float64, f"Expected dtype {np.float64}, got {array_np.dtype}"
-    else:
-        assert array_np.dtype == np.complex128, f"Expected dtype {np.complex128}, got {array_np.dtype}"
-
-    # Check element-wise equality
-    assert np.all(array_np == list(array)), "Data mismatch in NumPy array"
-
-    # Modify NumPy array and verify Array reflects the change
-    # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
-    # array_np.flat[0] = 99
-    # assert array[0] == 99, "NumPy array modification not reflected in Array"
-
-    # Modify Array and verify NumPy array reflects the change
-    array[1] = 77
-    assert array_np.flat[1] == 77, "Array modification not reflected in NumPy array"
-
-
-@pytest.mark.parametrize("array_type", array_types)
-@given(data=st.data())
-def test_as_numpy(array_type: type[A], data: st.DataObject) -> None:
-    """
     Tests the `as_numpy()` method of the Array class.
 
     Verifies:
-    - The returned NumPy array has the correct shape and dtype.
+    - The returned CuPy array has the correct shape and dtype.
     - The array contains the same data as the Array.
     - The underlying memory is shared.
-    - Changes in NumPy are reflected in the Array and vice versa.
+    - Changes in CuPy are reflected in the Array and vice versa.
     """
+
+    if TYPE_CHECKING:
+        import cupy  # type: ignore[import-untyped] # NOQA: PLC0415
+    else:
+        cupy = pytest.importorskip("cupy")
 
     # Create and initialize the Array
     array = data.draw(array_strategy(array_type))
     assume(array.getSize() > 1)
     dims = (array.getSize(),)
 
-    # Convert to NumPy array
-    array_np = array.as_numpy()
-
-    # Check that the array is writable
-    assert array_np.flags.writeable
+    # Convert to CuPy array
+    array_cupy = cupy.from_dlpack(array)
 
     # Check shape
-    assert array_np.shape == dims, f"Expected shape {dims}, got {array_np.shape}"
+    assert array_cupy.shape == dims, f"Expected shape {dims}, got {array_cupy.shape}"
 
     # Check data type
     if array_type.ValueType is int:
-        assert array_np.dtype == np.int_, f"Expected dtype {np.int_}, got {array_np.dtype}"
+        assert array_cupy.dtype == cupy.int_, f"Expected dtype {cupy.int_}, got {array_cupy.dtype}"
     elif array_type.ValueType is float:
-        assert array_np.dtype == np.float64, f"Expected dtype {np.float64}, got {array_np.dtype}"
+        assert array_cupy.dtype == cupy.float64, f"Expected dtype {cupy.float64}, got {array_cupy.dtype}"
     else:
-        assert array_np.dtype == np.complex128, f"Expected dtype {np.complex128}, got {array_np.dtype}"
+        assert array_cupy.dtype == cupy.complex128, f"Expected dtype {cupy.complex128}, got {array_cupy.dtype}"
 
     # Check element-wise equality
-    assert np.all(array_np == list(array)), "Data mismatch in NumPy array"
+    assert all(array_cupy[i] == array[i] for i in range(len(array))), "Data mismatch in CuPy array"
 
-    # Modify NumPy array and verify Array reflects the change
-    array_np.flat[0] = 99
-    assert array[0] == 99, "NumPy array modification not reflected in Array"
+    # Modify CuPy array and verify Array reflects the change
+    array_cupy.flat[0] = 99
+    assert array[0] == 99, "CuPy array modification not reflected in Array"
 
-    # Modify Array and verify NumPy array reflects the change
+    # Modify Array and verify CuPy array reflects the change
     array[1] = 77
-    assert array_np.flat[1] == 77, "Array modification not reflected in NumPy array"
+    assert array_cupy.flat[1] == 77, "Array modification not reflected in CuPy array"
 
     # Check that memory is shared
-    assert np.shares_memory(array_np, array.as_numpy()), "Memory should be shared between Array and NumPy array"
+    assert cupy.shares_memory(array_cupy, cupy.from_dlpack(array)), "Memory should be shared between two cupy arrays"

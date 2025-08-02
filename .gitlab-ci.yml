@@ -100,6 +100,26 @@ Arch_pip:
     - mypy
     - basedpyright
 
+Arch_pip_cuda:
+  stage: build
+  image: "jlk.fjfi.cvut.cz:5000/fjfi-mmg/archlinux-cuda:latest"
+  tags:
+    - nvidia
+  # don't wait for jobs in previous stages to complete before starting this job
+  needs: []
+  before_script:
+    # make sure that $PATH and other essential variables are set correctly (needed for cuda)
+    - source /etc/profile
+    - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
+  script:
+    - *env_setup
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - python -m pip install .[dev,dev-cuda] -v
+    - pytest -m cuda -n 0
+    - mypy
+    - basedpyright
+
 Python_build:
   stage: build
   image: "docker.io/library/python:${IMAGE_TAG}"

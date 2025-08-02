@@ -7,22 +7,22 @@ export_distributeSubentities( nb::module_& m )
 {
    using TNL::Meshes::DistributedMeshes::distributeSubentities;
    m.def( "distributeFaces",
-          []( DistributedMeshOfTriangles& mesh )
+          []( DistributedMeshOfTriangles_host& mesh )
           {
              distributeSubentities< 1 >( mesh );
           } );
    m.def( "distributeFaces",
-          []( DistributedMeshOfQuadrangles& mesh )
+          []( DistributedMeshOfQuadrangles_host& mesh )
           {
              distributeSubentities< 1 >( mesh );
           } );
    m.def( "distributeFaces",
-          []( DistributedMeshOfTetrahedrons& mesh )
+          []( DistributedMeshOfTetrahedrons_host& mesh )
           {
              distributeSubentities< 2 >( mesh );
           } );
    m.def( "distributeFaces",
-          []( DistributedMeshOfHexahedrons& mesh )
+          []( DistributedMeshOfHexahedrons_host& mesh )
           {
              distributeSubentities< 2 >( mesh );
           } );

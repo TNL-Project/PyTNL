@@ -1,6 +1,10 @@
+# mypy: disable-error-code="import-not-found, no-any-unimported, no-untyped-call, unused-ignore"
+# pyright: standard
+# pyright: reportMissingImports=information
+
 import copy
 from collections.abc import Callable
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pytest
@@ -8,6 +12,10 @@ import pytest
 import pytnl._containers
 from pytnl._meta import DIMS, VT, is_dim_guard
 from pytnl.containers import NDArray
+from pytnl.devices import Cuda
+
+# Mark all tests in this module
+pytestmark = pytest.mark.cuda
 
 # Type alias for indexer types
 type Indexer = pytnl._containers.NDArrayIndexer_1 | pytnl._containers.NDArrayIndexer_2 | pytnl._containers.NDArrayIndexer_3
@@ -45,7 +53,7 @@ def test_typedefs(dim: DIMS, value_type: type[VT]) -> None:
     - `ValueType` matches the expected Python type (e.g., `int`, `float`, `bool`).
     - `IndexerType` is a valid NDArrayIndexer class for the specified dimension.
     """
-    ndarray_class = NDArray[dim, value_type]  # type: ignore[type-arg,valid-type]
+    ndarray_class = NDArray[dim, value_type, Cuda]  # type: ignore[type-arg,valid-type]
 
     # Test IndexerType
     indexer_type = cast(Indexer, ndarray_class.IndexerType)
@@ -66,7 +74,7 @@ def test_setSizes(shape: tuple[int, ...]) -> None:
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(shape)  # type: ignore[arg-type]
     assert a.getSizes() == shape
     a.setSizes(*shape)
@@ -78,7 +86,7 @@ def test_data_access(shape: tuple[int, ...]) -> None:
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(shape)  # type: ignore[arg-type]
     a.setValue(42)
     for idx in np.ndindex(shape):
@@ -90,7 +98,7 @@ def test_invalid_indices(shape: tuple[int, ...]) -> None:
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(shape)  # type: ignore[arg-type]
     a.setValue(42)
     for idx in np.ndindex(shape):
@@ -113,9 +121,9 @@ def test_setLike(shape: tuple[int, ...]) -> None:
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(shape)  # type: ignore[arg-type]
-    b = NDArray[dim, int]()  # type: ignore[index]
+    b = NDArray[dim, int, Cuda]()  # type: ignore[index]
     b.setLike(a)  # pyright: ignore[reportArgumentType]
     assert b.getSizes() == shape
 
@@ -125,7 +133,7 @@ def test_reset(shape: tuple[int, ...]) -> None:
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(shape)  # type: ignore[arg-type]
     a.reset()
     assert a.getSizes() == (0,) * dim
@@ -139,12 +147,12 @@ def test_equality(shape: tuple[int, ...]) -> None:
     assert is_dim_guard(dim)
 
     # Create first array
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(shape)  # type: ignore[arg-type]
     a.setValue(0)
 
     # Create second array
-    b = NDArray[dim, int]()  # type: ignore[index]
+    b = NDArray[dim, int, Cuda]()  # type: ignore[index]
     b.setLike(a)  # pyright: ignore[reportArgumentType]
     b.setValue(0)
 
@@ -170,40 +178,42 @@ def test_equality(shape: tuple[int, ...]) -> None:
     assert a == b, "Arrays with the same shape and value should be equal"
 
 
+@pytest.mark.skip(reason="NDArray.forAll is not available on CUDA arrays")
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
 def test_forAll(shape: tuple[int, ...]) -> None:
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
 
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)
 
     def setter(*idx: int) -> None:
         a[idx] += 1
 
-    a.forAll(setter)
+    a.forAll(setter)  # pyright: ignore
 
     assert all(value == 1 for value in a.getStorageArray())
     for idx in np.ndindex(shape):
         assert a[idx] == 1
 
 
+@pytest.mark.skip(reason="NDArray.forInterior is not available on CUDA arrays")
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
 def test_forInterior(shape: tuple[int, ...]) -> None:
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
 
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)
 
     def setter(*idx: int) -> None:
         a[idx] += 1
 
-    a.forInterior(setter)
+    a.forInterior(setter)  # pyright: ignore
 
     for idx in np.ndindex(shape):
         # Check if interior
@@ -214,20 +224,21 @@ def test_forInterior(shape: tuple[int, ...]) -> None:
             assert a[idx] == 0
 
 
+@pytest.mark.skip(reason="NDArray.forBoundary is not available on CUDA arrays")
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
 def test_forBoundary(shape: tuple[int, ...]) -> None:
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
 
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)
 
     def setter(*idx: int) -> None:
         a[idx] += 1
 
-    a.forBoundary(setter)
+    a.forBoundary(setter)  # pyright: ignore
 
     for idx in np.ndindex(shape):
         is_boundary = any(i == 0 or i == s - 1 for i, s in zip(idx, shape))
@@ -251,7 +262,7 @@ def test_getStorageArray(shape: tuple[int, ...]) -> None:
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
 
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)  # Initialize all elements to 0
 
@@ -294,7 +305,7 @@ def test_copy(shape: tuple[int, ...], copy_function: Callable[[Any], Any]) -> No
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
 
-    a = NDArray[dim, int]()  # type: ignore[index]
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
     a.setSizes(*shape)
     a.setValue(0)
 
@@ -350,12 +361,12 @@ def test_str_repr(value_type: type[VT], shape: tuple[int, ...]) -> None:
     assert is_dim_guard(dim)
 
     # Create NDArray with the given value type and dimension
-    array_type = NDArray[dim, value_type]()  # type: ignore[index]
+    array_type = NDArray[dim, value_type, Cuda]()  # type: ignore[index]
     array_type.setSizes(*shape)
 
     # Check that `__str__` contains the correct value type and shape
     str_output = str(array_type)
-    expected_str = f"NDArray[{dim}, {value_type.__name__}, Host]({', '.join(str(x) for x in shape)})"
+    expected_str = f"NDArray[{dim}, {value_type.__name__}, Cuda]({', '.join(str(x) for x in shape)})"
     assert str_output == expected_str
 
     # Check that `__repr__` includes memory address
@@ -367,130 +378,72 @@ def test_str_repr(value_type: type[VT], shape: tuple[int, ...]) -> None:
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
 def test_dlpack(shape: tuple[int, ...]) -> None:
     """
-    Tests interoperability with NumPy using the DLPack API.
+    Tests interoperability with CuPy using the DLPack API.
 
     Verifies:
-    - The returned NumPy array has the correct shape and dtype.
+    - The returned CuPy array has the correct shape and dtype.
     - The array contains the same data as the NDArray.
     - The underlying memory is shared.
-    - Changes in NumPy are reflected in the NDArray and vice versa.
+    - Changes in CuPy are reflected in the NDArray and vice versa.
     """
+
+    if TYPE_CHECKING:
+        import cupy  # type: ignore[import-untyped] # NOQA: PLC0415
+    else:
+        cupy = pytest.importorskip("cupy")
+
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
 
     # Create and initialize the NDArray
-    array = NDArray[dim, int]()  # type: ignore[index]
+    array = NDArray[dim, int, Cuda]()  # type: ignore[index]
     array.setSizes(*shape)
     array.setValue(42)  # Fill with known value
 
-    # Convert to NumPy array
-    array_np = np.from_dlpack(array)
+    # Convert to CuPy array
+    array_cupy = cupy.from_dlpack(array)
 
     # Check that the array is writable
     # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
     # https://github.com/numpy/numpy/issues/29474
     # https://github.com/wjakob/nanobind/issues/1122
-    # assert array_np.flags.writeable
+    # assert array_cupy.flags.writeable
 
     # Check shape
-    assert array_np.shape == shape, f"Expected shape {shape}, got {array_np.shape}"
+    assert array_cupy.shape == shape, f"Expected shape {shape}, got {array_cupy.shape}"
 
-    # Check strides (NumPy is in bytes, TNL in elements)
-    strides = tuple(s // array_np.dtype.itemsize for s in array_np.strides)
+    # Check strides (CuPy is in bytes, TNL in elements)
+    strides = tuple(s // array_cupy.dtype.itemsize for s in array_cupy.strides)
     assert array.getStrides() == strides
 
     # Check data type
-    assert array_np.dtype == np.int_, f"Expected dtype {np.int_}, got {array_np.dtype}"
+    assert array_cupy.dtype == cupy.int_, f"Expected dtype {cupy.int_}, got {array_cupy.dtype}"
 
     # Check element-wise equality
-    assert np.all(array_np == 42), "Data mismatch in NumPy array"
+    assert cupy.all(array_cupy == 42), "Data mismatch in CuPy array"
 
     # Test storage array
     storage = array.getStorageArray()
-    storage_np = storage.as_numpy()
-    assert storage_np.shape == (storage.getSize(),)
-    assert np.all(storage_np == 42), "Storage array as_numpy() mismatch"
+    storage_cupy = cupy.from_dlpack(storage)
+    assert storage_cupy.shape == (storage.getSize(),)
+    assert cupy.all(storage_cupy == 42), "Storage array as_numpy() mismatch"
 
     # Check that memory is shared
-    assert np.shares_memory(array_np, storage_np), "Memory should be shared between NDArray and its storage Array"
+    assert cupy.shares_memory(array_cupy, storage_cupy), "Memory should be shared between NDArray and its storage Array"
 
-    ndidx = np.ndindex(shape)
+    ndidx = cupy.ndindex(shape)
 
-    # Modify NumPy array and verify NDArray reflects the change
+    # Modify CuPy array and verify NDArray reflects the change
     # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
     # idx = next(ndidx)
     # array_np[idx] = 99
-    # assert array[idx] == 99, "NumPy array modification not reflected in NDArray"
+    # assert array[idx] == 99, "CuPy array modification not reflected in NDArray"
 
-    # Modify NDArray and verify NumPy array reflects the change
+    # Modify NDArray and verify CuPy array reflects the change
     idx = next(ndidx)
     array[idx] = 77
-    assert array_np[idx] == 77, "NDArray modification not reflected in NumPy array"
+    assert array_cupy[idx] == 77, "NDArray modification not reflected in CuPy array"
 
     # Check that memory is shared
-    assert np.shares_memory(array_np, array.as_numpy()), "Memory should be shared between NDArray and NumPy array"
-
-
-@pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_as_numpy(shape: tuple[int, ...]) -> None:
-    """
-    Tests the `as_numpy()` method of the NDArray class.
-
-    Verifies:
-    - The returned NumPy array has the correct shape and dtype.
-    - The array contains the same data as the NDArray.
-    - The underlying memory is shared.
-    - Changes in NumPy are reflected in the NDArray and vice versa.
-    """
-    dim = len(shape)
-    # dim needs to be narrowed down to a literal for type-checking
-    assert is_dim_guard(dim)
-
-    # Create and initialize the NDArray
-    array = NDArray[dim, int]()  # type: ignore[index]
-    array.setSizes(*shape)
-    array.setValue(42)  # Fill with known value
-
-    # Convert to NumPy array
-    array_np = array.as_numpy()
-
-    # Check that the array is writable
-    assert array_np.flags.writeable
-
-    # Check shape
-    assert array_np.shape == shape, f"Expected shape {shape}, got {array_np.shape}"
-
-    # Check strides (NumPy is in bytes, TNL in elements)
-    strides = tuple(s // array_np.dtype.itemsize for s in array_np.strides)
-    assert array.getStrides() == strides
-
-    # Check data type
-    assert array_np.dtype == np.int_, f"Expected dtype {np.int_}, got {array_np.dtype}"
-
-    # Check element-wise equality
-    assert np.all(array_np == 42), "Data mismatch in NumPy array"
-
-    # Test storage array
-    storage = array.getStorageArray()
-    storage_np = storage.as_numpy()
-    assert storage_np.shape == (storage.getSize(),)
-    assert np.all(storage_np == 42), "Storage array as_numpy() mismatch"
-
-    # Check that memory is shared
-    assert np.shares_memory(array_np, storage_np), "Memory should be shared between NDArray and its storage Array"
-
-    ndidx = np.ndindex(shape)
-
-    # Modify NumPy array and verify NDArray reflects the change
-    idx = next(ndidx)
-    array_np[idx] = 99
-    assert array[idx] == 99, "NumPy array modification not reflected in NDArray"
-
-    # Modify NDArray and verify NumPy array reflects the change
-    idx = next(ndidx)
-    array[idx] = 77
-    assert array_np[idx] == 77, "NDArray modification not reflected in NumPy array"
-
-    # Check that memory is shared
-    assert np.shares_memory(array_np, array.as_numpy()), "Memory should be shared between NDArray and NumPy array"
+    assert cupy.shares_memory(array_cupy, cupy.from_dlpack(array)), "Memory should be shared between two cupy arrays"

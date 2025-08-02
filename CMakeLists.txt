@@ -6,6 +6,7 @@ project(PyTNL
 # Declare all CMake options for the project
 option(PyTNL_EXPORT_INTERFACE_TARGETS "Instruct CMake to generate rules to export the interface target" ${PROJECT_IS_TOP_LEVEL})
 option(PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization (IPO/LTO) for PyTNL targets" ON)
+option(PyTNL_USE_CUDA "Build with CUDA support" ON)
 
 # make cache variables for install destinations
 include(GNUInstallDirs)
@@ -39,6 +40,39 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} ${CMAKE_CXX_FLAGS_DEBUG}")
+
+# Check and enable CUDA
+if(PyTNL_USE_CUDA)
+    # Set one default GPU architecture to avoid building for all GPU architectures
+    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES "native")
+    endif()
+
+    include(CheckLanguage)
+    check_language(CUDA)
+    if(CMAKE_CUDA_COMPILER)
+        enable_language(CUDA)
+        set(PyTNL_BUILD_CUDA TRUE)
+
+        # Set C++ standard
+        set(CMAKE_CUDA_STANDARD 17)
+        set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+        set(CMAKE_CUDA_EXTENSIONS OFF)
+
+        # Set project-specific (i.e. not exported) build options
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wall")
+        set(CMAKE_CUDA_FLAGS_DEBUG "-g")
+        set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -DNDEBUG")
+        set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "${CMAKE_CUDA_FLAGS_RELEASE} ${CMAKE_CUDA_FLAGS_DEBUG}")
+
+        # Enable separable compilation
+        set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+
+        # nanobind sets only the CXX_VISIBILITY_PRESET cmake target property to hidden,
+        # which does not affect intermediate CUDA objects
+        set(CMAKE_CUDA_VISIBILITY_PRESET hidden)
+    endif()
+endif()
 
 # make cache variable so it can be used in downstream projects
 set(PyTNL_INCLUDE_DIRS

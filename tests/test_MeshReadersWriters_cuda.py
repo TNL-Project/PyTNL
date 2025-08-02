@@ -1,15 +1,19 @@
-import io
+# mypy: disable-error-code="import-not-found, no-any-unimported, no-untyped-call, index, unused-ignore"
+# pyright: standard
+# pyright: reportMissingImports=information
+
 import shutil
 import subprocess
 from pathlib import Path
 from types import ModuleType
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import pytest
 
 import pytnl._meshes
 import pytnl.meshes
 from pytnl._meta import DIMS
+from pytnl.devices import Cuda
 
 mpi4py: ModuleType | None
 try:
@@ -18,8 +22,17 @@ try:
 except ImportError:
     mpi4py = None
 
+if TYPE_CHECKING:
+    import pytnl._meshes_cuda as _meshes_cuda
+else:
+    _meshes_cuda = pytest.importorskip("pytnl._meshes_cuda")
+
+# Mark all tests in this module
+pytestmark = pytest.mark.cuda
+
 # Aliases for tested types
-type Mesh = (
+type Grid = _meshes_cuda.Grid_1 | _meshes_cuda.Grid_2 | _meshes_cuda.Grid_3
+type HostMesh = (
     pytnl._meshes.Grid_1
     | pytnl._meshes.Grid_2
     | pytnl._meshes.Grid_3
@@ -31,16 +44,28 @@ type Mesh = (
     | pytnl._meshes.Mesh_Tetrahedron
     | pytnl._meshes.Mesh_Polyhedron
 )
+type Mesh = (
+    _meshes_cuda.Grid_1
+    | _meshes_cuda.Grid_2
+    | _meshes_cuda.Grid_3
+    | _meshes_cuda.Mesh_Edge
+    | _meshes_cuda.Mesh_Triangle
+    | _meshes_cuda.Mesh_Quadrangle
+    | _meshes_cuda.Mesh_Polygon
+    | _meshes_cuda.Mesh_Hexahedron
+    | _meshes_cuda.Mesh_Tetrahedron
+    | _meshes_cuda.Mesh_Polyhedron
+)
 type MeshWriter = (
-    pytnl._meshes.VTIWriter_Grid_1
-    | pytnl._meshes.VTIWriter_Grid_2
-    | pytnl._meshes.VTIWriter_Grid_3
-    | pytnl._meshes.VTKWriter_Grid_1
-    | pytnl._meshes.VTKWriter_Grid_2
-    | pytnl._meshes.VTKWriter_Grid_3
-    | pytnl._meshes.VTUWriter_Grid_1
-    | pytnl._meshes.VTUWriter_Grid_2
-    | pytnl._meshes.VTUWriter_Grid_3
+    _meshes_cuda.VTIWriter_Grid_1
+    | _meshes_cuda.VTIWriter_Grid_2
+    | _meshes_cuda.VTIWriter_Grid_3
+    | _meshes_cuda.VTKWriter_Grid_1
+    | _meshes_cuda.VTKWriter_Grid_2
+    | _meshes_cuda.VTKWriter_Grid_3
+    | _meshes_cuda.VTUWriter_Grid_1
+    | _meshes_cuda.VTUWriter_Grid_2
+    | _meshes_cuda.VTUWriter_Grid_3
     | pytnl._meshes.VTKWriter_Mesh_Edge
     | pytnl._meshes.VTKWriter_Mesh_Triangle
     | pytnl._meshes.VTKWriter_Mesh_Quadrangle
@@ -119,6 +144,7 @@ def _test_reader_writer(
     writer_class: type[MeshWriter],
     mesh: Mesh,
     tmp_path: Path,
+    host_mesh: HostMesh | Mesh | None = None,
 ) -> None:
     """
     Test that writing a mesh to a file with the given writer and reading it back
@@ -136,7 +162,10 @@ def _test_reader_writer(
     with open(output_file, "wb") as file:
         writer = writer_class(file)
         writer.writeMetadata(cycle=0, time=1.0)
-        writer.writeCells(mesh)  # type: ignore[arg-type]
+        if host_mesh is None:
+            writer.writeCells(mesh)  # type: ignore[arg-type]
+        else:
+            writer.writeCells(host_mesh)  # type: ignore[arg-type]
         del writer  # Force flush
 
     # Check that the writer produced output
@@ -163,6 +192,7 @@ def _test_meshfunction(
     mesh: Mesh,
     tmp_path: Path,
     data_type: Literal["PointData", "CellData"] = "PointData",
+    host_mesh: HostMesh | Mesh | None = None,
 ) -> None:
     """
     Tests writing and reading point/cell data arrays with the mesh.
@@ -184,7 +214,10 @@ def _test_meshfunction(
     with open(output_file, "wb") as file:
         writer = writer_class(file)
         writer.writeMetadata(cycle=42, time=3.14)
-        writer.writeCells(mesh)  # type: ignore[arg-type]
+        if host_mesh is None:
+            writer.writeCells(mesh)  # type: ignore[arg-type]
+        else:
+            writer.writeCells(host_mesh)  # type: ignore[arg-type]
         if data_type == "PointData":
             writer.writePointData(scalar_data, "foo", 1)
             writer.writePointData(vector_data, "bar", 3)
@@ -220,7 +253,7 @@ def _test_meshfunction(
 )
 def test_vti_reader_synthetic(dim: DIMS, origin: list[int], proportions: list[int], dimensions: list[int], tmp_path: Path) -> None:
     # Choose appropriate grid, reader and writer based on dimension
-    grid_class = pytnl.meshes.Grid[dim]  # type: ignore[type-arg, valid-type]
+    grid_class = pytnl.meshes.Grid[dim, Cuda]  # type: ignore[type-arg, valid-type]
     reader_class = pytnl.meshes.VTIReader
     writer_class: type[MeshWriter] = pytnl.meshes.VTIWriter[grid_class]  # pyright: ignore[reportUnknownVariableType]
 
@@ -252,8 +285,9 @@ def test_mesh_file(file_path: str, expected_vertices: int, expected_cells: int, 
     if suffix == ".vti":
         # Choose appropriate grid class and writer class based on dimension
         dim: Literal[2, 3] = 2 if "quadrangles" in file_path else 3
-        mesh_class: type[Mesh] = pytnl.meshes.Grid[dim]
-        writer_class: type[MeshWriter] = pytnl.meshes.VTIWriter[mesh_class]  # pyright: ignore[reportUnknownVariableType]
+        mesh_class: type[Mesh] = pytnl.meshes.Grid[dim, Cuda]  # type: ignore[assignment]
+        host_mesh_class: type[HostMesh | Mesh] = mesh_class
+        writer_class: type[MeshWriter] = pytnl.meshes.VTIWriter[mesh_class]  # type: ignore[assignment]
     else:
         # Get mesh topology based on directory
         try:
@@ -261,27 +295,31 @@ def test_mesh_file(file_path: str, expected_vertices: int, expected_cells: int, 
         except KeyError:
             pytest.fail(f"Unsupported directory: {directory}")
 
-        mesh_class = pytnl.meshes.Mesh[topology]
+        mesh_class = pytnl.meshes.Mesh[topology, Cuda]  # type: ignore[assignment]
+        host_mesh_class = pytnl.meshes.Mesh[topology]
 
         # Choose writer based on reader
         if reader_class == pytnl.meshes.VTKReader:
-            writer_class = pytnl.meshes.VTKWriter[mesh_class]  # pyright: ignore[reportUnknownVariableType]
+            writer_class = pytnl.meshes.VTKWriter[host_mesh_class]  # pyright: ignore
         else:
-            writer_class = pytnl.meshes.VTUWriter[mesh_class]  # pyright: ignore[reportUnknownVariableType]
+            writer_class = pytnl.meshes.VTUWriter[host_mesh_class]  # pyright: ignore
 
     # Load mesh
     mesh = mesh_class()
+    host_mesh = host_mesh_class()
     reader = reader_class(str(full_path))
     reader.loadMesh(mesh)
+    reader = reader_class(str(full_path))
+    reader.loadMesh(host_mesh)
 
     # Check mesh entities
     assert mesh.getEntitiesCount(mesh.Vertex) == expected_vertices, f"Expected {expected_vertices} points in {file_path}"  # type: ignore[arg-type]
     assert mesh.getEntitiesCount(mesh.Cell) == expected_cells, f"Expected {expected_cells} cells in {file_path}"  # type: ignore[arg-type]
 
     # Round-trip tests
-    _test_reader_writer(reader_class, writer_class, mesh, tmp_path)
-    _test_meshfunction(reader_class, writer_class, mesh, tmp_path, "PointData")
-    _test_meshfunction(reader_class, writer_class, mesh, tmp_path, "CellData")
+    _test_reader_writer(reader_class, writer_class, mesh, tmp_path, host_mesh=host_mesh)
+    _test_meshfunction(reader_class, writer_class, mesh, tmp_path, "PointData", host_mesh=host_mesh)
+    _test_meshfunction(reader_class, writer_class, mesh, tmp_path, "CellData", host_mesh=host_mesh)
 
 
 # This test actually tests three functions:
@@ -306,7 +344,7 @@ def test_resolveMeshType(file_path: str, expected_vertices: int, expected_cells:
     if suffix == ".vti":
         # Choose appropriate grid class based on dimension
         dim: Literal[2, 3] = 2 if "quadrangles" in file_path else 3
-        mesh_class: type[Mesh] = pytnl.meshes.Grid[dim]
+        mesh_class: type[Mesh] = pytnl.meshes.Grid[dim, Cuda]  # type: ignore[assignment]
     else:
         # Get mesh topology based on directory
         try:
@@ -314,7 +352,7 @@ def test_resolveMeshType(file_path: str, expected_vertices: int, expected_cells:
         except KeyError:
             pytest.fail(f"Unsupported directory: {directory}")
 
-        mesh_class = pytnl.meshes.Mesh[topology]
+        mesh_class = pytnl.meshes.Mesh[topology, Cuda]  # type: ignore[assignment]
 
     # Test getMeshReader
     reader = pytnl.meshes.getMeshReader(f"invalid{suffix}")
@@ -325,7 +363,7 @@ def test_resolveMeshType(file_path: str, expected_vertices: int, expected_cells:
     # Test resolveMeshType
     with pytest.raises(RuntimeError):
         pytnl.meshes.resolveMeshType(f"invalid{suffix}")
-    reader, mesh = pytnl.meshes.resolveMeshType(str(full_path))
+    reader, mesh = pytnl.meshes.resolveMeshType(str(full_path), device_type=Cuda)
     assert isinstance(reader, reader_class), reader
     assert isinstance(mesh, mesh_class), mesh
     # Check mesh entities
@@ -335,7 +373,7 @@ def test_resolveMeshType(file_path: str, expected_vertices: int, expected_cells:
     # Test resolveAndLoadMesh
     with pytest.raises(RuntimeError):
         pytnl.meshes.resolveAndLoadMesh(f"invalid{suffix}")
-    reader, mesh = pytnl.meshes.resolveAndLoadMesh(str(full_path))
+    reader, mesh = pytnl.meshes.resolveAndLoadMesh(str(full_path), device_type=Cuda)
     assert isinstance(reader, reader_class), reader
     assert isinstance(mesh, mesh_class), mesh
     # Check mesh entities
@@ -371,30 +409,17 @@ def test_pvtu_reader_writer(file_path: str, expected_vertices: int, expected_cel
     subprocess.run(cmd, shell=True, check=True)
 
     # Load mesh and read data
-    mesh_class = pytnl.meshes.Mesh[pytnl.meshes.topologies.Triangle]  # type: ignore[type-arg]
+    mesh_class = pytnl.meshes.Mesh[pytnl.meshes.topologies.Triangle, Cuda]  # type: ignore[type-arg]
     mesh = pytnl.meshes.DistributedMesh[mesh_class]()
-    local_mesh = mesh.getLocalMesh()
+    # local_mesh = mesh.getLocalMesh()
     reader = pytnl.meshes.PVTUReader(str(output_pvtu))
     reader.loadMesh(mesh)
-    pytnl.meshes.distributeFaces(mesh)
+    # NOTE: distributeFaces is host-only
+    # pytnl.meshes.distributeFaces(mesh)
     indices = reader.readCellData("GlobalIndex")
 
     assert len(indices) > 0
     assert min(indices) >= 0
     assert max(indices) > 0
 
-    # Write test
-    f = io.BytesIO()
-    writer = pytnl.meshes.PVTUWriter[mesh_class](f)
-    writer.writeCells(mesh)
-    writer.writeMetadata(cycle=0, time=1.0)
-    array = [42] * local_mesh.getEntitiesCount(local_mesh.Cell)
-    writer.writePDataArray(array, "testArray", 1)
-    for i in range(comm.Get_size()):
-        path = writer.addPiece("pytnl_test.pvtu", i)
-        assert path.endswith(f"/subdomain.{i}.vtu")
-    del writer  # Force flush
-    output = f.getvalue()
-
-    assert output.startswith(b'<?xml version="1.0"?>\n<VTKFile type="PUnstructuredGrid"')
-    assert output.count(b"<Piece") == comm.Get_size()
+    # NOTE: writer is host-only

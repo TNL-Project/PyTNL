@@ -3,6 +3,8 @@
 #include <pytnl/pytnl.h>
 
 #include <TNL/Containers/Array.h>
+#include <TNL/Allocators/CudaHost.h>
+#include <TNL/Allocators/CudaManaged.h>
 
 #include "indexing.h"
 
@@ -12,6 +14,8 @@ export_Array( nb::module_& m, const char* name )
 {
    using IndexType = typename ArrayType::IndexType;
    using ValueType = typename ArrayType::ValueType;
+   using DeviceType = typename ArrayType::DeviceType;
+   using AllocatorType = typename ArrayType::AllocatorType;
 
    auto array =  //
       nb::class_< ArrayType >( m, name )
@@ -135,25 +139,60 @@ export_Array( nb::module_& m, const char* name )
             {
                return ArrayType( self );
             },
-            nb::arg( "memo" ) )
+            nb::arg( "memo" ) );
 
-         .def(
-            "as_numpy",
-            []( ArrayType& self )
-            {
-               return nb::ndarray< ValueType, nb::numpy, nb::ndim< 1 > >(
-                  self.getData(),
-                  { static_cast< std::size_t >( self.getSize() ) },
-                  nb::find( self ),  // find the Python object associated with `self` and pass it as owner
-                  {},                // strides
-                  nb::dtype< ValueType >(),
-                  nb::device::cpu::value,
-                  0  // device_id
-               );
-            },
-            nb::rv_policy::reference_internal,
-            nb::sig( "def as_numpy(self) -> numpy.typing.NDArray[typing.Any]" ),
-            "Returns a NumPy ndarray for this Array with shared memory (i.e. the data is not copied)" );
+   // Interoperability with Python array API standard (DLPack)
+   auto dlpack_device = []()
+   {
+      // FIXME: DLPack supports switching CUDA devices but TNL does not
+      if constexpr( std::is_same_v< AllocatorType, TNL::Allocators::Cuda< ValueType > > )
+         return std::make_pair( nb::device::cuda::value, TNL::Backend::getDevice() );
+      else if constexpr( std::is_same_v< AllocatorType, TNL::Allocators::CudaHost< ValueType > > )
+         return std::make_pair( nb::device::cuda_host::value, TNL::Backend::getDevice() );
+      else if constexpr( std::is_same_v< AllocatorType, TNL::Allocators::CudaManaged< ValueType > > )
+         return std::make_pair( nb::device::cuda_managed::value, TNL::Backend::getDevice() );
+      else
+         return std::make_pair( nb::device::cpu::value, 0 );
+   };
+   array
+      .def(
+         "__dlpack__",
+         [ dlpack_device ]( ArrayType& self, nb::kwargs kwargs )
+         {
+            int device_id = 0;
+            // FIXME: DLPack support switching CUDA devices but TNL does not
+            if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > )
+               device_id = TNL::Backend::getDevice();
+            return nb::ndarray<>( self.getData(),
+                                  { static_cast< std::size_t >( self.getSize() ) },
+                                  nb::find( self ),  // find the Python object associated with `self` and pass it as owner
+                                  {},                // strides
+                                  nb::dtype< ValueType >(),
+                                  dlpack_device().first,
+                                  device_id );
+         },
+         nb::sig( "def __dlpack__(self, **kwargs: typing.Any) -> typing_extensions.CapsuleType" ) )
+      .def_static( "__dlpack_device__", dlpack_device );
+
+   // NOTE: this is needed only because NumPy does not support writable unversioned dlpacks
+   if constexpr( ! std::is_same_v< DeviceType, TNL::Devices::GPU > )
+      array.def(
+         "as_numpy",
+         []( ArrayType& self )
+         {
+            return nb::ndarray< ValueType, nb::numpy, nb::ndim< 1 > >(
+               self.getData(),
+               { static_cast< std::size_t >( self.getSize() ) },
+               nb::find( self ),  // find the Python object associated with `self` and pass it as owner
+               {},                // strides
+               nb::dtype< ValueType >(),
+               nb::device::cpu::value,
+               0  // device_id
+            );
+         },
+         nb::rv_policy::reference_internal,
+         nb::sig( "def as_numpy(self) -> numpy.typing.NDArray[typing.Any]" ),
+         "Returns a NumPy ndarray for this Array with shared memory (i.e. the data is not copied)" );
 
    def_indexing< ArrayType >( array );
    def_slice_indexing< ArrayType >( array );

@@ -6,11 +6,13 @@ template< typename Grid >
 struct SpaceStepsProductsGetter
 {};
 
-template<>
-struct SpaceStepsProductsGetter< Grid1D >
+template< typename RealType, typename DeviceType, typename IndexType >
+struct SpaceStepsProductsGetter< TNL::Meshes::Grid< 1, RealType, DeviceType, IndexType > >
 {
-   static inline typename Grid1D::RealType
-   get( const Grid1D& grid, const int& xPow )
+   using Grid = TNL::Meshes::Grid< 1, RealType, DeviceType, IndexType >;
+
+   static RealType
+   get( const Grid& grid, const int& xPow )
    {
       if( xPow == -2 )
          return grid.template getSpaceStepsProducts< -2 >();
@@ -34,11 +36,13 @@ struct SpaceStepsProductsGetter< Grid1D >
    }
 };
 
-template<>
-struct SpaceStepsProductsGetter< Grid2D >
+template< typename RealType, typename DeviceType, typename IndexType >
+struct SpaceStepsProductsGetter< TNL::Meshes::Grid< 2, RealType, DeviceType, IndexType > >
 {
-   static inline typename Grid2D::RealType
-   get( const Grid2D& grid, const int& xPow, const int& yPow = 0 )
+   using Grid = TNL::Meshes::Grid< 2, RealType, DeviceType, IndexType >;
+
+   static RealType
+   get( const Grid& grid, const int& xPow, const int& yPow = 0 )
    {
       if( xPow == 0 && yPow == 0 )
          return grid.template getSpaceStepsProducts< 0, 0 >();
@@ -59,11 +63,13 @@ struct SpaceStepsProductsGetter< Grid2D >
    }
 };
 
-template<>
-struct SpaceStepsProductsGetter< Grid3D >
+template< typename RealType, typename DeviceType, typename IndexType >
+struct SpaceStepsProductsGetter< TNL::Meshes::Grid< 3, RealType, DeviceType, IndexType > >
 {
-   static inline typename Grid3D::RealType
-   get( const Grid3D& grid, const int& xPow, const int& yPow = 0, const int& zPow = 0 )
+   using Grid = TNL::Meshes::Grid< 3, RealType, DeviceType, IndexType >;
+
+   static RealType
+   get( const Grid& grid, const int& xPow, const int& yPow = 0, const int& zPow = 0 )
    {
       if( xPow == 0 && yPow == 0 && zPow == 0 )
          return grid.template getSpaceStepsProducts< 0, 0, 0 >();
