@@ -42,6 +42,8 @@ build-backend = "scikit_build_core.build"
 wheel.packages = []
 # specifying build-dir breaks build isolation, but enables incremental and editable builds
 build-dir = "build"
+# CMAKE_BUILD_TYPE (can be overridden with the SKBUILD_CMAKE_BUILD_TYPE environment variable)
+cmake.build-type = "Release"
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers -n auto -m 'not cuda'"
