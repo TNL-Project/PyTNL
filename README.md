@@ -22,6 +22,8 @@ For this to work, several dependencies must be installed:
 - __Compiler for the C++17 standard__, e.g. [GCC][gcc] or [Clang][clang]
 - __[Git][git]__
 - __An MPI library__ such as [OpenMPI][openmpi]
+- _(Optional):_ [CUDA toolkit][CUDA] for building and using CUDA-enabled PyTNL
+  submodules
 
 You can install all dependencies with one of the following commands, depending
 on your Linux distribution:
@@ -100,6 +102,9 @@ basedpyright
 mypy
 ```
 
+The `[dev-cuda]` _extra_ additionally contains dependencies necessary for
+testing the CUDA support.
+
 ### Other
 
 There are other ways to install PyTNL in specific environments, including
@@ -127,6 +132,7 @@ There is also an extension [for VSCode][pyright-vscode] and
 [clang]: https://clang.llvm.org/
 [git]: https://git-scm.com/
 [openmpi]: https://www.open-mpi.org/
+[CUDA]: https://docs.nvidia.com/cuda/index.html
 [cmake-pkg]: https://pypi.org/project/cmake/
 [cmake-fetchcontent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
 [venv]: https://docs.python.org/3/library/venv.html
