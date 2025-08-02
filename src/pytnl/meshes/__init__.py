@@ -1,5 +1,6 @@
 from __future__ import annotations  # noqa: I001
 
+import importlib
 from typing import TYPE_CHECKING, Any, Literal, overload
 
 import pytnl._meshes
@@ -21,10 +22,8 @@ from pytnl._meshes import (
     VTKReader,
     VTKTypesArrayType,
     VTUReader,
-    distributeFaces,
+    distributeFaces,  # Note: host-only function
     getMeshReader,
-    resolveAndLoadMesh,
-    resolveMeshType,
 )
 
 # Import type aliases/variables
@@ -803,3 +802,36 @@ class PVTUWriter(metaclass=_PVTUWriterMeta):
     - `PVTUWriter[Mesh[topologies.Edge]]` → `PVTUWriter_Mesh_Edge`
     - `PVTUWriter[Mesh[topologies.Polygon]]` → `PVTUWriter_Mesh_Polygon`
     """
+
+
+def resolveMeshType(
+    file_name: str,
+    *,
+    file_format: str = "auto",
+    device_type: type[DT] = pytnl.devices.Host,
+) -> tuple[MeshReader, type]:
+    """
+    Returns a `(reader, mesh)` pair where `reader` is initialized with the given
+    file name (using `getMeshReader`) and `mesh` is empty.
+    """
+    if device_type is pytnl.devices.Cuda:
+        _meshes_cuda = importlib.import_module("pytnl._meshes_cuda")
+        return _meshes_cuda.resolveMeshType(file_name, file_format=file_format)  # type: ignore[no-any-return]
+    return pytnl._meshes.resolveMeshType(file_name, file_format=file_format)
+
+
+def resolveAndLoadMesh(
+    file_name: str,
+    *,
+    file_format: str = "auto",
+    device_type: type[DT] = pytnl.devices.Host,
+) -> tuple[MeshReader, type]:
+    """
+    Returns a `(reader, mesh)` pair where `reader` is initialized with the given
+    file name (using `getMeshReader`) and `mesh` contains the mesh loaded from
+    the given file (using `reader.loadMesh(mesh)`).
+    """
+    if device_type is pytnl.devices.Cuda:
+        _meshes_cuda = importlib.import_module("pytnl._meshes_cuda")
+        return _meshes_cuda.resolveAndLoadMesh(file_name, file_format=file_format)  # type: ignore[no-any-return]
+    return pytnl._meshes.resolveAndLoadMesh(file_name, file_format=file_format)
