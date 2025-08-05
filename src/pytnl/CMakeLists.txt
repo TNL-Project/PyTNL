@@ -93,8 +93,8 @@ if (PyTNL_BUILD_CUDA)
             _meshes_cuda
     )
     set(module_depends__containers_cuda _containers)
-    set(module_depends_matrices_cuda _containers_cuda)
-    set(module_depends__meshes_cuda _containers_cuda _meshes)
+    set(module_depends_matrices_cuda _containers_cuda _containers)
+    set(module_depends__meshes_cuda _containers_cuda _meshes _containers)
 endif()
 
 # set common properties

@@ -48,7 +48,7 @@ NB_MODULE( matrices_cuda, m )
    register_exceptions( m );
 
    // import depending modules
-   nb::module_::import_( "pytnl._containers" );
+   nb::module_::import_( "pytnl._containers_cuda" );
 
    export_SparseMatrices( m );
 }

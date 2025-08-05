@@ -7,6 +7,8 @@ stages:
 
 .env_setup: &env_setup
   #
+  # make sure that $PATH and other essential variables are set correctly (needed for cuda)
+  - source /etc/profile
   # do not use all cores for OpenMP
   - export OMP_NUM_THREADS=4
   # running as root does not matter inside Docker containers
@@ -66,6 +68,29 @@ Arch_cmake:
           - Debug
           - Release
 
+Arch_cmake_cuda:
+  stage: build
+  image: "jlk.fjfi.cvut.cz:5000/fjfi-mmg/archlinux-cuda:latest"
+  tags:
+    - nvidia
+  # don't wait for jobs in previous stages to complete before starting this job
+  needs: []
+  before_script:
+    - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
+    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py python-cupy
+    - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis
+  script:
+    - *env_setup
+    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX="$HOME/.local"
+    - cmake --build build
+    - cmake --install build
+    - pytest -m cuda -n 0
+  parallel:
+    matrix:
+      - BUILD_TYPE:
+          - Debug
+          - Release
+
 Arch_python_build:
   stage: build
   image: "quay.io/archlinux/archlinux:base-devel"
@@ -108,8 +133,6 @@ Arch_pip_cuda:
   # don't wait for jobs in previous stages to complete before starting this job
   needs: []
   before_script:
-    # make sure that $PATH and other essential variables are set correctly (needed for cuda)
-    - source /etc/profile
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
   script:
     - *env_setup
