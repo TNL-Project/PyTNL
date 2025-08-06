@@ -182,7 +182,7 @@ Python_build:
 
 Ubuntu_cmake:
   stage: build
-  image: "docker.io/library/ubuntu:latest"
+  image: "docker.io/library/ubuntu:rolling"
   # don't wait for jobs in previous stages to complete before starting this job
   needs: []
   before_script:
