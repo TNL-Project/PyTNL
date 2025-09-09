@@ -132,6 +132,10 @@ exclude = ["build", ".venv"]
 # Enable all/most diagnostics with "error" level
 typeCheckingMode = "strict"
 
+# Suppress diagnostics for imports that have no corresponding source file
+# (we have binary modules containing multiple submodules)
+reportMissingModuleSource = "none"
+
 # Disable errors for non-typing diagnostics
 reportUnusedClass = "information"
 reportUnusedFunction = "information"

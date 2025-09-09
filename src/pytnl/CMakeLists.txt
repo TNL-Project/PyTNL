@@ -80,6 +80,16 @@ set(modules
     _meshes
 )
 
+# define a mapping for stub files
+# (needed because the stubgen in recursive mode may generate multiple files
+# when `.def_submodule` is used and cmake cannot automatically detect them)
+set(module_stubs__containers _containers.pyi)
+set(module_stubs__containers_cuda _containers_cuda.pyi)
+set(module_stubs_matrices matrices.pyi)
+set(module_stubs_matrices_cuda matrices_cuda.pyi)
+set(module_stubs__meshes _meshes/__init__.pyi _meshes/topologies.pyi)
+set(module_stubs__meshes_cuda _meshes_cuda.pyi)
+
 # define a mapping for dependencies between the modules
 set(module_depends__containers)
 set(module_depends_matrices _containers)
@@ -112,14 +122,29 @@ foreach(target IN ITEMS ${modules})
     nanobind_add_stub(
         ${target}_stub
         MODULE ${target}
-        OUTPUT ${target}.pyi
+        RECURSIVE
+        OUTPUT ${module_stubs_${target}}
         PYTHON_PATH $<TARGET_FILE_DIR:${target}> $<TARGET_FILE_DIR:${target}>/..
         DEPENDS ${target} ${module_depends_${target}}
     )
 
-    # install the module and stub file
+    # install the module
     install(TARGETS ${target} DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}.pyi DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl)
+
+    # install the stub file(s)
+    list(GET module_stubs_${target} 0 _first_stub)
+    get_filename_component(_module_directory ${_first_stub} DIRECTORY)
+    if (NOT _module_directory STREQUAL "")
+        install(
+            DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${_module_directory}
+            DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl
+        )
+    else()
+        install(
+            FILES ${CMAKE_CURRENT_BINARY_DIR}/${module_stubs_${target}}
+            DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl
+        )
+    endif()
 endforeach()
 
 # make the modules importable from the build directory
