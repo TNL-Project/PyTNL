@@ -18,11 +18,7 @@ export_topology( Scope& m, const char* name )
 void
 export_topologies( nb::module_& m )
 {
-   // FIXME: nanobind's stubgen does not generate type hints for the submodule https://github.com/wjakob/nanobind/issues/1126
-   //auto submodule = m.def_submodule( "topologies" );
-   struct Sub
-   {};
-   auto submodule = nb::class_< Sub >( m, "topologies" );
+   auto submodule = m.def_submodule( "topologies" );
 
    export_topology< TNL::Meshes::Topologies::Edge >( submodule, "Edge" );
    export_topology< TNL::Meshes::Topologies::Hexahedron >( submodule, "Hexahedron" );
