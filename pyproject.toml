@@ -30,7 +30,7 @@ dev = [
     "basedmypy",
     "basedpyright",
 ]
-dev-cuda = ["cupy-cuda12x"]
+dev-cuda = ["cupy-cuda13x"]
 
 [build-system]
 requires = ["scikit-build-core>=0.10"]
