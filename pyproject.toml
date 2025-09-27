@@ -91,6 +91,11 @@ ignore = [
     "UP047", # non-pep695-generic-function - we often need reusable TypeVars with constraints/bounds
 ]
 
+[tool.ruff.lint.isort]
+# Do not categorize imports of our binary modules as third-party
+# https://docs.astral.sh/ruff/faq/#how-does-ruff-determine-which-of-my-imports-are-first-party-third-party-etc
+known-first-party = ["pytnl"]
+
 # Configuration for mypy / basedmypy
 # https://kotlinisland.github.io/basedmypy/config_file.html
 # https://kotlinisland.github.io/basedmypy/config_file.html#example-pyproject-toml
