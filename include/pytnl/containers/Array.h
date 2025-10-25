@@ -175,7 +175,7 @@ export_Array( nb::module_& m, const char* name )
       .def_static( "__dlpack_device__", dlpack_device );
 
    // NOTE: this is needed only because NumPy does not support writable unversioned dlpacks
-   if constexpr( ! std::is_same_v< DeviceType, TNL::Devices::GPU > )
+   if constexpr( ! std::is_same_v< DeviceType, TNL::Devices::GPU > && ! std::is_enum_v< ValueType > )
       array.def(
          "as_numpy",
          []( ArrayType& self )
