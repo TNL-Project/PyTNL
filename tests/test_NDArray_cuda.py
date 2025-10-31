@@ -405,9 +405,7 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     array_cupy = cupy.from_dlpack(array)
 
     # Check that the array is writable
-    # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
-    # https://github.com/numpy/numpy/issues/29474
-    # https://github.com/wjakob/nanobind/issues/1122
+    # FIXME: CuPy does not have the writeable flag yet https://github.com/cupy/cupy/issues/2616
     # assert array_cupy.flags.writeable
 
     # Check shape
@@ -435,10 +433,9 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     ndidx = cupy.ndindex(shape)
 
     # Modify CuPy array and verify NDArray reflects the change
-    # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
-    # idx = next(ndidx)
-    # array_np[idx] = 99
-    # assert array[idx] == 99, "CuPy array modification not reflected in NDArray"
+    idx = next(ndidx)
+    array_cupy[idx] = 99
+    assert array[idx] == 99, "CuPy array modification not reflected in NDArray"
 
     # Modify NDArray and verify CuPy array reflects the change
     idx = next(ndidx)

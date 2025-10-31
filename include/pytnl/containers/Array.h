@@ -157,42 +157,28 @@ export_Array( nb::module_& m, const char* name )
    array
       .def(
          "__dlpack__",
-         [ dlpack_device ]( ArrayType& self, nb::kwargs kwargs )
+         [ dlpack_device ]( nb::pointer_and_handle< ArrayType > self, nb::kwargs kwargs )
          {
             int device_id = 0;
             // FIXME: DLPack support switching CUDA devices but TNL does not
             if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > )
                device_id = TNL::Backend::getDevice();
-            return nb::ndarray<>( self.getData(),
-                                  { static_cast< std::size_t >( self.getSize() ) },
-                                  nb::find( self ),  // find the Python object associated with `self` and pass it as owner
-                                  {},                // strides
-                                  nb::dtype< ValueType >(),
-                                  dlpack_device().first,
-                                  device_id );
+
+            using array_api_t = nb::ndarray< nb::array_api, ValueType >;
+            array_api_t array_api( self.p->getData(),
+                                   { static_cast< std::size_t >( self.p->getSize() ) },
+                                   self.h,  // pass the Python object associated with `self` as owner
+                                   {},      // strides
+                                   nb::dtype< ValueType >(),
+                                   dlpack_device().first,
+                                   device_id );
+
+            // call the array_api's __dlpack__ Python method to properly handle the kwargs
+            nb::object aa = nb::cast( array_api, nb::rv_policy::reference_internal, self.h );
+            return aa.attr( "__dlpack__" )( **kwargs );
          },
          nb::sig( "def __dlpack__(self, **kwargs: typing.Any) -> typing_extensions.CapsuleType" ) )
       .def_static( "__dlpack_device__", dlpack_device );
-
-   // NOTE: this is needed only because NumPy does not support writable unversioned dlpacks
-   if constexpr( ! std::is_same_v< DeviceType, TNL::Devices::GPU > && ! std::is_enum_v< ValueType > )
-      array.def(
-         "as_numpy",
-         []( ArrayType& self )
-         {
-            return nb::ndarray< ValueType, nb::numpy, nb::ndim< 1 > >(
-               self.getData(),
-               { static_cast< std::size_t >( self.getSize() ) },
-               nb::find( self ),  // find the Python object associated with `self` and pass it as owner
-               {},                // strides
-               nb::dtype< ValueType >(),
-               nb::device::cpu::value,
-               0  // device_id
-            );
-         },
-         nb::rv_policy::reference_internal,
-         nb::sig( "def as_numpy(self) -> numpy.typing.NDArray[typing.Any]" ),
-         "Returns a NumPy ndarray for this Array with shared memory (i.e. the data is not copied)" );
 
    def_indexing< ArrayType >( array );
    def_slice_indexing< ArrayType >( array );
