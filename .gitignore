@@ -4,4 +4,16 @@
 .hypothesis/
 .pytest_cache/
 .venv/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Ruff
+.ruff_cache/
+
+# Byte code
 __pycache__/
+*.py[cod]
+*$py.class
