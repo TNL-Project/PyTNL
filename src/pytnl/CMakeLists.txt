@@ -50,6 +50,10 @@ set(src_meshes_cuda
     meshes/meshes.cu
 )
 nanobind_add_module(_meshes ${src_meshes})
+set(src_solvers
+    solvers/solvers.cpp
+)
+nanobind_add_module(_solvers ${src_solvers})
 
 # add dependencies
 target_compile_definitions(_meshes PUBLIC "-DHAVE_ZLIB -DHAVE_TINYXML2")
@@ -78,6 +82,7 @@ set(modules
     _containers
     matrices
     _meshes
+    _solvers
 )
 
 # define a mapping for stub files
@@ -89,11 +94,13 @@ set(module_stubs_matrices matrices.pyi)
 set(module_stubs_matrices_cuda matrices_cuda.pyi)
 set(module_stubs__meshes _meshes/__init__.pyi _meshes/topologies.pyi)
 set(module_stubs__meshes_cuda _meshes_cuda.pyi)
+set(module_stubs__solvers _solvers.pyi)
 
 # define a mapping for dependencies between the modules
 set(module_depends__containers)
 set(module_depends_matrices _containers)
 set(module_depends__meshes _containers)
+set(module_depends__solvers _containers)
 
 # add CUDA modules
 if (PyTNL_BUILD_CUDA)
