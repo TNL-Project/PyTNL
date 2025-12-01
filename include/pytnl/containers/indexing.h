@@ -12,7 +12,7 @@ def_indexing( Scope& scope )
 
    scope.def( "__len__",
               &Array::getSize,
-              // need to set custom signature because StaticArray has static setSize
+              // need to set custom signature because StaticArray has static getSize
               // and .def() generates a signature without argument by default
               nb::sig( "def __len__(self) -> int" ) );
 
