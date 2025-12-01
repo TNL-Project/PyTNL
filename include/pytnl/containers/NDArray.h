@@ -8,6 +8,8 @@
 #include <TNL/Allocators/CudaHost.h>
 #include <TNL/Allocators/CudaManaged.h>
 
+#include "dlpack.h"
+
 template< typename Index >
 void
 ndarray_check_index( std::size_t i, Index idx, Index size )
@@ -286,7 +288,6 @@ export_NDArray( nb::module_& m, const char* name )
    using IndexerType = typename ArrayType::IndexerType;
    using ValueType = typename ArrayType::ValueType;
    using DeviceType = typename ArrayType::DeviceType;
-   using AllocatorType = typename ArrayType::AllocatorType;
 
    auto array =  //
       nb::class_< ArrayType, IndexerType >( m, name )
@@ -443,22 +444,10 @@ export_NDArray( nb::module_& m, const char* name )
             nb::arg( "memo" ) );
 
    // Interoperability with Python array API standard (DLPack)
-   auto dlpack_device = []()
-   {
-      // FIXME: DLPack supports switching CUDA devices but TNL does not
-      if constexpr( std::is_same_v< AllocatorType, TNL::Allocators::Cuda< ValueType > > )
-         return std::make_pair( nb::device::cuda::value, TNL::Backend::getDevice() );
-      else if constexpr( std::is_same_v< AllocatorType, TNL::Allocators::CudaHost< ValueType > > )
-         return std::make_pair( nb::device::cuda_host::value, TNL::Backend::getDevice() );
-      else if constexpr( std::is_same_v< AllocatorType, TNL::Allocators::CudaManaged< ValueType > > )
-         return std::make_pair( nb::device::cuda_managed::value, TNL::Backend::getDevice() );
-      else
-         return std::make_pair( nb::device::cpu::value, 0 );
-   };
    array
       .def(
          "__dlpack__",
-         [ dlpack_device ]( nb::pointer_and_handle< ArrayType > self, nb::kwargs kwargs )
+         []( nb::pointer_and_handle< ArrayType > self, nb::kwargs kwargs )
          {
             int device_id = 0;
             // FIXME: DLPack support switching CUDA devices but TNL does not
@@ -482,7 +471,7 @@ export_NDArray( nb::module_& m, const char* name )
                                    self.h,  // pass the Python object associated with `self` as owner
                                    strides.data(),
                                    nb::dtype< ValueType >(),
-                                   dlpack_device().first,
+                                   dlpack_device< ArrayType >().first,
                                    device_id );
 
             // call the array_api's __dlpack__ Python method to properly handle the kwargs
@@ -490,7 +479,7 @@ export_NDArray( nb::module_& m, const char* name )
             return aa.attr( "__dlpack__" )( **kwargs );
          },
          nb::sig( "def __dlpack__(self, **kwargs: typing.Any) -> typing_extensions.CapsuleType" ) )
-      .def_static( "__dlpack_device__", dlpack_device );
+      .def_static( "__dlpack_device__", dlpack_device< ArrayType > );
 
    ndarray_indexing( array );
    ndarray_iteration( array );
