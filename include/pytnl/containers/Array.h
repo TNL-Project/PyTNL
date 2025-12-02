@@ -17,14 +17,11 @@ export_Array( nb::module_& m, const char* name )
    using ValueType = typename ArrayType::ValueType;
    using DeviceType = typename ArrayType::DeviceType;
 
+   // NOTE: ArrayType can be Array or ArrayView
    auto array =  //
       nb::class_< ArrayType >( m, name )
          // Constructors
          .def( nb::init<>() )
-         // NOTE: the nb::init<...> does not work due to list-initialization and
-         //       std::list_initializer constructor in ArrayType
-         .def( my_init< IndexType >(), nb::arg( "size" ) )
-         .def( my_init< IndexType, ValueType >(), nb::arg( "size" ), nb::arg( "value" ) )
 
          // Typedefs
          .def_prop_ro_static(  //
@@ -62,14 +59,68 @@ export_Array( nb::module_& m, const char* name )
                   return nb::type< ValueType >();
                }
             } )
+         .def_prop_ro_static(  //
+            "ViewType",
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
+            {
+               return nb::type< typename ArrayType::ViewType >();
+            } )
+         .def_prop_ro_static(  //
+            "ConstViewType",
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
+            {
+               return nb::type< typename ArrayType::ConstViewType >();
+            } )
 
-         // Size management
-         .def( "getSize", &ArrayType::getSize )
-         .def( "setSize", &ArrayType::setSize, nb::arg( "size" ) )
-         .def( "setLike", &ArrayType::template setLike< ArrayType > )
-         .def( "resize", nb::overload_cast< IndexType >( &ArrayType::resize ), nb::arg( "size" ) )
+         // ArrayView getters
          .def(
-            "resize", nb::overload_cast< IndexType, ValueType >( &ArrayType::resize ), nb::arg( "size" ), nb::arg( "value" ) )
+            "getView",
+            []( ArrayType& array, IndexType begin = 0, IndexType end = 0 )
+            {
+               if( begin < 0 || begin >= array.getSize() )
+                  throw nb::index_error( ( "begin index " + std::to_string( begin )
+                                           + " is out-of-bounds for given array with size "
+                                           + std::to_string( array.getSize() ) )
+                                            .c_str() );
+               if( end < 0 || end > array.getSize() )
+                  throw nb::index_error( ( "end index " + std::to_string( end ) + " is out-of-bounds for given array with size "
+                                           + std::to_string( array.getSize() ) )
+                                            .c_str() );
+               if( end == 0 )
+                  end = array.getSize();
+               if( end < begin )
+                  throw nb::index_error(
+                     ( "end index " + std::to_string( end ) + " is smaller than the begin index " + std::to_string( begin ) )
+                        .c_str() );
+               return array.getView( begin, end );
+            },
+            nb::arg( "begin" ) = 0,
+            nb::arg( "end" ) = 0 )
+         .def(
+            "getConstView",
+            []( ArrayType& array, IndexType begin = 0, IndexType end = 0 )
+            {
+               if( begin < 0 || begin >= array.getSize() )
+                  throw nb::index_error( ( "begin index " + std::to_string( begin )
+                                           + " is out-of-bounds for given array with size "
+                                           + std::to_string( array.getSize() ) )
+                                            .c_str() );
+               if( end < 0 || end > array.getSize() )
+                  throw nb::index_error( ( "end index " + std::to_string( end ) + " is out-of-bounds for given array with size "
+                                           + std::to_string( array.getSize() ) )
+                                            .c_str() );
+               if( end == 0 )
+                  end = array.getSize();
+               if( end < begin )
+                  throw nb::index_error(
+                     ( "end index " + std::to_string( end ) + " is smaller than the begin index " + std::to_string( begin ) )
+                        .c_str() );
+               return array.getConstView( begin, end );
+            },
+            nb::arg( "begin" ) = 0,
+            nb::arg( "end" ) = 0 )
+
+         .def( "getSize", &ArrayType::getSize )
          .def( "swap", &ArrayType::swap )
          .def( "reset", &ArrayType::reset )
          .def( "empty", &ArrayType::empty )
@@ -77,19 +128,23 @@ export_Array( nb::module_& m, const char* name )
          // Data access
          .def(
             "setElement",
-            []( ArrayType& array, typename ArrayType::IndexType i, typename ArrayType::ValueType value )
+            []( ArrayType& array, IndexType i, ValueType value )
             {
-               if( i < 0 || i >= array.getSize() )
-                  throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
-                                           + std::to_string( array.getSize() ) )
-                                            .c_str() );
-               array.setElement( i, value );
+               if constexpr( std::is_const_v< ValueType > )
+                  throw nb::type_error( "Cannot set element of a constant array" );
+               else {
+                  if( i < 0 || i >= array.getSize() )
+                     throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
+                                              + std::to_string( array.getSize() ) )
+                                               .c_str() );
+                  array.setElement( i, value );
+               }
             },
             nb::arg( "i" ),
             nb::arg( "value" ) )
          .def(
             "getElement",
-            []( const ArrayType& array, typename ArrayType::IndexType i )
+            []( const ArrayType& array, IndexType i )
             {
                if( i < 0 || i >= array.getSize() )
                   throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
@@ -103,7 +158,10 @@ export_Array( nb::module_& m, const char* name )
          .def( "assign",
                []( ArrayType& array, const ArrayType& other ) -> ArrayType&
                {
-                  return array = other;
+                  if constexpr( std::is_const_v< ValueType > )
+                     throw nb::type_error( "Cannot assign into constant array" );
+                  else
+                     return array = other;
                } )
 
          // Comparison
@@ -111,12 +169,31 @@ export_Array( nb::module_& m, const char* name )
          .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) )
 
          // Fill
-         .def( "setValue", &ArrayType::setValue, nb::arg( "value" ), nb::arg( "begin" ) = 0, nb::arg( "end" ) = 0 )
+         .def(
+            "setValue",
+            []( ArrayType& array, typename ArrayType::ValueType value, IndexType begin = 0, IndexType end = 0 )
+            {
+               if constexpr( std::is_const_v< ValueType > )
+                  throw nb::type_error( "Cannot set value of constant array" );
+               else
+                  array.setValue( value, begin, end );
+            },
+            nb::arg( "value" ),
+            nb::arg( "begin" ) = 0,
+            nb::arg( "end" ) = 0 )
 
          // File I/O
-         .def_static( "getSerializationType", &ArrayType::getSerializationType )
-         .def( "save", &ArrayType::save )
-         .def( "load", &ArrayType::load )
+         .def( "save", &ArrayType::save, nb::arg( "filename" ) )
+         .def(
+            "load",
+            []( ArrayType& array, const std::string& filename )
+            {
+               if constexpr( std::is_const_v< ValueType > )
+                  throw nb::type_error( "Cannot load into constant array" );
+               else
+                  return array.load( filename );
+            },
+            nb::arg( "filename" ) )
 
          // String representation
          .def( "__str__",
@@ -125,21 +202,7 @@ export_Array( nb::module_& m, const char* name )
                   std::stringstream ss;
                   ss << a;
                   return ss.str();
-               } )
-
-         // Deepcopy support https://pybind11.readthedocs.io/en/stable/advanced/classes.html#deepcopy-support
-         .def( "__copy__",
-               []( const ArrayType& self )
-               {
-                  return ArrayType( self );
-               } )
-         .def(
-            "__deepcopy__",
-            []( const ArrayType& self, nb::typed< nb::dict, nb::str, nb::any > )
-            {
-               return ArrayType( self );
-            },
-            nb::arg( "memo" ) );
+               } );
 
    // Interoperability with Python array API standard (DLPack)
    // (note that the set of dtypes supported by DLPack is limited)
@@ -172,5 +235,51 @@ export_Array( nb::module_& m, const char* name )
    }
 
    def_indexing< ArrayType >( array );
-   def_slice_indexing< ArrayType >( array );
+
+   if constexpr( TNL::IsViewType< ArrayType >::value ) {
+      array  //
+         .def( nb::init< const ArrayType& >() )
+         // FIXME: needed for implicit conversion from Array, but AllocatorType is ignored
+         .def( nb::init_implicit< TNL::Containers::Array< std::remove_const_t< ValueType >, DeviceType, IndexType >& >() )
+         .def( "bind",
+               []( ArrayType& self, const ArrayType& other )
+               {
+                  self.bind( other );
+               } );
+   }
+   else {
+      // TODO: slicing should work for views too
+      def_slice_indexing< ArrayType >( array );
+
+      // Additional Array-specific methods
+      array
+         // NOTE: the nb::init<...> does not work due to list-initialization and
+         //       std::list_initializer constructor in ArrayType
+         .def( my_init< IndexType >(), nb::arg( "size" ) )
+         .def( my_init< IndexType, ValueType >(), nb::arg( "size" ), nb::arg( "value" ) )
+
+         // Size management
+         .def( "setSize", &ArrayType::setSize, nb::arg( "size" ) )
+         .def( "setLike", &ArrayType::template setLike< ArrayType > )
+         .def( "resize", nb::overload_cast< IndexType >( &ArrayType::resize ), nb::arg( "size" ) )
+         .def(
+            "resize", nb::overload_cast< IndexType, ValueType >( &ArrayType::resize ), nb::arg( "size" ), nb::arg( "value" ) )
+
+         // File I/O
+         .def_static( "getSerializationType", &ArrayType::getSerializationType )
+
+         // Deepcopy support https://pybind11.readthedocs.io/en/stable/advanced/classes.html#deepcopy-support
+         .def( "__copy__",
+               []( const ArrayType& self )
+               {
+                  return ArrayType( self );
+               } )
+         .def(
+            "__deepcopy__",
+            []( const ArrayType& self, nb::typed< nb::dict, nb::str, nb::any > )
+            {
+               return ArrayType( self );
+            },
+            nb::arg( "memo" ) );
+   }
 }

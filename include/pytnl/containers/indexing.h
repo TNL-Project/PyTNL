@@ -42,12 +42,16 @@ def_indexing( Scope& scope )
    scope.def( "__setitem__",
               []( Array& a, Index i, const Value& e )
               {
-                 if( i < 0 || i >= a.getSize() )
-                    throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
-                                             + std::to_string( a.getSize() ) )
-                                              .c_str() );
-                 // setElement is equivalent to operator[] on host but works on cuda
-                 a.setElement( i, e );
+                 if constexpr( std::is_const_v< typename Array::ValueType > )
+                    throw nb::type_error( "Cannot set element of a read-only array" );
+                 else {
+                    if( i < 0 || i >= a.getSize() )
+                       throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
+                                                + std::to_string( a.getSize() ) )
+                                                 .c_str() );
+                    // setElement is equivalent to operator[] on host but works on cuda
+                    a.setElement( i, e );
+                 }
               } );
 }
 

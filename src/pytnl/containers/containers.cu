@@ -15,6 +15,12 @@ using _array = TNL::Containers::Array< T, TNL::Devices::Cuda, IndexType >;
 template< typename T >
 using _vector = TNL::Containers::Vector< T, TNL::Devices::Cuda, IndexType >;
 
+template< typename T >
+using _array_view = TNL::Containers::ArrayView< T, TNL::Devices::Cuda, IndexType >;
+
+template< typename T >
+using _vector_view = TNL::Containers::VectorView< T, TNL::Devices::Cuda, IndexType >;
+
 template< int dim, typename T >
 using _ndarray = NDArray< T,
                           make_sizes_holder< IndexType, dim >,
@@ -43,6 +49,22 @@ NB_MODULE( _containers_cuda, m )
    export_Vector< _array< IndexType >, _vector< IndexType > >( m, "Vector_int" );
    export_Vector< _array< RealType >, _vector< RealType > >( m, "Vector_float" );
    export_Vector< _array< ComplexType >, _vector< ComplexType > >( m, "Vector_complex" );
+
+   export_Array< _array_view< bool > >( m, "ArrayView_bool" );
+   export_Array< _array_view< IndexType > >( m, "ArrayView_int" );
+   export_Array< _array_view< RealType > >( m, "ArrayView_float" );
+   export_Array< _array_view< ComplexType > >( m, "ArrayView_complex" );
+   export_Vector< _array_view< IndexType >, _vector_view< IndexType > >( m, "VectorView_int" );
+   export_Vector< _array_view< RealType >, _vector_view< RealType > >( m, "VectorView_float" );
+   export_Vector< _array_view< ComplexType >, _vector_view< ComplexType > >( m, "VectorView_complex" );
+
+   export_Array< _array_view< bool const > >( m, "ArrayView_bool_const" );
+   export_Array< _array_view< IndexType const > >( m, "ArrayView_int_const" );
+   export_Array< _array_view< RealType const > >( m, "ArrayView_float_const" );
+   export_Array< _array_view< ComplexType const > >( m, "ArrayView_complex_const" );
+   export_Vector< _array_view< IndexType const >, _vector_view< IndexType const > >( m, "VectorView_int_const" );
+   export_Vector< _array_view< RealType const >, _vector_view< RealType const > >( m, "VectorView_float_const" );
+   export_Vector< _array_view< ComplexType const >, _vector_view< ComplexType const > >( m, "VectorView_complex_const" );
 
    export_NDArray< _ndarray< 1, IndexType > >( m, "NDArray_1_int" );
    export_NDArray< _ndarray< 2, IndexType > >( m, "NDArray_2_int" );
