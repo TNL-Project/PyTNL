@@ -3,6 +3,34 @@
 #include <pytnl/pytnl.h>
 #include <pytnl/RawIterator.h>
 
+template< typename Index >
+void
+check_array_index( Index size, Index i )
+{
+   if( i < 0 || i >= size )
+      throw nb::index_error(
+         ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size " + std::to_string( size ) ).c_str() );
+}
+
+template< typename Index >
+void
+check_array_range( Index size, Index begin, Index end )
+{
+   if( begin < 0 || begin > size )
+      throw nb::index_error(
+         ( "begin index " + std::to_string( begin ) + " is out-of-bounds for given array with size " + std::to_string( size ) )
+            .c_str() );
+   if( end < 0 || end > size )
+      throw nb::index_error(
+         ( "end index " + std::to_string( end ) + " is out-of-bounds for given array with size " + std::to_string( size ) )
+            .c_str() );
+   if( end == 0 )
+      end = size;
+   if( end < begin )
+      throw nb::index_error(
+         ( "end index " + std::to_string( end ) + " is smaller than the begin index " + std::to_string( begin ) ).c_str() );
+}
+
 template< typename Array, typename Scope >
 void
 def_indexing( Scope& scope )
@@ -31,10 +59,7 @@ def_indexing( Scope& scope )
    scope.def( "__getitem__",
               []( Array& a, Index i )
               {
-                 if( i < 0 || i >= a.getSize() )
-                    throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
-                                             + std::to_string( a.getSize() ) )
-                                              .c_str() );
+                 check_array_index( a.getSize(), i );
                  // getElement is equivalent to operator[] on host but works on cuda
                  return a.getElement( i );
               } );
@@ -45,10 +70,7 @@ def_indexing( Scope& scope )
                  if constexpr( std::is_const_v< typename Array::ValueType > )
                     throw nb::type_error( "Cannot set element of a read-only array" );
                  else {
-                    if( i < 0 || i >= a.getSize() )
-                       throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
-                                                + std::to_string( a.getSize() ) )
-                                                 .c_str() );
+                    check_array_index( a.getSize(), i );
                     // setElement is equivalent to operator[] on host but works on cuda
                     a.setElement( i, e );
                  }

@@ -77,21 +77,7 @@ export_Array( nb::module_& m, const char* name )
             "getView",
             []( ArrayType& array, IndexType begin = 0, IndexType end = 0 )
             {
-               if( begin < 0 || begin >= array.getSize() )
-                  throw nb::index_error( ( "begin index " + std::to_string( begin )
-                                           + " is out-of-bounds for given array with size "
-                                           + std::to_string( array.getSize() ) )
-                                            .c_str() );
-               if( end < 0 || end > array.getSize() )
-                  throw nb::index_error( ( "end index " + std::to_string( end ) + " is out-of-bounds for given array with size "
-                                           + std::to_string( array.getSize() ) )
-                                            .c_str() );
-               if( end == 0 )
-                  end = array.getSize();
-               if( end < begin )
-                  throw nb::index_error(
-                     ( "end index " + std::to_string( end ) + " is smaller than the begin index " + std::to_string( begin ) )
-                        .c_str() );
+               check_array_range( array.getSize(), begin, end );
                return array.getView( begin, end );
             },
             nb::arg( "begin" ) = 0,
@@ -100,21 +86,7 @@ export_Array( nb::module_& m, const char* name )
             "getConstView",
             []( ArrayType& array, IndexType begin = 0, IndexType end = 0 )
             {
-               if( begin < 0 || begin >= array.getSize() )
-                  throw nb::index_error( ( "begin index " + std::to_string( begin )
-                                           + " is out-of-bounds for given array with size "
-                                           + std::to_string( array.getSize() ) )
-                                            .c_str() );
-               if( end < 0 || end > array.getSize() )
-                  throw nb::index_error( ( "end index " + std::to_string( end ) + " is out-of-bounds for given array with size "
-                                           + std::to_string( array.getSize() ) )
-                                            .c_str() );
-               if( end == 0 )
-                  end = array.getSize();
-               if( end < begin )
-                  throw nb::index_error(
-                     ( "end index " + std::to_string( end ) + " is smaller than the begin index " + std::to_string( begin ) )
-                        .c_str() );
+               check_array_range( array.getSize(), begin, end );
                return array.getConstView( begin, end );
             },
             nb::arg( "begin" ) = 0,
@@ -133,10 +105,7 @@ export_Array( nb::module_& m, const char* name )
                if constexpr( std::is_const_v< ValueType > )
                   throw nb::type_error( "Cannot set element of a constant array" );
                else {
-                  if( i < 0 || i >= array.getSize() )
-                     throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
-                                              + std::to_string( array.getSize() ) )
-                                               .c_str() );
+                  check_array_index( array.getSize(), i );
                   array.setElement( i, value );
                }
             },
@@ -146,10 +115,7 @@ export_Array( nb::module_& m, const char* name )
             "getElement",
             []( const ArrayType& array, IndexType i )
             {
-               if( i < 0 || i >= array.getSize() )
-                  throw nb::index_error( ( "index " + std::to_string( i ) + " is out-of-bounds for given array with size "
-                                           + std::to_string( array.getSize() ) )
-                                            .c_str() );
+               check_array_index( array.getSize(), i );
                return array.getElement( i );
             },
             nb::arg( "i" ) )
@@ -175,8 +141,10 @@ export_Array( nb::module_& m, const char* name )
             {
                if constexpr( std::is_const_v< ValueType > )
                   throw nb::type_error( "Cannot set value of constant array" );
-               else
+               else {
+                  check_array_range( array.getSize(), begin, end );
                   array.setValue( value, begin, end );
+               }
             },
             nb::arg( "value" ),
             nb::arg( "begin" ) = 0,
