@@ -5,6 +5,18 @@ stages:
   - lint
   - build
 
+# https://docs.gitlab.com/ee/ci/yaml/workflow.html
+workflow:
+  rules:
+    # run a pipeline in the merge request context
+    # https://docs.gitlab.com/ci/pipelines/merge_request_pipelines/
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    # don't run a branch pipeline on push when there is an open merge request
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    # otherwise run a branch pipeline, but only if the project is in the tnl-project group
+    - if: $CI_COMMIT_BRANCH && $CI_PROJECT_ROOT_NAMESPACE == "tnl-project"
+
 .env_setup: &env_setup
   #
   # make sure that $PATH and other essential variables are set correctly (needed for cuda)
