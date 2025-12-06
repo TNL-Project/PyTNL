@@ -2,9 +2,9 @@ default:
   interruptible: true
 
 stages:
-  - docs
   - lint
   - build
+  - deploy
 
 # https://docs.gitlab.com/ee/ci/yaml/workflow.html
 workflow:
@@ -27,19 +27,6 @@ workflow:
   # running as root does not matter inside Docker containers
   - export OMPI_ALLOW_RUN_AS_ROOT=1
   - export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-
-pages:
-  stage: docs
-  image: javnile/mkdocs
-  script:
-    - cd docs
-    - mkdocs build
-  artifacts:
-    paths:
-      - docs/public
-  needs: []
-  only:
-    - main
 
 ruff format:
   stage: lint
@@ -247,3 +234,33 @@ Ubuntu_pip:
     - pytest
     - mypy
     - basedpyright
+
+documentation:
+  stage: build
+  image: squidfunk/mkdocs-material
+  rules:
+    - changes:
+        - docs/**/*
+        - .gitlab-ci.yml
+  script:
+    - cd docs
+    - mkdocs build
+  artifacts:
+    paths:
+      - "./docs/public"
+    expire_in: "7 days"
+  needs: []
+  only:
+    - main
+
+pages:
+  stage: deploy
+  dependencies:
+    - documentation
+  script:
+    - mv docs/public public/
+  artifacts:
+    paths:
+      - docs/public
+  only:
+    - main

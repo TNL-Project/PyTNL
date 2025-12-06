@@ -13,6 +13,6 @@ This project uses [MkDocs](https://mkdocs.org) along with the [material](https:/
 
 - Clone this repository
 - Create virtual environment using `python -m venv .venv`
-- Run `pip install .`
+- Run `pip install -r requirements.txt`
 - To Serve run `mkdocs serve` -> Serves the development server on localhost:8000
 - To Build run `mkdocs build` -> Builds and outputs static site assets to /public directory

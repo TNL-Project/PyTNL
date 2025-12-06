@@ -27,8 +27,8 @@ extra:
 theme:
   name: material
   locale: en
-  logo: img/logo.png
-  favicon: img/favicon.ico
+  logo: img/favicon.png
+  favicon: img/favicon.png
   palette:
     primary: black
     scheme: slate
@@ -48,3 +48,4 @@ markdown_extensions:
       pygments_style: monokai
   - pymdownx.superfences
   - admonition
+  - pymdownx.snippets
