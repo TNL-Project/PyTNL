@@ -1,7 +1,7 @@
 This section covers the suggested setup for PyTNL developers.
 First make sure to install all [dependencies](dependencies.md).
 
-Clone the [PyTNL](https://gitlab.com/tnl-project/pytnl) repository and create a Python **virtual environment** (venv) for the
+Clone the [PyTNL] repository and create a Python **virtual environment** (venv) for the
 project:
 
 ```shell
@@ -41,3 +41,7 @@ mypy
 
 The `[dev-cuda]` _extra_ additionally contains dependencies necessary for
 testing the CUDA support.
+
+<!-- LINKS -->
+
+[PyTNL]: https://gitlab.com/tnl-project/pytnl

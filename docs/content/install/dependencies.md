@@ -1,11 +1,14 @@
-These dependencies are required for PyTNL to work:
+**Required:**
 
 - **Python 3.12 or later**, including the _development headers_ for building
   C/C++ Python modules
-- **Compiler for the C++17 standard**, e.g. [GCC](https://gcc.gnu.org/) or [Clang](https://clang.llvm.org/)
-- **[Git](https://git-scm.com/)**
-- **An MPI library** such as [OpenMPI](https://www.open-mpi.org/)
-- _(Optional):_ [CUDA toolkit](https://developer.nvidia.com/cuda-toolkit) for building and using CUDA-enabled PyTNL
+- **Compiler for the C++17 standard**, e.g. [GCC] or [Clang]
+- **[Git]**
+- **An MPI library** such as [OpenMPI]
+
+**Optional:**
+
+- **[CUDA toolkit]** for building and using CUDA-enabled PyTNL
   submodules
 
 ## Installation
@@ -27,3 +30,11 @@ apt install build-essential git python3-dev libopenmpi-dev
 
 Additional dependencies will be pulled in automatically either as Python
 packages (e.g. [cmake](https://pypi.org/project/cmake/)) or using the [FetchContent cmake module](https://cmake.org/cmake/help/latest/module/FetchContent.html).
+
+<!-- LINKS -->
+
+[GCC]: https://gcc.gnu.org/
+[Clang]: https://clang.llvm.org/
+[Git]: https://git-scm.com/
+[OpenMPI]: https://www.open-mpi.org/
+[CUDA toolkit]: https://developer.nvidia.com/cuda-toolkit
