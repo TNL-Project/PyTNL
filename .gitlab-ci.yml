@@ -2,6 +2,7 @@ default:
   interruptible: true
 
 stages:
+  - docs
   - lint
   - build
 
@@ -26,6 +27,19 @@ workflow:
   # running as root does not matter inside Docker containers
   - export OMPI_ALLOW_RUN_AS_ROOT=1
   - export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
+pages:
+  stage: docs
+  image: javnile/mkdocs
+  script:
+    - cd docs
+    - mkdocs build
+  artifacts:
+    paths:
+      - docs/public
+  needs: []
+  only:
+    - main
 
 ruff format:
   stage: lint

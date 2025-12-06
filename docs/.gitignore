@@ -1,0 +1,4 @@
+/build/
+.venv
+public
+*.egg-info/

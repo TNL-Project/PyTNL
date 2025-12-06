@@ -1,0 +1,51 @@
+site_name: PyTNL
+docs_dir: ./content
+
+nav:
+  - Home: index.md
+  - Installation:
+      - Dependencies: install/dependencies.md
+      - Development: install/dev.md
+      - PyPi: install/pypi.md
+      - Git: install/git.md
+      - Other: install/other.md
+  - Usage:
+      - Containers:
+          - Arrays: usage/containers/arrays.md
+          - ND Arrays: usage/containers/arrays_nd.md
+          - Vectors: usage/containers/vectors.md
+          - Static Vectors: usage/containers/vectors_static.md
+      - Examples:
+          - Overview: examples/index.md
+          - NDArray: examples/ndarray.md
+          - Vector: examples/vector.md
+  - License: https://gitlab.com/tnl-project/pytnl/-/raw/main/LICENSE
+  - Issues: https://gitlab.com/tnl-project/pytnl/-/issues
+
+extra:
+  work_in_progress: true
+
+theme:
+  name: material
+  locale: en
+  logo: img/logo.png
+  favicon: img/favicon.ico
+  palette:
+    primary: black
+    scheme: slate
+  features:
+    - content.code.copy
+
+extra_css:
+  - extra.css
+
+site_dir: public
+repo_url: https://gitlab.com/tnl-project/pytnl
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      use_pygments: true
+      pygments_style: monokai
+  - pymdownx.superfences
+  - admonition
