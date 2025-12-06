@@ -1,7 +1,7 @@
 This section covers the suggested setup for PyTNL developers.
 First make sure to install all [dependencies](dependencies.md).
 
-Clone the repository and create a Python **virtual environment** (venv) for the
+Clone the [PyTNL](https://gitlab.com/tnl-project/pytnl) repository and create a Python **virtual environment** (venv) for the
 project:
 
 ```shell

@@ -16,7 +16,6 @@ nav:
           - Vectors: usage/containers/vectors.md
           - Static Vectors: usage/containers/vectors_static.md
       - Examples:
-          - Overview: examples/index.md
           - NDArray: examples/ndarray.md
           - Vector: examples/vector.md
   - License: https://gitlab.com/tnl-project/pytnl/-/raw/main/LICENSE
