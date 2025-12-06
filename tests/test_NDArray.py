@@ -185,7 +185,7 @@ def test_forAll(shape: tuple[int, ...]) -> None:
 
     a.forAll(setter)
 
-    assert all(value == 1 for value in a.getStorageArray())
+    assert all(value == 1 for value in a.getStorageArrayView())
     for idx in np.ndindex(shape):
         assert a[idx] == 1
 
@@ -238,9 +238,9 @@ def test_forBoundary(shape: tuple[int, ...]) -> None:
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_getStorageArray(shape: tuple[int, ...]) -> None:
+def test_getStorageArrayView(shape: tuple[int, ...]) -> None:
     """
-    Tests the `getStorageArray()` method of the NDArray class.
+    Tests the `getStorageArrayView()` method of the NDArray class.
 
     Verifies:
     - The storage array is of the correct size and shape.
@@ -256,7 +256,7 @@ def test_getStorageArray(shape: tuple[int, ...]) -> None:
     a.setValue(0)  # Initialize all elements to 0
 
     # Get the internal storage array
-    storage = a.getStorageArray()
+    storage = a.getStorageArrayView()
 
     # 1. Check that storage has the correct size
     assert storage.getSize() == np.prod(shape), "Storage array size mismatch"
@@ -404,7 +404,7 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     assert np.all(array_np == 42), "Data mismatch in NumPy array"
 
     # Test storage array
-    storage = array.getStorageArray()
+    storage = array.getStorageArrayView()
     storage_np = np.from_dlpack(storage)
     assert storage_np.shape == (storage.getSize(),)
     assert np.all(storage_np == 42), "Storage array as_numpy() mismatch"

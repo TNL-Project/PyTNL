@@ -94,7 +94,7 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
             {
                // setElement is equivalent to operator[] on host but works on cuda
                const auto idx = self.getStorageIndex( indices... );
-               self.getStorageArray().setElement( idx, value );
+               self.getStorageArrayView().setElement( idx, value );
             },
             indices_array );
       },
@@ -383,10 +383,10 @@ export_NDArray( nb::module_& m, const char* name )
          .def( "setValue", &ArrayType::setValue, nb::arg( "value" ) )
 
          // Internal storage
-         .def( "getStorageArray",
-               nb::overload_cast<>( &ArrayType::getStorageArray ),
+         .def( "getStorageArrayView",
+               &ArrayType::getStorageArrayView,
                nb::rv_policy::reference_internal,
-               "Return a reference to the underlying storage array." )
+               "Return an ArrayView for the underlying storage array." )
 
          // String representation
          .def(

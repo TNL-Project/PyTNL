@@ -22,7 +22,7 @@ def f(i: int, j: int) -> None:
 a.forAll(f)
 
 # Print the memory layout of the array
-print(list(a.getStorageArray()))
+print(list(a.getStorageArrayView()))
 
 # Get a NumPy array that shares memory
 np_array = np.from_dlpack(a)
