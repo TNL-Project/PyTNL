@@ -14,22 +14,24 @@
 ## Installation
 
 You can install all dependencies with one of the following commands, depending
-on your Linux distribution:
+on your opearating system:
 
-### Arch Linux
+### Linux
+
+#### Arch Linux
 
 ```shell
 pacman -S base-devel git python openmpi
 ```
 
-### Ubuntu
+#### Ubuntu
 
 ```shell
 apt install build-essential git python3-dev libopenmpi-dev
 ```
 
 Additional dependencies will be pulled in automatically either as Python
-packages (e.g. [cmake](https://pypi.org/project/cmake/)) or using the [FetchContent cmake module](https://cmake.org/cmake/help/latest/module/FetchContent.html).
+packages (e.g. [cmake] or using the [FetchContent cmake module](https://cmake.org/cmake/help/latest/module/FetchContent.html).
 
 <!-- LINKS -->
 
@@ -38,3 +40,4 @@ packages (e.g. [cmake](https://pypi.org/project/cmake/)) or using the [FetchCont
 [Git]: https://git-scm.com/
 [OpenMPI]: https://www.open-mpi.org/
 [CUDA toolkit]: https://developer.nvidia.com/cuda-toolkit
+[cmake]: https://pypi.org/project/cmake/)

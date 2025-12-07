@@ -242,25 +242,19 @@ documentation:
     - changes:
         - docs/**/*
         - .gitlab-ci.yml
-  script:
-    - cd docs
-    - mkdocs build
+  script: mkdocs build
   artifacts:
     paths:
-      - "./docs/public"
+      - "public"
     expire_in: "7 days"
   needs: []
-  only:
-    - main
 
 pages:
   stage: deploy
   dependencies:
     - documentation
-  script:
-    - mv docs/public public/
   artifacts:
     paths:
-      - docs/public
+      - public
   only:
     - main

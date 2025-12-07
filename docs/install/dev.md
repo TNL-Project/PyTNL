@@ -29,6 +29,13 @@ pip install --no-build-isolation -ve .[dev]
 Run the previous command again after making changes in the code to rebuild the
 project.
 
+The `[docs]` _extra_ installs optional packages for serving and building documentation website.
+
+```shell
+mkdocs serve # Hosts documentation website locally
+mkdocs build # Builds the documentation and outputs static website to /public
+```
+
 The `[dev]` _extra_ also installs packages for testing and linting the code
 that you can run:
 

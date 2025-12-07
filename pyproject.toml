@@ -30,6 +30,7 @@ dev = [
     "basedmypy",
     "basedpyright",
 ]
+docs = ["mkdocs", "mkdocs-material"]
 dev-cuda = ["cupy-cuda13x"]
 
 [build-system]
