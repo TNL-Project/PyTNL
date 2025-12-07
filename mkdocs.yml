@@ -2,12 +2,7 @@ site_name: PyTNL
 
 nav:
   - Home: index.md
-  - Installation:
-      - Dependencies: install/dependencies.md
-      - Development: install/dev.md
-      - PyPi: install/pypi.md
-      - Git: install/git.md
-      - Other: install/other.md
+  - install.md
   - Usage:
       - Containers:
           - Arrays: usage/containers/arrays.md
@@ -17,8 +12,8 @@ nav:
       - Examples:
           - NDArray: examples/ndarray.md
           - Vector: examples/vector.md
-  - License: https://gitlab.com/tnl-project/pytnl/-/raw/main/LICENSE
-  - Issues: https://gitlab.com/tnl-project/pytnl/-/issues
+  - license.md
+  - contributing.md
 
 extra:
   work_in_progress: true
