@@ -1,5 +1,4 @@
 from pytnl.containers import Array
-import numpy as np
 
 # Define the parameterized class for an Array of integers (int).
 ArrayInt = Array[int]
@@ -35,7 +34,7 @@ print(str(mi_array_int))
 mi_array_int.resize(12, 99)
 
 # Fill a range (setValue) for indices [1, 4).
-mi_array_int.setValue(-1, 1, 4) 
+mi_array_int.setValue(-1, 1, 4)
 
 print("\nArray after resize(12, 99) and setValue(-1, 1, 4):")
 print(str(mi_array_int))
