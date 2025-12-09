@@ -4,3 +4,4 @@
 .hypothesis/
 .pytest_cache/
 .venv/
+__pycache__/
