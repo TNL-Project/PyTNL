@@ -237,11 +237,14 @@ Ubuntu_pip:
 
 documentation:
   stage: build
-  image: squidfunk/mkdocs-material
+  image: "quay.io/archlinux/archlinux:base"
   rules:
     - changes:
         - docs/**/*
         - .gitlab-ci.yml
+        - examples/**/*
+  before_script:
+    - pacman -Syu --needed --noconfirm mkdocs mkdocs-material python-pymdown-extensions
   script: mkdocs build
   artifacts:
     paths:
@@ -249,12 +252,15 @@ documentation:
     expire_in: "7 days"
   needs: []
 
-pages:
+deploy documentation:
   stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - docs/**/*
+        - .gitlab-ci.yml
+        - examples/**/*
   dependencies:
     - documentation
-  artifacts:
-    paths:
-      - public
-  only:
-    - main
+  pages: true
+  script: "true"
