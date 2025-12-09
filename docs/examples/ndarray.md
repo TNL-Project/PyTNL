@@ -1,3 +1,3 @@
 ```py
---8<-- "examples\ndarray.py"
+--8<-- "examples/ndarray.py"
 ```

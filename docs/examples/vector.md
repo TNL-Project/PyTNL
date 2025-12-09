@@ -1,3 +1,3 @@
 ```py
---8<-- "examples\vector.py"
+--8<-- "examples/vector.py"
 ```
