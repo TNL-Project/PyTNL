@@ -4,6 +4,7 @@ default:
 stages:
   - lint
   - build
+  - deploy
 
 # https://docs.gitlab.com/ee/ci/yaml/workflow.html
 workflow:
@@ -233,3 +234,33 @@ Ubuntu_pip:
     - pytest
     - mypy
     - basedpyright
+
+documentation:
+  stage: build
+  image: "quay.io/archlinux/archlinux:base"
+  rules:
+    - changes:
+        - docs/**/*
+        - .gitlab-ci.yml
+        - examples/**/*
+  before_script:
+    - pacman -Syu --needed --noconfirm mkdocs mkdocs-material python-pymdown-extensions
+  script: mkdocs build
+  artifacts:
+    paths:
+      - "public"
+    expire_in: "7 days"
+  needs: []
+
+deploy documentation:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - docs/**/*
+        - .gitlab-ci.yml
+        - examples/**/*
+  dependencies:
+    - documentation
+  pages: true
+  script: "true"
