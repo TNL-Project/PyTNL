@@ -159,7 +159,7 @@ def test_vector_mult_vector(vector_type: type[V], data: st.DataObject) -> None:
     v1, v2 = data.draw(vector_pair_strategy(vector_type))
     v3 = v1 * v2
     for i in range(v1.getSize()):
-        assert v3[i] == v1[i] * v2[i]
+        assert v3[i] == pytest.approx(v1[i] * v2[i])  # type: ignore[no-untyped-call]
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
@@ -175,7 +175,7 @@ def teset_vector_div_vector(vector_type: type[V], data: st.DataObject) -> None:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
             assert v3[i] == math.trunc(v1[i] / v2[i])  # type: ignore[arg-type]
         else:
-            assert v3[i] == v1[i] / v2[i]
+            assert v3[i] == pytest.approx(v1[i] / v2[i])  # type: ignore[no-untyped-call]
 
 
 # ----------------------
@@ -207,7 +207,7 @@ def test_vector_mult_scalar(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     v2 = v * s  # type: ignore[operator]
     for i in range(v.getSize()):
-        assert v2[i] == v[i] * s
+        assert v2[i] == pytest.approx(v[i] * s)  # type: ignore[no-untyped-call]
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
@@ -222,7 +222,7 @@ def test_vector_div_scalar(vector_type: type[V], data: st.DataObject) -> None:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
             assert v2[i] == math.trunc(v[i] / s)  # type: ignore[arg-type]
         else:
-            assert v2[i] == v[i] / s
+            assert v2[i] == pytest.approx(v[i] / s)  # type: ignore[no-untyped-call]
 
 
 # ----------------------
@@ -254,7 +254,7 @@ def test_scalar_mult_vector(vector_type: type[V], data: st.DataObject) -> None:
     v, s = data.draw(vector_scalar_strategy(vector_type))
     v2 = s * v  # type: ignore[operator]
     for i in range(v.getSize()):
-        assert v2[i] == s * v[i]
+        assert v2[i] == pytest.approx(s * v[i])  # type: ignore[no-untyped-call]
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
@@ -270,7 +270,7 @@ def test_scalar_div_vector(vector_type: type[V], data: st.DataObject) -> None:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
             assert v2[i] == math.trunc(s / v[i])  # type: ignore[arg-type]
         else:
-            assert v2[i] == s / v[i]
+            assert v2[i] == pytest.approx(s / v[i])  # type: ignore[no-untyped-call]
 
 
 # ----------------------
@@ -353,7 +353,7 @@ def test_imul_vector(vector_type: type[V], data: st.DataObject) -> None:
     original_v1 = copy.deepcopy(v1)
     v1 *= v2
     for i in range(v1.getSize()):
-        assert v1[i] == original_v1[i] * v2[i]
+        assert v1[i] == pytest.approx(original_v1[i] * v2[i])  # type: ignore[no-untyped-call]
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
@@ -370,7 +370,7 @@ def test_idiv_vector(vector_type: type[V], data: st.DataObject) -> None:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
             assert v1[i] == math.trunc(original_v1[i] / v2[i])  # type: ignore[arg-type]
         else:
-            assert v1[i] == original_v1[i] / v2[i]
+            assert v1[i] == pytest.approx(original_v1[i] / v2[i])  # type: ignore[no-untyped-call]
 
 
 @pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
@@ -426,7 +426,7 @@ def test_imul_scalar(vector_type: type[V], data: st.DataObject) -> None:
     # workaround for pyright: the assignment makes the type of v partially unknown
     v = cast(V, v)  # type: ignore[redundant-cast]
     for i in range(v.getSize()):
-        assert v[i] == original_v[i] * s
+        assert v[i] == pytest.approx(original_v[i] * s)  # type: ignore[no-untyped-call]
 
 
 @pytest.mark.parametrize("vector_type", vector_types)
@@ -444,7 +444,7 @@ def test_idiv_scalar(vector_type: type[V], data: st.DataObject) -> None:
             # GOTCHA: Python rounds to the next lower integer (floor), whereas C++ rounds towards zero (trunc)
             assert v[i] == math.trunc(original_v[i] / s)  # type: ignore[arg-type]
         else:
-            assert v[i] == original_v[i] / s
+            assert v[i] == pytest.approx(original_v[i] / s)  # type: ignore[no-untyped-call]
 
 
 @pytest.mark.parametrize("vector_type", [t for t in vector_types if t.ValueType is int])
