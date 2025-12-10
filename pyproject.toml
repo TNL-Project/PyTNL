@@ -102,7 +102,7 @@ known-first-party = ["pytnl"]
 # https://kotlinisland.github.io/basedmypy/config_file.html#example-pyproject-toml
 [tool.mypy]
 python_version = "3.12"
-packages = ["src", "tests"]
+packages = ["examples", "src", "tests"]
 check_untyped_defs = true
 disallow_any_decorated = false     # basedmypy
 disallow_any_explicit = false
@@ -127,7 +127,7 @@ warn_unused_ignores = true
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
 [tool.pyright]
 pythonVersion = "3.12"
-include = ["src", "tests"]
+include = ["examples", "src", "tests"]
 exclude = ["build", ".venv"]
 
 # Using a "type: ignore[...]" comment causes pyright to ignore any diagnostics,
