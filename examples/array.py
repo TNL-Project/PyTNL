@@ -1,10 +1,8 @@
 from pytnl.containers import Array
 
-# Define the parameterized class for an Array of integers (int).
-ArrayInt = Array[int]
-
 # 1. Initialization and Element-wise Modification
-mi_array_int = ArrayInt(10, 0)
+# Array[int] specifies an Array of integers (int).
+mi_array_int = Array[int](10, 0)
 
 # Fill the first 5 elements.
 for i in range(5):
@@ -18,7 +16,7 @@ print(str(mi_array_int))
 data_list = [10, 20, 30, 40, 50]
 
 # Convert the Python list into a temporary pytnl Array object.
-array_temp = ArrayInt(len(data_list))
+array_temp = Array[int](len(data_list))
 for i, val in enumerate(data_list):
     array_temp[i] = val
 
