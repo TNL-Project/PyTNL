@@ -388,74 +388,6 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     array_np = np.from_dlpack(array)
 
     # Check that the array is writable
-    # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
-    # https://github.com/numpy/numpy/issues/29474
-    # https://github.com/wjakob/nanobind/issues/1122
-    # assert array_np.flags.writeable
-
-    # Check shape
-    assert array_np.shape == shape, f"Expected shape {shape}, got {array_np.shape}"
-
-    # Check strides (NumPy is in bytes, TNL in elements)
-    strides = tuple(s // array_np.dtype.itemsize for s in array_np.strides)
-    assert array.getStrides() == strides
-
-    # Check data type
-    assert array_np.dtype == np.int_, f"Expected dtype {np.int_}, got {array_np.dtype}"
-
-    # Check element-wise equality
-    assert np.all(array_np == 42), "Data mismatch in NumPy array"
-
-    # Test storage array
-    storage = array.getStorageArray()
-    storage_np = storage.as_numpy()
-    assert storage_np.shape == (storage.getSize(),)
-    assert np.all(storage_np == 42), "Storage array as_numpy() mismatch"
-
-    # Check that memory is shared
-    assert np.shares_memory(array_np, storage_np), "Memory should be shared between NDArray and its storage Array"
-
-    ndidx = np.ndindex(shape)
-
-    # Modify NumPy array and verify NDArray reflects the change
-    # FIXME: numpy>=2.2.5 sets `readonly = 1` for unversioned dlpacks (and numpy<2.2.5 never set the writeable flag)
-    # idx = next(ndidx)
-    # array_np[idx] = 99
-    # assert array[idx] == 99, "NumPy array modification not reflected in NDArray"
-
-    # Modify NDArray and verify NumPy array reflects the change
-    idx = next(ndidx)
-    array[idx] = 77
-    assert array_np[idx] == 77, "NDArray modification not reflected in NumPy array"
-
-    # Check that memory is shared
-    assert np.shares_memory(array_np, array.as_numpy()), "Memory should be shared between NDArray and NumPy array"
-
-
-@pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_as_numpy(shape: tuple[int, ...]) -> None:
-    """
-    Tests the `as_numpy()` method of the NDArray class.
-
-    Verifies:
-    - The returned NumPy array has the correct shape and dtype.
-    - The array contains the same data as the NDArray.
-    - The underlying memory is shared.
-    - Changes in NumPy are reflected in the NDArray and vice versa.
-    """
-    dim = len(shape)
-    # dim needs to be narrowed down to a literal for type-checking
-    assert is_dim_guard(dim)
-
-    # Create and initialize the NDArray
-    array = NDArray[dim, int]()  # type: ignore[index]
-    array.setSizes(*shape)
-    array.setValue(42)  # Fill with known value
-
-    # Convert to NumPy array
-    array_np = array.as_numpy()
-
-    # Check that the array is writable
     assert array_np.flags.writeable
 
     # Check shape
@@ -473,7 +405,7 @@ def test_as_numpy(shape: tuple[int, ...]) -> None:
 
     # Test storage array
     storage = array.getStorageArray()
-    storage_np = storage.as_numpy()
+    storage_np = np.from_dlpack(storage)
     assert storage_np.shape == (storage.getSize(),)
     assert np.all(storage_np == 42), "Storage array as_numpy() mismatch"
 
@@ -493,4 +425,4 @@ def test_as_numpy(shape: tuple[int, ...]) -> None:
     assert array_np[idx] == 77, "NDArray modification not reflected in NumPy array"
 
     # Check that memory is shared
-    assert np.shares_memory(array_np, array.as_numpy()), "Memory should be shared between NDArray and NumPy array"
+    assert np.shares_memory(array_np, np.from_dlpack(array)), "Memory should be shared between two NumPy arrays"

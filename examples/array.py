@@ -1,3 +1,5 @@
+import numpy as np
+
 from pytnl.containers import Array
 
 # 1. Initialization and Element-wise Modification
@@ -39,11 +41,11 @@ print(str(mi_array_int))
 # Expected: [0, -1, -1, -1, 8, 10, 20, 30, 40, 50, 99, 99]
 
 # 4. NumPy Interoperability
-# Get a NumPy view that shares memory.
-np_view = mi_array_int.as_numpy()
+# Get a NumPy array that shares memory.
+np_array = np.from_dlpack(mi_array_int)
 
 # Modify the first element through the NumPy view.
-np_view[0] = 5000
+np_array[0] = 5000
 
 print("\nValue in mi_array_int[0] after changing NumPy view:")
 print(mi_array_int[0])

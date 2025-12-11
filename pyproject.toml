@@ -14,7 +14,9 @@ classifiers = [
     "Natural Language :: English",
     "Topic :: Scientific/Engineering",
 ]
-dependencies = ["numpy"]
+dependencies = [
+    "numpy>=2.2.5", # older versions never set the writeable flag in np.from_dlpack()
+]
 
 [project.urls]
 Homepage = "https://gitlab.com/tnl-project/pytnl"
