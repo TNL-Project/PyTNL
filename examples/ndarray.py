@@ -1,3 +1,5 @@
+import numpy as np
+
 from pytnl.containers import NDArray
 
 # Create a 2D array of floats
@@ -22,7 +24,7 @@ a.forAll(f)
 # Print the memory layout of the array
 print(list(a.getStorageArray()))
 
-# Convert the array to a NumPy array
-np = a.as_numpy()
-print(np)
-print(type(np), np.shape, np.dtype)
+# Get a NumPy array that shares memory
+np_array = np.from_dlpack(a)
+print(np_array)
+print(type(np_array), np_array.shape, np_array.dtype)

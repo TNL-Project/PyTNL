@@ -1,3 +1,5 @@
+import numpy as np
+
 from pytnl.containers import Vector
 
 # Create two vectors of floats with the same size
@@ -16,12 +18,12 @@ c = 2 * a + b
 # Convert the vector to a Python list
 print(list(c))
 
-# Convert the vector to a NumPy array
-np = c.as_numpy()
-print(np)
+# Get a NumPy array that shares memory
+np_c = np.from_dlpack(c)
+print(np_c)
 
 # Modify the NumPy array
-np[:] = 0.0
+np_c[:] = 0.0
 
 # Print the elements in the TNL vector
 print(list(c))
