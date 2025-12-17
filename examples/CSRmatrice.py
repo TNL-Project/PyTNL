@@ -9,12 +9,15 @@ except ImportError:
 def main():
     print("--- CSR Matrix Creator ---")
 
-    # 1. Ask for dimensions
-    rows = int(input("Number of rows: "))
-    cols = int(input("Number of columns: "))
-    nnz = int(input("Number of non-zero elements: "))
+    # 1. Ask for dimensions with security checks
+    try:
+        rows = int(input("Number of rows: "))
+        cols = int(input("Number of columns: "))
+        nnz = int(input("Number of non-zero elements: "))
+    except ValueError:
+        print("Error: Dimensions must be integers. Exiting.")
+        return
 
-    # 2. Collect data
     entries = []
     for i in range(nnz):
         raw = input(f"Element {i+1} (row col value): ").split()
