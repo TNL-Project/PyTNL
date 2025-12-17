@@ -18,10 +18,38 @@ def main():
         print("Error: Dimensions must be integers. Exiting.")
         return
 
+    #entries with security checks
     entries = []
     for i in range(nnz):
-        raw = input(f"Element {i+1} (row col value): ").split()
-        entries.append((int(raw[0]), int(raw[1]), float(raw[2])))
+        try:
+            line = input(f"Element {i+1} (row col value): ").split()
+
+            # Format check
+            if len(line) < 3:
+                print("   [!] Ignored: Invalid format. Usage: row col value")
+                continue
+
+            r = int(line[0])
+            c = int(line[1])
+            v = float(line[2])
+
+            # avoid C from crashing on invalid indices
+            if r < 0 or r >= rows:
+                print(f"   [!] Ignored: Row index {r} is out of bounds (0-{rows-1}).")
+                continue
+            if c < 0 or c >= cols:
+                print(f"   [!] Ignored: Column index {c} is out of bounds (0-{cols-1}).")
+                continue
+
+            # If ok, add to list
+            entries.append((r, c, v))
+
+        except ValueError:
+            print("   [!] Ignored: Inputs must be numbers.")
+
+    if not entries:
+        print("No valid data provided. Exiting.")
+        return
 
     # 3. Build CSR Matrix
     csr = CSR()
