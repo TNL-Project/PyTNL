@@ -1,10 +1,7 @@
 import pytnl
 from pytnl.matrices import CSR
 # Import for memory handling
-try:
-    from pytnl.containers import Vector_int
-except ImportError:
-    from pytnl._containers import Vector_int
+
 
 def main():
     print("--- CSR Matrix Creator ---")
