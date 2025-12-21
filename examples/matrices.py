@@ -1,8 +1,10 @@
-from pytnl.matrices import CSR, Ellpack, SparseMatrixRowView
-from pytnl._containers import Vector_int
-import numpy as np
-import time
 import random
+from datetime import date
+
+from pytnl._containers import Vector_int
+from pytnl.matrices import CSR, Ellpack, SlicedEllpack
+
+SIZE = 10
 
 # TODO
 # 1. addition
@@ -13,64 +15,47 @@ import random
 # 6. save
 # 7. reset
 
-# region pytnl
+# region CSR
 
 # create a compressed sparse row matrix
 tnl_matrix = CSR()
-tnl_vector = Vector_int(10, 10)
-tnl_matrix.setDimensions(10, 10)
+tnl_vector = Vector_int(SIZE, SIZE)
+tnl_matrix.setDimensions(SIZE, SIZE)
 tnl_matrix.setRowCapacities(tnl_vector)
-# tnl_matrix.addElement(3, 5, 5.2, 1)
 
-# fill the matrix 
-val = random.uniform(0, 2)
+# fill the matrix
+val = random.uniform(0, 5)
 
-for i in range(10):
-    for j in range(10):
+for i in range(SIZE):
+    for j in range(SIZE):
         if random.random() < 0.1:
             val = random.random()
             tnl_matrix.addElement(i, j, val, 1)
 
-# rows, cols = tnl_matrix.getRows(), tnl_matrix.getColumns()
-# dense = np.zeros((rows, cols))
-
-# for r in range(rows):
-#     row_data = tnl_matrix.getRow(r)
-#     for col, val in row_data:
-#         dense[r, col] = val
-
 columns = tnl_matrix.getColumns()
 rows = tnl_matrix.getRows()
 
+# print the matrix
 print("columns:", columns, "rows:", rows, "matrix:", tnl_matrix)
 
+#get the current date for later use
+date = date.today()
+str_date = str(date)
+
+# save the matrix into a file
+tnl_matrix.save(str_date)
+
+# load the matrix into a file
+loaded_matrix = tnl_matrix.load(str_date)
+print(loaded_matrix)
+
 # endregion
 
-
-# region numpy
-
-b_matrix = np.array()
-b_matrix([1, 0, 0], [0, 1, 0], [0, 0, 1])
-
-
-# endregion
-
-
-
-
-
-
-
-# region scipy
-
+# region Ellpack
 # endregion
 
 
 
 
-
-
-
-# region python
-
+# region SlicedEllpack
 # endregion
