@@ -1,7 +1,7 @@
 import pytnl
 from pytnl.matrices import CSR
 # Import for memory handling
-
+from pytnl.containers import Vector
 
 def main():
     print("--- CSR Matrix Creator ---")
@@ -53,7 +53,8 @@ def main():
     csr.setDimensions(rows, cols)
 
     # Calculate capacities per row
-    caps = Vector_int(rows)
+    caps = Vector[int]()
+    caps.setSize(rows)
     for i in range(rows): caps[i] = 0
 
     for r, c, v in entries:
