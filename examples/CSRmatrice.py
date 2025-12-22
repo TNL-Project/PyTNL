@@ -1,9 +1,9 @@
-import pytnl
-from pytnl.matrices import CSR
 # Import for memory handling
 from pytnl.containers import Vector
+from pytnl.matrices import CSR
 
-def main():
+
+def main() -> None: # noqa: C901
     print("--- CSR Matrix Creator ---")
 
     # 1. Ask for dimensions with security checks
@@ -55,7 +55,8 @@ def main():
     # Calculate capacities per row
     caps = Vector[int]()
     caps.setSize(rows)
-    for i in range(rows): caps[i] = 0
+    for i in range(rows):
+        caps[i] = 0
 
     for r, c, v in entries:
         caps[r] += 1
