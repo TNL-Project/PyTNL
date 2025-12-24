@@ -1,22 +1,23 @@
-/build/
-/dist/
-.cache/
-.hypothesis/
-.pytest_cache/
-.venv/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Ruff
-.ruff_cache/
-
-# Byte code
+# Python byte-compiled/optimized files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# MkDocs
-public/
+# Python workflows
+.venv/
+/build/
+/dist/
+/public/
+
+# caches
+.cache/
+.hypothesis/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# mypy
+.dmypy.json
+
+# git
+*.orig
