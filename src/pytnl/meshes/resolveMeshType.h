@@ -29,16 +29,13 @@ resolveMeshType( const std::string& file_name, const std::string& file_format = 
       return true;
    };
 
-   bool result = false;
    if( reader->getMeshType() == "Meshes::Grid" || reader->getMeshType() == "Meshes::DistributedGrid" )
-      result = TNL::Meshes::GridTypeResolver< PyTNLConfigTag, Device >::run( *reader, wrapper );
+      TNL::Meshes::GridTypeResolver< PyTNLConfigTag, Device >::run( *reader, wrapper );
    else if( reader->getMeshType() == "Meshes::Mesh" || reader->getMeshType() == "Meshes::DistributedMesh" )
-      result = TNL::Meshes::MeshTypeResolver< PyTNLConfigTag, Device >::run( *reader, wrapper );
+      TNL::Meshes::MeshTypeResolver< PyTNLConfigTag, Device >::run( *reader, wrapper );
    else {
       throw std::runtime_error( "The mesh type " + reader->getMeshType() + " is not supported." );
    }
-   if( ! result )
-      throw std::runtime_error( "Failed to resolve mesh type from given file." );
 
    nb::object py_reader = nb::cast( reader );
    return nb::make_tuple( std::move( py_reader ), std::move( py_mesh ) );
