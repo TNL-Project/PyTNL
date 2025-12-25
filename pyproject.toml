@@ -1,6 +1,6 @@
 [project]
 name = "pytnl"
-version = "0.0.6"
+version = "0.0.7"
 description = "Python bindings for the Template Numerical Library"
 readme = "README.md"
 requires-python = ">=3.12"
