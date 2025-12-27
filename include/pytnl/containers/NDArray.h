@@ -444,42 +444,45 @@ export_NDArray( nb::module_& m, const char* name )
             nb::arg( "memo" ) );
 
    // Interoperability with Python array API standard (DLPack)
-   array
-      .def(
-         "__dlpack__",
-         []( nb::pointer_and_handle< ArrayType > self, nb::kwargs kwargs )
-         {
-            int device_id = 0;
-            // FIXME: DLPack support switching CUDA devices but TNL does not
-            if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > )
-               device_id = TNL::Backend::getDevice();
+   // (note that the set of dtypes supported by DLPack is limited)
+   if constexpr( nb::dtype< ValueType >().bits != 0 ) {
+      array
+         .def(
+            "__dlpack__",
+            []( nb::pointer_and_handle< ArrayType > self, nb::kwargs kwargs )
+            {
+               int device_id = 0;
+               // FIXME: DLPack support switching CUDA devices but TNL does not
+               if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > )
+                  device_id = TNL::Backend::getDevice();
 
-            constexpr std::size_t dim = ArrayType::getDimension();
-            std::array< std::size_t, dim > sizes;
-            std::array< std::int64_t, dim > strides;
-            TNL::Algorithms::staticFor< std::size_t, 0, dim >(
-               [ & ]( auto i )
-               {
-                  sizes[ i ] = self.p->template getSize< i >();
-                  strides[ i ] = self.p->template getStride< i >();
-               } );
+               constexpr std::size_t dim = ArrayType::getDimension();
+               std::array< std::size_t, dim > sizes;
+               std::array< std::int64_t, dim > strides;
+               TNL::Algorithms::staticFor< std::size_t, 0, dim >(
+                  [ & ]( auto i )
+                  {
+                     sizes[ i ] = self.p->template getSize< i >();
+                     strides[ i ] = self.p->template getStride< i >();
+                  } );
 
-            using array_api_t = nb::ndarray< nb::array_api, ValueType >;
-            array_api_t array_api( self.p->getData(),
-                                   dim,
-                                   sizes.data(),
-                                   self.h,  // pass the Python object associated with `self` as owner
-                                   strides.data(),
-                                   nb::dtype< ValueType >(),
-                                   dlpack_device< ArrayType >().first,
-                                   device_id );
+               using array_api_t = nb::ndarray< nb::array_api, ValueType >;
+               array_api_t array_api( self.p->getData(),
+                                      dim,
+                                      sizes.data(),
+                                      self.h,  // pass the Python object associated with `self` as owner
+                                      strides.data(),
+                                      nb::dtype< ValueType >(),
+                                      dlpack_device< ArrayType >().first,
+                                      device_id );
 
-            // call the array_api's __dlpack__ Python method to properly handle the kwargs
-            nb::object aa = nb::cast( array_api, nb::rv_policy::reference_internal, self.h );
-            return aa.attr( "__dlpack__" )( **kwargs );
-         },
-         nb::sig( "def __dlpack__(self, **kwargs: typing.Any) -> typing_extensions.CapsuleType" ) )
-      .def_static( "__dlpack_device__", dlpack_device< ArrayType > );
+               // call the array_api's __dlpack__ Python method to properly handle the kwargs
+               nb::object aa = nb::cast( array_api, nb::rv_policy::reference_internal, self.h );
+               return aa.attr( "__dlpack__" )( **kwargs );
+            },
+            nb::sig( "def __dlpack__(self, **kwargs: typing.Any) -> typing_extensions.CapsuleType" ) )
+         .def_static( "__dlpack_device__", dlpack_device< ArrayType > );
+   }
 
    ndarray_indexing( array );
    ndarray_iteration( array );
