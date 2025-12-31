@@ -51,7 +51,10 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
          std::array< IndexType, dim > indices_array;
          for( std::size_t i = 0; i < dim; ++i ) {
             indices_array[ i ] = nb::cast< IndexType >( tuple_indices[ i ] );
-            ndarray_check_index( i, indices_array[ i ], self.getSizes()[ i ] );
+            if( ArrayType::SizesHolderType::getStaticSize( i ) > 0 )
+               ndarray_check_index( i, indices_array[ i ], ArrayType::SizesHolderType::getStaticSize( i ) );
+            else
+               ndarray_check_index( i, indices_array[ i ], self.getSizes()[ i ] );
          }
 
          // Unpack the array into the operator()
@@ -88,7 +91,10 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
             std::array< IndexType, dim > indices_array;
             for( std::size_t i = 0; i < dim; ++i ) {
                indices_array[ i ] = nb::cast< IndexType >( tuple_indices[ i ] );
-               ndarray_check_index( i, indices_array[ i ], self.getSizes()[ i ] );
+               if( ArrayType::SizesHolderType::getStaticSize( i ) > 0 )
+                  ndarray_check_index( i, indices_array[ i ], ArrayType::SizesHolderType::getStaticSize( i ) );
+               else
+                  ndarray_check_index( i, indices_array[ i ], self.getSizes()[ i ] );
             }
 
             // Unpack and assign
