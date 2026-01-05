@@ -444,3 +444,17 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
 
     # Check that memory is shared
     assert cupy.shares_memory(array_cupy, cupy.from_dlpack(array)), "Memory should be shared between two cupy arrays"
+
+    # Get CuPy array from view
+    view = array.getView()
+    view_cupy = cupy.from_dlpack(view)
+    assert view_cupy.shape == shape, f"Expected shape {shape}, got {view_cupy.shape}"
+    assert view_cupy.dtype == array_cupy.dtype
+    assert cupy.all(view_cupy == array_cupy), "Data mismatch in CuPy array from view"
+
+    # Get CuPy array from const view
+    const_view = array.getConstView()
+    const_view_cupy = cupy.from_dlpack(const_view)
+    assert const_view_cupy.shape == shape, f"Expected shape {shape}, got {const_view_cupy.shape}"
+    assert const_view_cupy.dtype == array_cupy.dtype
+    assert cupy.all(const_view_cupy == array_cupy), "Data mismatch in CuPy array from const view"

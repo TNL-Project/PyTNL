@@ -51,6 +51,19 @@ real_vector_types = Vreal.__constraints__
 # ----------------------
 
 
+def create_vector(data: Collection[int | float | complex], vector_type: type[V]) -> V:
+    """Create a vector of the given type from a list of values."""
+    v = vector_type(len(data))
+    for i, val in enumerate(data):
+        v[i] = val  # type: ignore[assignment]
+    return v
+
+
+# ----------------------
+# Hypothesis Strategies
+# ----------------------
+
+
 @st.composite
 def complex_numbers(draw: st.DrawFn) -> complex:
     # avoid too small/large exponents
@@ -72,19 +85,6 @@ def element_strategy(vector_type: type[V]) -> st.SearchStrategy[int | float | co
         return st.floats(allow_nan=False, allow_infinity=False)
     else:
         return complex_numbers()
-
-
-def create_vector(data: Collection[int | float | complex], vector_type: type[V]) -> V:
-    """Create a vector of the given type from a list of values."""
-    v = vector_type(len(data))
-    for i, val in enumerate(data):
-        v[i] = val  # type: ignore[assignment]
-    return v
-
-
-# ----------------------
-# Hypothesis Strategies
-# ----------------------
 
 
 @st.composite
