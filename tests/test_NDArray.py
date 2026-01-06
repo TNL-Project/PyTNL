@@ -185,7 +185,7 @@ def test_forAll(shape: tuple[int, ...]) -> None:
 
     a.forAll(setter)
 
-    assert all(value == 1 for value in a.getStorageArray())
+    assert all(value == 1 for value in a.getStorageArrayView())
     for idx in np.ndindex(shape):
         assert a[idx] == 1
 
@@ -238,9 +238,9 @@ def test_forBoundary(shape: tuple[int, ...]) -> None:
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_getStorageArray(shape: tuple[int, ...]) -> None:
+def test_getStorageArrayView(shape: tuple[int, ...]) -> None:
     """
-    Tests the `getStorageArray()` method of the NDArray class.
+    Tests the `getStorageArrayView()` method of the NDArray class.
 
     Verifies:
     - The storage array is of the correct size and shape.
@@ -256,7 +256,7 @@ def test_getStorageArray(shape: tuple[int, ...]) -> None:
     a.setValue(0)  # Initialize all elements to 0
 
     # Get the internal storage array
-    storage = a.getStorageArray()
+    storage = a.getStorageArrayView()
 
     # 1. Check that storage has the correct size
     assert storage.getSize() == np.prod(shape), "Storage array size mismatch"
@@ -282,6 +282,58 @@ def test_getStorageArray(shape: tuple[int, ...]) -> None:
     idx = (1,) * dim
     a[idx] = 42
     assert storage[a.getStorageIndex(*idx)] == 42, "NDArray is not a reference to storage array data"
+
+
+@pytest.mark.parametrize("shape", SHAPE_PARAMS)
+def test_getView(shape: tuple[int, ...]) -> None:
+    dim = len(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int]()  # type: ignore[index]
+    a.setSizes(*shape)
+    a.setValue(0)  # Initialize all elements to 0
+
+    v = a.getView()
+
+    # Check that v has the correct size and shape
+    assert v.getSizes() == shape, "View array size mismatch"
+
+    # Check that v reflects changes in a and vice versa
+    for idx in np.ndindex(shape):
+        assert v[idx] == 0, f"Element at {idx} in view was not initialized to 0"
+        v[idx] = idx[0] + idx[-1]
+        assert v[idx] == idx[0] + idx[-1], f"Element at {idx} in view was not updated correctly"
+        assert a[idx] == idx[0] + idx[-1], "View array is not a reference to NDArray data"
+
+    # Check that storage views are equal
+    assert list(a.getStorageArrayView()) == list(v.getStorageArrayView()), "Storage views are not equal"
+
+
+@pytest.mark.parametrize("shape", SHAPE_PARAMS)
+def test_getConstView(shape: tuple[int, ...]) -> None:
+    dim = len(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int]()  # type: ignore[index]
+    a.setSizes(*shape)
+    a.setValue(0)  # Initialize all elements to 0
+
+    v = a.getConstView()
+
+    # Check that v has the correct size and shape
+    assert v.getSizes() == shape, "View array size mismatch"
+
+    # Check that v reflects changes in a and vice versa
+    for idx in np.ndindex(shape):
+        assert v[idx] == 0, f"Element at {idx} in view was not initialized to 0"
+        # Check that const view cannot be modified directly
+        with pytest.raises(TypeError):
+            v[idx] = 1
+
+    # Check that storage views are equal
+    assert list(a.getStorageArrayView()) == list(v.getStorageArrayView()), "Storage views are not equal"
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
@@ -404,7 +456,7 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     assert np.all(array_np == 42), "Data mismatch in NumPy array"
 
     # Test storage array
-    storage = array.getStorageArray()
+    storage = array.getStorageArrayView()
     storage_np = np.from_dlpack(storage)
     assert storage_np.shape == (storage.getSize(),)
     assert np.all(storage_np == 42), "Storage array as_numpy() mismatch"
@@ -426,3 +478,19 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
 
     # Check that memory is shared
     assert np.shares_memory(array_np, np.from_dlpack(array)), "Memory should be shared between two NumPy arrays"
+
+    # Get NumPy array from view
+    view = array.getView()
+    view_np = np.from_dlpack(view)
+    assert view_np.flags.writeable
+    assert view_np.shape == shape, f"Expected shape {shape}, got {view_np.shape}"
+    assert view_np.dtype == array_np.dtype
+    assert np.all(view_np == array_np), "Data mismatch in NumPy array from view"
+
+    # Get NumPy array from const view
+    const_view = array.getConstView()
+    const_view_np = np.from_dlpack(const_view)
+    assert not const_view_np.flags.writeable
+    assert const_view_np.shape == shape, f"Expected shape {shape}, got {const_view_np.shape}"
+    assert const_view_np.dtype == array_np.dtype
+    assert np.all(const_view_np == array_np), "Data mismatch in NumPy array from const view"

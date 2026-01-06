@@ -194,7 +194,7 @@ def test_forAll(shape: tuple[int, ...]) -> None:
 
     a.forAll(setter)  # pyright: ignore
 
-    assert all(value == 1 for value in a.getStorageArray())
+    assert all(value == 1 for value in a.getStorageArrayView())
     for idx in np.ndindex(shape):
         assert a[idx] == 1
 
@@ -249,9 +249,9 @@ def test_forBoundary(shape: tuple[int, ...]) -> None:
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
-def test_getStorageArray(shape: tuple[int, ...]) -> None:
+def test_getStorageArrayView(shape: tuple[int, ...]) -> None:
     """
-    Tests the `getStorageArray()` method of the NDArray class.
+    Tests the `getStorageArrayView()` method of the NDArray class.
 
     Verifies:
     - The storage array is of the correct size and shape.
@@ -267,7 +267,7 @@ def test_getStorageArray(shape: tuple[int, ...]) -> None:
     a.setValue(0)  # Initialize all elements to 0
 
     # Get the internal storage array
-    storage = a.getStorageArray()
+    storage = a.getStorageArrayView()
 
     # 1. Check that storage has the correct size
     assert storage.getSize() == np.prod(shape), "Storage array size mismatch"
@@ -422,7 +422,7 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     assert cupy.all(array_cupy == 42), "Data mismatch in CuPy array"
 
     # Test storage array
-    storage = array.getStorageArray()
+    storage = array.getStorageArrayView()
     storage_cupy = cupy.from_dlpack(storage)
     assert storage_cupy.shape == (storage.getSize(),)
     assert cupy.all(storage_cupy == 42), "Storage array as_numpy() mismatch"
@@ -444,3 +444,17 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
 
     # Check that memory is shared
     assert cupy.shares_memory(array_cupy, cupy.from_dlpack(array)), "Memory should be shared between two cupy arrays"
+
+    # Get CuPy array from view
+    view = array.getView()
+    view_cupy = cupy.from_dlpack(view)
+    assert view_cupy.shape == shape, f"Expected shape {shape}, got {view_cupy.shape}"
+    assert view_cupy.dtype == array_cupy.dtype
+    assert cupy.all(view_cupy == array_cupy), "Data mismatch in CuPy array from view"
+
+    # Get CuPy array from const view
+    const_view = array.getConstView()
+    const_view_cupy = cupy.from_dlpack(const_view)
+    assert const_view_cupy.shape == shape, f"Expected shape {shape}, got {const_view_cupy.shape}"
+    assert const_view_cupy.dtype == array_cupy.dtype
+    assert cupy.all(const_view_cupy == array_cupy), "Data mismatch in CuPy array from const view"

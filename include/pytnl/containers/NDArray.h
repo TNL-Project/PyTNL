@@ -51,7 +51,10 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
          std::array< IndexType, dim > indices_array;
          for( std::size_t i = 0; i < dim; ++i ) {
             indices_array[ i ] = nb::cast< IndexType >( tuple_indices[ i ] );
-            ndarray_check_index( i, indices_array[ i ], self.getSizes()[ i ] );
+            if( ArrayType::SizesHolderType::getStaticSize( i ) > 0 )
+               ndarray_check_index( i, indices_array[ i ], ArrayType::SizesHolderType::getStaticSize( i ) );
+            else
+               ndarray_check_index( i, indices_array[ i ], self.getSizes()[ i ] );
          }
 
          // Unpack the array into the operator()
@@ -69,34 +72,41 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
       "__setitem__",
       [ dim ]( ArrayType& self, nb::object indices, ValueType value )
       {
-         nb::tuple tuple_indices;
-
-         if( nb::isinstance< nb::tuple >( indices ) ) {
-            tuple_indices = nb::cast< nb::tuple >( indices );
-         }
+         if constexpr( std::is_const_v< ValueType > )
+            throw nb::type_error( "Cannot set element of a read-only array" );
          else {
-            tuple_indices = nb::make_tuple( indices );
-         }
+            nb::tuple tuple_indices;
 
-         if( tuple_indices.size() != dim ) {
-            throw nb::value_error( ( "Expected " + std::to_string( dim ) + " indices" ).c_str() );
-         }
+            if( nb::isinstance< nb::tuple >( indices ) ) {
+               tuple_indices = nb::cast< nb::tuple >( indices );
+            }
+            else {
+               tuple_indices = nb::make_tuple( indices );
+            }
 
-         std::array< IndexType, dim > indices_array;
-         for( std::size_t i = 0; i < dim; ++i ) {
-            indices_array[ i ] = nb::cast< IndexType >( tuple_indices[ i ] );
-            ndarray_check_index( i, indices_array[ i ], self.getSizes()[ i ] );
-         }
+            if( tuple_indices.size() != dim ) {
+               throw nb::value_error( ( "Expected " + std::to_string( dim ) + " indices" ).c_str() );
+            }
 
-         // Unpack and assign
-         std::apply(
-            [ & ]( auto... indices )
-            {
-               // setElement is equivalent to operator[] on host but works on cuda
-               const auto idx = self.getStorageIndex( indices... );
-               self.getStorageArray().setElement( idx, value );
-            },
-            indices_array );
+            std::array< IndexType, dim > indices_array;
+            for( std::size_t i = 0; i < dim; ++i ) {
+               indices_array[ i ] = nb::cast< IndexType >( tuple_indices[ i ] );
+               if( ArrayType::SizesHolderType::getStaticSize( i ) > 0 )
+                  ndarray_check_index( i, indices_array[ i ], ArrayType::SizesHolderType::getStaticSize( i ) );
+               else
+                  ndarray_check_index( i, indices_array[ i ], self.getSizes()[ i ] );
+            }
+
+            // Unpack and assign
+            std::apply(
+               [ & ]( auto... indices )
+               {
+                  // setElement is equivalent to operator[] on host but works on cuda
+                  const auto idx = self.getStorageIndex( indices... );
+                  self.getStorageArrayView().setElement( idx, value );
+               },
+               indices_array );
+         }
       },
       nb::arg( "indices" ),
       nb::arg( "value" ) );
@@ -320,73 +330,47 @@ export_NDArray( nb::module_& m, const char* name )
                   return nb::type< ValueType >();
                }
             } )
+         .def_prop_ro_static(  //
+            "ViewType",
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
+            {
+               return nb::type< typename ArrayType::ViewType >();
+            } )
+         .def_prop_ro_static(  //
+            "ConstViewType",
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
+            {
+               return nb::type< typename ArrayType::ConstViewType >();
+            } )
 
          // Constructors
          .def( nb::init<>() )
          .def( nb::init< ArrayType >(), nb::arg( "other" ) )
 
-         // Size management
-         .def( "setSizes",
-               &ArrayType::setSize,  // Note: C++ method should be renamed
-               nb::arg( "sizes" ),
-               "Set sizes of the array using an instance of SizesHolder (a tuple of ints in Python)" )
-         .def(
-            "setSizes",
-            []( ArrayType& self, const nb::args& sizes )
-            {
-               constexpr std::size_t dim = ArrayType::getDimension();
-               using IndexType = typename ArrayType::IndexType;
+         // NDArrayView getters
+         .def( "getView", &ArrayType::getView )
+         .def( "getConstView", &ArrayType::getConstView )
+         // TODO: getSubarrayView (requires template parameters...)
 
-               if( sizes.size() != dim ) {
-                  throw nb::value_error( ( "Expected " + std::to_string( dim ) + " sizes" ).c_str() );
-               }
-
-               std::array< IndexType, dim > sizes_array;
-               for( std::size_t i = 0; i < dim; ++i ) {
-                  sizes_array[ i ] = nb::cast< IndexType >( sizes[ i ] );
-               }
-
-               return std::apply(
-                  [ & ]( auto... sizes )
-                  {
-                     self.setSizes( sizes... );
-                  },
-                  sizes_array );
-            },
-            nb::arg( "sizes" ),
-            nb::sig( "def setSizes(self, *sizes: int) -> None" ),
-            "Set sizes of the array using a sequence of ints" )
-         .def(
-            "setLike",
-            []( ArrayType& self, const ArrayType& other )
-            {
-               self.setLike( other );
-            },
-            nb::arg( "other" ) )
-         .def( "reset",
-               &ArrayType::reset,
-               "Reset the array to the empty state. The current data will be deallocated, "
-               "thus all pointers and views to the array elements will become invalid." )
+         // Internal storage
+         .def( "getStorageArrayView",
+               &ArrayType::getStorageArrayView,
+               nb::rv_policy::reference_internal,
+               "Return an ArrayView for the underlying storage array." )
 
          // Assignment
          .def( "assign",
                []( ArrayType& array, const ArrayType& other ) -> ArrayType&
                {
-                  return array = other;
+                  if constexpr( std::is_const_v< ValueType > )
+                     throw nb::type_error( "Cannot assign into constant array" );
+                  else
+                     return array = other;
                } )
 
          // Comparison
          .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
          .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) )
-
-         // Fill
-         .def( "setValue", &ArrayType::setValue, nb::arg( "value" ) )
-
-         // Internal storage
-         .def( "getStorageArray",
-               nb::overload_cast<>( &ArrayType::getStorageArray ),
-               nb::rv_policy::reference_internal,
-               "Return a reference to the underlying storage array." )
 
          // String representation
          .def(
@@ -428,20 +412,8 @@ export_NDArray( nb::module_& m, const char* name )
                return oss.str();
             },
             "Returns a readable string representation of the array" )
-
-         // Deepcopy support https://pybind11.readthedocs.io/en/stable/advanced/classes.html#deepcopy-support
-         .def( "__copy__",
-               []( const ArrayType& self )
-               {
-                  return ArrayType( self );
-               } )
-         .def(
-            "__deepcopy__",
-            []( const ArrayType& self, nb::typed< nb::dict, nb::str, nb::any > )
-            {
-               return ArrayType( self );
-            },
-            nb::arg( "memo" ) );
+      //
+      ;
 
    // Interoperability with Python array API standard (DLPack)
    // (note that the set of dtypes supported by DLPack is limited)
@@ -486,4 +458,86 @@ export_NDArray( nb::module_& m, const char* name )
 
    ndarray_indexing( array );
    ndarray_iteration( array );
+
+   if constexpr( TNL::IsViewType< ArrayType >::value ) {
+      array  //
+         .def( nb::init< const ArrayType& >() )
+         // FIXME: needed for implicit conversion from NDArray, but AllocatorType is ignored
+         //.def( nb::init_implicit< TNL::Containers::NDArray< ... >& >() )
+         .def( "bind",
+               []( ArrayType& self, const ArrayType& other )
+               {
+                  self.bind( other );
+               } )
+         .def( "reset",
+               &ArrayType::reset,
+               "Reset the array view to the empty state. There is no deallocation, it does not affect other views." )
+         //
+         ;
+   }
+   else {
+      // Additional NDArray-specific methods
+      array
+         // Size management
+         .def( "setSizes",
+               &ArrayType::setSize,  // Note: C++ method should be renamed
+               nb::arg( "sizes" ),
+               "Set sizes of the array using an instance of SizesHolder (a tuple of ints in Python)" )
+         .def(
+            "setSizes",
+            []( ArrayType& self, const nb::args& sizes )
+            {
+               constexpr std::size_t dim = ArrayType::getDimension();
+               using IndexType = typename ArrayType::IndexType;
+
+               if( sizes.size() != dim ) {
+                  throw nb::value_error( ( "Expected " + std::to_string( dim ) + " sizes" ).c_str() );
+               }
+
+               std::array< IndexType, dim > sizes_array;
+               for( std::size_t i = 0; i < dim; ++i ) {
+                  sizes_array[ i ] = nb::cast< IndexType >( sizes[ i ] );
+               }
+
+               return std::apply(
+                  [ & ]( auto... sizes )
+                  {
+                     self.setSizes( sizes... );
+                  },
+                  sizes_array );
+            },
+            nb::arg( "sizes" ),
+            nb::sig( "def setSizes(self, *sizes: int) -> None" ),
+            "Set sizes of the array using a sequence of ints" )
+         .def(
+            "setLike",
+            []( ArrayType& self, const ArrayType& other )
+            {
+               self.setLike( other );
+            },
+            nb::arg( "other" ) )
+         .def( "reset",
+               &ArrayType::reset,
+               "Reset the array to the empty state. The current data will be deallocated, "
+               "thus all pointers and views to the array elements will become invalid." )
+
+         // Fill
+         .def( "setValue", &ArrayType::setValue, nb::arg( "value" ) )
+
+         // Deepcopy support https://pybind11.readthedocs.io/en/stable/advanced/classes.html#deepcopy-support
+         .def( "__copy__",
+               []( const ArrayType& self )
+               {
+                  return ArrayType( self );
+               } )
+         .def(
+            "__deepcopy__",
+            []( const ArrayType& self, nb::typed< nb::dict, nb::str, nb::any > )
+            {
+               return ArrayType( self );
+            },
+            nb::arg( "memo" ) );
+      //
+      ;
+   }
 }

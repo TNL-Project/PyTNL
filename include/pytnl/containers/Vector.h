@@ -13,15 +13,12 @@ export_Vector( nb::module_& m, const char* name )
 {
    using IndexType = typename VectorType::IndexType;
    using RealType = typename VectorType::RealType;
+   using DeviceType = typename VectorType::DeviceType;
 
    auto vector =  //
       nb::class_< VectorType, ArrayType >( m, name )
          // Constructors
          .def( nb::init<>() )
-         // NOTE: the nb::init<...> does not work due to list-initialization and
-         //       std::list_initializer constructor in ArrayType
-         .def( my_init< IndexType >(), nb::arg( "size" ) )
-         .def( my_init< IndexType, RealType >(), nb::arg( "size" ), nb::arg( "value" ) )
 
          // Typedefs
          .def_prop_ro_static(  //
@@ -46,6 +43,61 @@ export_Vector( nb::module_& m, const char* name )
                   return nb::type< RealType >();
                }
             } )
+         .def_prop_ro_static(  //
+            "ViewType",
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
+            {
+               return nb::type< typename VectorType::ViewType >();
+            } )
+         .def_prop_ro_static(  //
+            "ConstViewType",
+            []( nb::handle ) -> nb::typed< nb::handle, nb::type_object >
+            {
+               return nb::type< typename VectorType::ConstViewType >();
+            } )
+
+         // VectorView getters
+         .def(
+            "getView",
+            []( VectorType& self, IndexType begin = 0, IndexType end = 0 )
+            {
+               check_array_range( self.getSize(), begin, end );
+               return self.getView( begin, end );
+            },
+            nb::arg( "begin" ) = 0,
+            nb::arg( "end" ) = 0 )
+         .def(
+            "getConstView",
+            []( VectorType& self, IndexType begin = 0, IndexType end = 0 )
+            {
+               check_array_range( self.getSize(), begin, end );
+               return self.getConstView( begin, end );
+            },
+            nb::arg( "begin" ) = 0,
+            nb::arg( "end" ) = 0 );
+
+   // override so slice indexing can be used with vector operators
+   def_indexing< VectorType >( vector );
+
+   if constexpr( TNL::IsViewType< VectorType >::value ) {
+      vector  //
+         .def( nb::init< const VectorType& >() )
+         // FIXME: needed for implicit conversion from Vector, but AllocatorType is ignored
+         .def( nb::init_implicit< TNL::Containers::Vector< std::remove_const_t< RealType >, DeviceType, IndexType >& >() );
+   }
+   else {
+      // TODO: vector operations currently create a new vector - not usable for views
+      def_vector_operators( vector );
+
+      // TODO: slicing should work for views too
+      def_slice_indexing< VectorType >( vector );
+
+      // Additional Vector-specific methods
+      vector
+         // NOTE: the nb::init<...> does not work due to list-initialization and
+         //       std::list_initializer constructor in ArrayType
+         .def( my_init< IndexType >(), nb::arg( "size" ) )
+         .def( my_init< IndexType, RealType >(), nb::arg( "size" ), nb::arg( "value" ) )
 
          // Serialization
          .def_static( "getSerializationType", &VectorType::getSerializationType )
@@ -63,10 +115,5 @@ export_Vector( nb::module_& m, const char* name )
                return VectorType( self );
             },
             nb::arg( "memo" ) );
-
-   def_vector_operators( vector );
-
-   // override so slice indexing can be used with vector operators
-   def_indexing< VectorType >( vector );
-   def_slice_indexing< VectorType >( vector );
+   }
 }
