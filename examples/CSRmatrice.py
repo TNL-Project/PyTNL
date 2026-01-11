@@ -1,6 +1,6 @@
 # Import for memory handling
-from pytnl.containers import Vector  # type: ignore
-from pytnl.matrices.csr import CSR  # type: ignore
+from pytnl.containers import Vector
+from pytnl.matrices import CSR  # type: ignore
 
 
 def main() -> None:  # noqa: C901
