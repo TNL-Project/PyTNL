@@ -18,10 +18,10 @@ SIZE = 10
 # region CSR
 
 # create a compressed sparse row matrix
-tnl_matrix = CSR()
+csr_matrix = CSR()
 tnl_vector = Vector_int(SIZE, SIZE)
-tnl_matrix.setDimensions(SIZE, SIZE)
-tnl_matrix.setRowCapacities(tnl_vector)
+csr_matrix.setDimensions(SIZE, SIZE)
+csr_matrix.setRowCapacities(tnl_vector)
 
 # fill the matrix
 val = random.uniform(0, 5)
@@ -30,30 +30,29 @@ for i in range(SIZE):
     for j in range(SIZE):
         if random.random() < 0.1:
             val = random.random()
-            tnl_matrix.addElement(i, j, val, 1)
+            csr_matrix.addElement(i, j, val, 1)
 
-columns = tnl_matrix.getColumns()
-rows = tnl_matrix.getRows()
+columns = csr_matrix.getColumns()
+rows = csr_matrix.getRows()
 
 # print the matrix
-print("columns:", columns, "rows:", rows, "matrix:", tnl_matrix)
+print("columns:", columns, "rows:", rows, "matrix:", csr_matrix)
 
 #get the current date for later use
 date = date.today()
 str_date = str(date)
 
 # save the matrix into a file
-tnl_matrix.save(str_date)
+csr_matrix.save(str_date)
 
-# load the matrix into a file
-loaded_matrix = tnl_matrix.load(str_date)
+# load the matrix from a file
+loaded_matrix = csr_matrix.load(str_date)
 print(loaded_matrix)
 
 # endregion
 
 # region Ellpack
 # endregion
-
 
 
 
