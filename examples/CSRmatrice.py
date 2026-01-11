@@ -1,9 +1,9 @@
 # Import for memory handling
-from pytnl.containers import Vector
-from pytnl.matrices import CSR
+from pytnl.containers import Vector  # type: ignore
+from pytnl.matrices.csr import CSR  # type: ignore
 
 
-def main() -> None: # noqa: C901
+def main() -> None:  # noqa: C901
     print("--- CSR Matrix Creator ---")
 
     # 1. Ask for dimensions with security checks
@@ -15,11 +15,11 @@ def main() -> None: # noqa: C901
         print("Error: Dimensions must be integers. Exiting.")
         return
 
-    #entries with security checks
-    entries = []
+    # entries with security checks
+    entries: list[tuple[int, int, float]] = []
     for i in range(nnz):
         try:
-            line = input(f"Element {i+1} (row col value): ").split()
+            line = input(f"Element {i + 1} (row col value): ").split()
 
             # Format check
             if len(line) < 3:
@@ -32,10 +32,10 @@ def main() -> None: # noqa: C901
 
             # avoid C from crashing on invalid indices
             if r < 0 or r >= rows:
-                print(f"   [!] Ignored: Row index {r} is out of bounds (0-{rows-1}).")
+                print(f"   [!] Ignored: Row index {r} is out of bounds (0-{rows - 1}).")
                 continue
             if c < 0 or c >= cols:
-                print(f"   [!] Ignored: Column index {c} is out of bounds (0-{cols-1}).")
+                print(f"   [!] Ignored: Column index {c} is out of bounds (0-{cols - 1}).")
                 continue
 
             # If ok, add to list
@@ -69,6 +69,7 @@ def main() -> None: # noqa: C901
 
     print("\n[Original Matrix]")
     print(csr)
+
 
 if __name__ == "__main__":
     main()
