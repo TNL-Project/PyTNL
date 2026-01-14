@@ -1,4 +1,10 @@
+# pyright: reportAttributeAccessIssue=none
+# pyright: reportUnknownArgumentType=none
+# pyright: reportUnknownMemberType=none
+# pyright: reportUnknownVariableType=none
+
 # Import for memory handling
+
 from pytnl.containers import Vector
 from pytnl.matrices import CSR  # type: ignore
 
