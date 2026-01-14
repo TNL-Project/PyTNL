@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: C++",
     "License :: OSI Approved :: MIT License",
@@ -34,7 +35,12 @@ dev = [
     "basedpyright",
 ]
 docs = ["mkdocs", "mkdocs-material"]
-dev-cuda = ["cupy-cuda13x"]
+dev-cuda = [
+    # no wheels for Python 3.14 yet :-(
+    # https://github.com/cupy/cupy/issues/9604
+    #"cupy-cuda13x",
+    "cupy", # build from source
+]
 
 [build-system]
 requires = ["scikit-build-core>=0.10"]
@@ -107,7 +113,7 @@ known-first-party = ["pytnl"]
 python_version = "3.12"
 packages = ["examples", "src", "tests"]
 check_untyped_defs = true
-disallow_any_decorated = false     # basedmypy
+disallow_any_decorated = false          # basedmypy
 disallow_any_explicit = false
 disallow_any_expr = false
 disallow_any_generics = true
