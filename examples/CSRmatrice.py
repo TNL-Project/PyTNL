@@ -22,14 +22,20 @@ def main() -> None:
     except ValueError:
         print("Error: Dimensions must be integers. Exiting.")
         return
+    if nnz > rows * cols:
+        print(f"Error: Too many non-zero elements ({nnz}) for the matrix size ({rows}x{cols}). Exiting.")
+        return
 
     # 2. Generating random values to fill matrice
     numbers = []
-    for _ in range(nnz):
+    already_filled = []
+    while len(numbers) < nnz:
         r = random.randint(0, rows - 1)
         c = random.randint(0, cols - 1)
         v = random.random()
-        numbers.append((r, c, v))
+        if (r, c) not in already_filled:
+            numbers.append((r, c, v))
+            already_filled.append((r, c))
 
     # 3. Build CSR Matrix
     csr = CSR()
