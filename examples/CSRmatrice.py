@@ -27,8 +27,8 @@ def main() -> None:
         return
 
     # 2. Generating random values to fill matrice
-    numbers = []
-    already_filled = []
+    numbers: list[tuple[int, int, float]] = []
+    already_filled: list[tuple[int, int]] = []
     while len(numbers) < nnz:
         r = random.randint(0, rows - 1)
         c = random.randint(0, cols - 1)
