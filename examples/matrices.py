@@ -1,74 +1,89 @@
 import random
 import sys
-from datetime import date
+from datetime import UTC, datetime
 
 from pytnl._containers import Vector_int
 from pytnl.matrices import CSR, Ellpack, SlicedEllpack
 
-SIZE = 1000
+SIZE = 100
 VECTOR = Vector_int(SIZE, SIZE)
 
-def createMatrix(matrix, size, vector) -> object:
-    m = matrix
-    m.setDimensions(size, size)
-    m.setRowCapacities(vector)
+MatrixType = CSR | Ellpack | SlicedEllpack
+
+
+def createMatrix(matrix: MatrixType, size: int, vector: Vector_int) -> MatrixType:
+    matrix.setDimensions(size, size)
+    matrix.setRowCapacities(vector)
     return matrix
 
-def fillRandom(matrix, size, p=0.1) -> None:
+
+def fillRandom(matrix: MatrixType, size: int, p: float = 0.1) -> None:
     for i in range(size):
         for j in range(size):
             if random.random() < p:
                 matrix.addElement(i, j, random.random(), 1)
 
-def printMatrix(name, matrix) -> None:
+
+def printMatrix(name: str, matrix: MatrixType) -> None:
     print(f"{name} matrix:")
-    # print(matrix)
-    print("rows:", matrix.getRows(),
-          "cols:", matrix.getColumns(),
-          "nnz:", matrix.getNonzeroElementsCount(),
-          "allocated:", matrix.getAllocatedElementsCount(),
+    print(matrix)
+    print(
+        "rows:",
+        matrix.getRows(),
+        "cols:",
+        matrix.getColumns(),
+        "nnz:",
+        matrix.getNonzeroElementsCount(),
+        "allocated:",
+        matrix.getAllocatedElementsCount(),
+        "memory use:",
+        sys.getsizeof(matrix),
         #   "serialization:", matrix.getSerializationType(),
-          "memory use:", sys.getsizeof(matrix)
-          )
+    )
     print()
 
+
 def getDate() -> str:
-    curr_date = date.today()
+    curr_date = datetime.now(UTC).date()
     str_date = str(curr_date)
     return str_date
 
-def saveMatrix(matrix, name) -> None:
-    matrix.save(name)
 
-def loadMatrix(matrix, name) -> object:
-    loaded_matrix = matrix
-    loaded_matrix.load(name)
-    return loaded_matrix
+def saveMatrix(matrix: MatrixType, name: str) -> MatrixType:
+    matrix.save(name)
+    return matrix
+
+
+def loadMatrix(matrix: MatrixType, name: str) -> MatrixType:
+    matrix.load(name)
+    return matrix
+
 
 current_date = getDate()
 
-csr = createMatrix(CSR(), SIZE, VECTOR)
-csr1 = createMatrix(CSR(), SIZE, VECTOR)
-ellpack = createMatrix(Ellpack(), SIZE, VECTOR)
-sellpack = createMatrix(SlicedEllpack(), SIZE, VECTOR)
+matrices = [
+    ("CSR", CSR()),
+    ("CSR1", CSR()),
+    ("Ell", Ellpack()),
+    ("SEll", SlicedEllpack())
+]
 
-fillRandom(csr, SIZE)
-fillRandom(csr1, SIZE)
-fillRandom(ellpack, SIZE)
-fillRandom(sellpack, SIZE)
+loaded_matrices = []
 
-csr_saved = saveMatrix(csr, "matCSR_" + current_date)
-ellpack_saved = saveMatrix(ellpack, "matEllpack_" + current_date)
-sellpack_saved = saveMatrix(sellpack, "matSellpack_" + current_date)
+for name, m in matrices:
+    mat = createMatrix(m, SIZE, VECTOR)
+    fillRandom(mat, SIZE)
+    saveMatrix(mat, f"mat{name}_{current_date}")
+    lmat = loadMatrix(mat, f"mat{name}_{current_date}")
+    loaded_matrices.append((name, lmat))
 
-csr_loaded = loadMatrix(csr, "matCSR_" + current_date)
-ellpack_loaded = loadMatrix(ellpack, "matEllpack_" + current_date)
-sellpack_loaded = loadMatrix(sellpack, "matSellpack_" + current_date)
+for name, mat in loaded_matrices:
+    printMatrix(name, mat)
 
-# printMatrix("CSR", csr_loaded)
-# printMatrix("Ellpack", ellpack_loaded)
-printMatrix("Sliced Ellpack", sellpack_loaded)
+
+csr = loaded_matrices[0][1]  # csr
+csr1 = loaded_matrices[1][1]  # csr1
 
 equal = csr.__eq__(csr1)
 nequal = csr.__ne__(csr1)
-print(equal,", " ,nequal)
+print(equal, ", ", nequal)
