@@ -1,12 +1,22 @@
+# pyright: reportAttributeAccessIssue=none
+# pyright: reportUnknownArgumentType=none
+# pyright: reportUnknownMemberType=none
+# pyright: reportUnknownParameterType=none
+# pyright: reportUnknownVariableType=none
+# pyright: reportInvalidTypeForm=none
+
 import random
 import sys
 from datetime import UTC, datetime
 
 from pytnl._containers import Vector_int
+
+# from pytnl.containers import Vector
 from pytnl.matrices import CSR, Ellpack, SlicedEllpack
 
 SIZE = 100
-VECTOR = Vector_int(SIZE, SIZE)
+# VECTOR = Vector[int](SIZE, SIZE)
+VECTOR_INT = Vector_int(SIZE, SIZE)
 
 MatrixType = CSR | Ellpack | SlicedEllpack
 
@@ -59,31 +69,35 @@ def loadMatrix(matrix: MatrixType, name: str) -> MatrixType:
     return matrix
 
 
-current_date = getDate()
+def main() -> None:
+    current_date = getDate()
 
-matrices = [
-    ("CSR", CSR()),
-    ("CSR1", CSR()),
-    ("Ell", Ellpack()),
-    ("SEll", SlicedEllpack())
-]
+    matrices = [
+        ("CSR", CSR()),
+        ("CSR1", CSR()),
+        ("Ell", Ellpack()),
+        ("SEll", SlicedEllpack()),
+    ]
 
-loaded_matrices = []
+    loaded_matrices = []
 
-for name, m in matrices:
-    mat = createMatrix(m, SIZE, VECTOR)
-    fillRandom(mat, SIZE)
-    saveMatrix(mat, f"mat{name}_{current_date}")
-    lmat = loadMatrix(mat, f"mat{name}_{current_date}")
-    loaded_matrices.append((name, lmat))
+    for name, m in matrices:
+        mat = createMatrix(m, SIZE, VECTOR_INT)
+        fillRandom(mat, SIZE)
+        saveMatrix(mat, f"mat{name}_{current_date}")
+        lmat = loadMatrix(mat, f"mat{name}_{current_date}")
+        loaded_matrices.append((name, lmat))
 
-for name, mat in loaded_matrices:
-    printMatrix(name, mat)
+    for name, mat in loaded_matrices:
+        printMatrix(name, mat)
+
+    csr = loaded_matrices[0][1]  # csr
+    csr1 = loaded_matrices[1][1]  # csr1
+
+    equal = csr == csr1
+    nequal = csr != csr1
+    print(equal, ", ", nequal)
 
 
-csr = loaded_matrices[0][1]  # csr
-csr1 = loaded_matrices[1][1]  # csr1
-
-equal = csr.__eq__(csr1)
-nequal = csr.__ne__(csr1)
-print(equal, ", ", nequal)
+if __name__ == "__main__":
+    main()
