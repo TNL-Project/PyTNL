@@ -1,5 +1,6 @@
 #pragma once
 
+#include <TNL/TypeTraits.h>
 #include <pytnl/pytnl.h>
 #include <pytnl/RawIterator.h>
 
@@ -38,11 +39,10 @@ def_indexing( Scope& scope )
    using Index = typename Array::IndexType;
    using Value = typename Array::ValueType;
 
-   scope.def( "__len__",
-              &Array::getSize,
-              // need to set custom signature because StaticArray has static getSize
-              // and .def() generates a signature without argument by default
-              nb::sig( "def __len__(self) -> int" ) );
+   if constexpr( TNL::IsStaticArrayType< Array >::value )
+      scope.def_static( "__len__", &Array::getSize );
+   else
+      scope.def( "__len__", &Array::getSize );
 
    scope.def(
       "__iter__",
