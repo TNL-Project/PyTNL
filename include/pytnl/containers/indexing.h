@@ -39,12 +39,15 @@ def_indexing( Scope& scope )
    using Index = typename Array::IndexType;
    using Value = typename Array::ValueType;
 
+   // For StaticArray, getSize is a static C++ method — neither &Array::getSize (generates a
+   // signature without self) nor def_static (breaks len(instance)) work. A lambda works for
+   // both Array and StaticArray since C++ allows calling static methods through an instance.
    scope.def(
       "__len__",
-      &Array::getSize,
-      // need to set custom signature because StaticArray has static getSize
-      // and .def() generates a signature without argument by default
-      nb::sig( "def __len__(self) -> int" ) );
+      []( Array& a )
+      {
+         return a.getSize();
+      } );
 
    scope.def(
       "__iter__",

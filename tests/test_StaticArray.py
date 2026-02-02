@@ -124,6 +124,13 @@ def test_constructors(array_type: type[A]) -> None:
 
 
 @pytest.mark.parametrize("array_type", array_types)
+def test_len(array_type: type[A]) -> None:
+    v = array_type(0)
+    assert len(v) == array_type.getSize()
+    assert len(v) == v.getSize()
+
+
+@pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
 def test_conversion(array_type: type[A], data: st.DataObject) -> None:
     elements = data.draw(st.lists(element_strategy(array_type), min_size=array_type.getSize(), max_size=array_type.getSize()))

@@ -153,6 +153,16 @@ def test_constructors(array_type: type[A]) -> None:
         array_type(-1)
 
 
+@pytest.mark.parametrize("array_type", array_types)
+def test_len(array_type: type[A]) -> None:
+    v = array_type()
+    assert len(v) == 0
+
+    v.setSize(42)
+    assert len(v) == 42
+    assert len(v) == v.getSize()
+
+
 @pytest.mark.parametrize("array_type, view_type", array_and_const_view_types)
 def test_view_constructors(array_type: type[A], view_type: type[CAV]) -> None:
     value = 3.14 if array_type.ValueType is float else 3
