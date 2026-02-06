@@ -184,6 +184,7 @@ Python_build:
         IMAGE_TAG:
           - "3.12-alpine"
           - "3.13-alpine"
+          - "3.14-alpine"
         # IPO/LTO does not work on Alpine:
         # error: inlining failed in call to 'always_inline' 'vsnprintf': function body can be overwritten at link time
         PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION: "OFF"
@@ -191,6 +192,7 @@ Python_build:
         IMAGE_TAG:
           - "3.12"
           - "3.13"
+          - "3.14"
         PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION: "ON"
 
 Ubuntu_cmake:
