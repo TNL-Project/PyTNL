@@ -1,8 +1,13 @@
 set(src_containers
+    containers/ArrayVector.cpp
+    containers/StaticVector.cpp
+    containers/NDArray.cpp
     containers/containers.cpp
 )
 nanobind_add_module(_containers ${src_containers})
 set(src_containers_cuda
+    containers/ArrayVector.cu
+    containers/NDArray.cu
     containers/containers.cu
 )
 if (PyTNL_BUILD_CUDA)
