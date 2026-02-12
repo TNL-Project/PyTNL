@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pytnl/exceptions.h>
 #include <pytnl/pytnl.h>
 #include <pytnl/RawIterator.h>
 
@@ -48,6 +49,12 @@ def_indexing( Scope& scope )
       "__iter__",
       []( Array& array )
       {
+         // TODO: make some custom iterator for CUDA arrays with buffering on host
+         if constexpr( ! TNL::IsStaticArrayType< Array >::value ) {
+            if constexpr( std::is_same_v< typename Array::DeviceType, TNL::Devices::GPU > ) {
+               throw NotImplementedError( "The __iter__ method is not implemented yet for GPU arrays." );
+            }
+         }
          return nb::make_iterator( nb::type< Array >(),
                                    "Iterator",
                                    RawIterator< Value >( array.getData() ),

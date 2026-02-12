@@ -362,6 +362,20 @@ def test_out_of_bounds_access(array_type: type[A]) -> None:
         v.setElement(1, 0)
 
 
+@pytest.mark.xfail(reason="The __iter__ method is not implemented yet for GPU arrays.")
+@pytest.mark.parametrize("array_type", array_types)
+@given(data=st.data())
+def test_conversion_to_list(array_type: type[A], data: st.DataObject) -> None:
+    elements = data.draw(st.lists(element_strategy(array_type), min_size=0, max_size=20))
+    array = create_array(elements, array_type)
+    view = array.getView()
+    const_view = array.getConstView()
+
+    assert list(array) == elements
+    assert list(view) == elements
+    assert list(const_view) == elements
+
+
 # FIXME: iteration over CUDA arrays is slow, even when done through `list(array)` - make some custom iterator for CUDA arrays with buffering on host
 @settings(deadline=500)
 @pytest.mark.parametrize("array_type", array_types)
