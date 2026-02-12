@@ -146,6 +146,7 @@ FetchContent_Declare(
 set(tinyxml2_BUILD_TESTING OFF)
 FetchContent_MakeAvailable(tinyxml2)
 
+find_package(MPI COMPONENTS CXX REQUIRED)
 find_package(ZLIB REQUIRED)
 
 # Add dependencies to the interface target

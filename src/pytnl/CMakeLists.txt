@@ -1,8 +1,13 @@
 set(src_containers
+    containers/ArrayVector.cpp
+    containers/StaticVector.cpp
+    containers/NDArray.cpp
     containers/containers.cpp
 )
 nanobind_add_module(_containers ${src_containers})
 set(src_containers_cuda
+    containers/ArrayVector.cu
+    containers/NDArray.cu
     containers/containers.cu
 )
 if (PyTNL_BUILD_CUDA)
@@ -55,22 +60,12 @@ nanobind_add_module(_meshes ${src_meshes})
 target_compile_definitions(_meshes PUBLIC "-DHAVE_ZLIB -DHAVE_TINYXML2")
 target_link_libraries(_meshes PUBLIC ZLIB::ZLIB tinyxml2::tinyxml2)
 
-# enable MPI
-find_package(MPI COMPONENTS CXX REQUIRED)
-target_compile_definitions(_meshes PUBLIC "-DHAVE_MPI")
-target_link_libraries(_meshes PUBLIC MPI::MPI_CXX)
-
 if (PyTNL_BUILD_CUDA)
     nanobind_add_module(_meshes_cuda ${src_meshes_cuda})
 
     # add dependencies
     target_compile_definitions(_meshes_cuda PUBLIC "-DHAVE_ZLIB -DHAVE_TINYXML2")
     target_link_libraries(_meshes_cuda PUBLIC ZLIB::ZLIB tinyxml2::tinyxml2)
-
-    # enable MPI
-    find_package(MPI COMPONENTS CXX REQUIRED)
-    target_compile_definitions(_meshes_cuda PUBLIC "-DHAVE_MPI")
-    target_link_libraries(_meshes_cuda PUBLIC MPI::MPI_CXX)
 endif()
 
 # define a list of modules
@@ -117,6 +112,10 @@ foreach(target IN ITEMS ${modules})
 
     # add TNL and PyTNL
     target_link_libraries(${target} PUBLIC PyTNL::PyTNL)
+
+    # enable MPI
+    target_compile_definitions(${target} PUBLIC "-DHAVE_MPI")
+    target_link_libraries(${target} PUBLIC MPI::MPI_CXX)
 
     # generate stub files for Python static type checking
     nanobind_add_stub(

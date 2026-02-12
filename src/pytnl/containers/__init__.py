@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "Array",
+    "DistributedNDArray",
     "NDArray",
     "NDArrayIndexer",
     "StaticVector",
@@ -520,4 +521,171 @@ class NDArrayIndexer(metaclass=_NDArrayIndexerMeta):
     Examples:
     - `NDArrayIndexer[1]` → `NDArrayIndexer_1`
     - `NDArrayIndexer[2]` → `NDArrayIndexer_2`
+    """
+
+
+class _DistributedNDArrayMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "DistributedNDArray"
+    _template_parameters = (
+        ("dimension", int),
+        ("value_type", type),
+        ("device_type", type),
+    )
+    _device_parameter = "device_type"
+
+    # NOTE: Python's typing `float` type accepts even `int` so the overloads
+    # "overlap" and `float` must be carefully ordered last so that pyright
+    # selects the first overload in a tie.
+    # https://stackoverflow.com/a/62734976
+
+    @overload
+    def __getitem__(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        key: tuple[Literal[1], type[int]] | tuple[Literal[1], type[int], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedNDArray_1_int]: ...
+
+    @overload
+    def __getitem__(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        key: tuple[Literal[2], type[int]] | tuple[Literal[2], type[int], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedNDArray_2_int]: ...
+
+    @overload
+    def __getitem__(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        key: tuple[Literal[3], type[int]] | tuple[Literal[3], type[int], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedNDArray_3_int]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: tuple[Literal[1], type[float]] | tuple[Literal[1], type[float], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedNDArray_1_float]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: tuple[Literal[2], type[float]] | tuple[Literal[2], type[float], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedNDArray_2_float]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: tuple[Literal[3], type[float]] | tuple[Literal[3], type[float], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedNDArray_3_float]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: tuple[Literal[1], type[complex]] | tuple[Literal[1], type[complex], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedNDArray_1_complex]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: tuple[Literal[2], type[complex]] | tuple[Literal[2], type[complex], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedNDArray_2_complex]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: tuple[Literal[3], type[complex]] | tuple[Literal[3], type[complex], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedNDArray_3_complex]: ...
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[Literal[1], type[int], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedNDArray_1_int]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[Literal[2], type[int], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedNDArray_2_int]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[Literal[3], type[int], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedNDArray_3_int]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[Literal[1], type[float], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedNDArray_1_float]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[Literal[2], type[float], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedNDArray_2_float]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[Literal[3], type[float], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedNDArray_3_float]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[Literal[1], type[complex], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedNDArray_1_complex]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[Literal[2], type[complex], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedNDArray_2_complex]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[Literal[3], type[complex], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedNDArray_3_complex]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    def __getitem__(
+        self,
+        key: tuple[DIMS, type[VT]] | tuple[DIMS, type[VT], type[DT]],
+        /,
+    ) -> type[Any]:
+        if len(key) == 2:
+            # use host as the default device
+            key = (*key, pytnl.devices.Host)
+        return self._get_cpp_class(key)
+
+
+class DistributedNDArray(metaclass=_DistributedNDArrayMeta):
+    """
+    Allows `DistributedNDArray[dimension, value_type, device_type]` syntax to resolve to
+    the appropriate C++ `NDArray` class.
+
+    This class provides a Python interface to C++ distributed N-dimensional
+    arrays of a specific dimension, value type, and device type.
+
+    Examples:
+    - `DistributedNDArray[3, float]` → `_containers.DistributedNDArray_3_float`
+    - `DistributedNDArray[2, int, devices.Cuda]` → `_containers_cuda.DistributedNDArray_2_int`
+    - `DistributedNDArray[2, float, devices.Host]` → `_containers.DistributedNDArray_2_float`
     """
