@@ -11,7 +11,7 @@ struct NotImplementedError : public std::runtime_error
    {}
 };
 
-static void
+inline void
 register_exceptions( nanobind::module_& m )
 {
    // Translate C++ exceptions to native Python exceptions without creating new objects in the module
