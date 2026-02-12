@@ -296,6 +296,64 @@ def test_getStorageArrayView(shape: tuple[int, ...]) -> None:
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
+def test_getView(shape: tuple[int, ...]) -> None:
+    dim = len(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
+    a.setSizes(*shape)
+    a.setValue(0)  # Initialize all elements to 0
+
+    v = a.getView()
+
+    # Check that v has the correct size and shape
+    assert v.getSizes() == shape, "View array size mismatch"
+
+    # Check that v reflects changes in a and vice versa
+    for idx in np.ndindex(shape):
+        assert v[idx] == 0, f"Element at {idx} in view was not initialized to 0"
+        v[idx] = idx[0] + idx[-1]
+        assert v[idx] == idx[0] + idx[-1], f"Element at {idx} in view was not updated correctly"
+        assert a[idx] == idx[0] + idx[-1], "View array is not a reference to NDArray data"
+
+    # Check that storage views are equal
+    try:
+        assert list(a.getStorageArrayView()) == list(v.getStorageArrayView()), "Storage views are not equal"
+    except NotImplementedError:
+        pytest.xfail(reason="The __iter__ method is not implemented yet for GPU arrays.")
+
+
+@pytest.mark.parametrize("shape", SHAPE_PARAMS)
+def test_getConstView(shape: tuple[int, ...]) -> None:
+    dim = len(shape)
+    # dim needs to be narrowed down to a literal for type-checking
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
+    a.setSizes(*shape)
+    a.setValue(0)  # Initialize all elements to 0
+
+    v = a.getConstView()
+
+    # Check that v has the correct size and shape
+    assert v.getSizes() == shape, "View array size mismatch"
+
+    # Check that v reflects changes in a and vice versa
+    for idx in np.ndindex(shape):
+        assert v[idx] == 0, f"Element at {idx} in view was not initialized to 0"
+        # Check that const view cannot be modified directly
+        with pytest.raises(TypeError):
+            v[idx] = 1
+
+    # Check that storage views are equal
+    try:
+        assert list(a.getStorageArrayView()) == list(v.getStorageArrayView()), "Storage views are not equal"
+    except NotImplementedError:
+        pytest.xfail(reason="The __iter__ method is not implemented yet for GPU arrays.")
+
+
+@pytest.mark.parametrize("shape", SHAPE_PARAMS)
 @pytest.mark.parametrize("copy_function", [copy.copy, copy.deepcopy])
 def test_copy(shape: tuple[int, ...], copy_function: Callable[[Any], Any]) -> None:
     """
