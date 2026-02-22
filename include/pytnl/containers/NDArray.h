@@ -10,6 +10,7 @@
 
 #include "dlpack.h"
 #include "buffer_protocol.h"
+#include "cuda_typestr.h"
 
 template< typename Index >
 void
@@ -458,6 +459,46 @@ export_NDArray( nb::module_& m, const char* name )
             },
             nb::sig( "def __dlpack__(self, **kwargs: typing.Any) -> typing_extensions.CapsuleType" ) )
          .def_static( "__dlpack_device__", dlpack_device< ArrayType > );
+   }
+
+   // Interoperability via CUDA Array Interface (CAI) version 3
+   // https://nvidia.github.io/numba-cuda/user/cuda_array_interface.html
+   if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > && nb::dtype< ValueType >().bits != 0 ) {
+      array.def_prop_ro(
+         "__cuda_array_interface__",
+         []( ArrayType& array ) -> nb::dict
+         {
+            constexpr std::size_t dim = ArrayType::getDimension();
+
+            // Build shape and byte-strides tuples dimension-by-dimension.
+            nb::list shape_list, strides_list;
+            TNL::Algorithms::staticFor< std::size_t, 0, dim >(
+               [ & ]( auto i )
+               {
+                  shape_list.append( array.template getSize< i >() );
+                  // CAI strides are in bytes; TNL getStride returns element offset.
+                  strides_list.append(
+                     static_cast< std::ptrdiff_t >( array.template getStride< i >() )
+                     * static_cast< std::ptrdiff_t >( sizeof( std::remove_const_t< ValueType > ) ) );
+               } );
+
+            nb::dict iface;
+            iface[ "shape" ] = nb::tuple( shape_list );
+            // typestr: NumPy-format type string (endianness + kind + itemsize)
+            iface[ "typestr" ] = cuda_typestr< ValueType >();
+            // data: (device_pointer_as_int, read_only_flag)
+            iface[ "data" ] = nb::make_tuple(
+               reinterpret_cast< std::uintptr_t >( array.getData() ),
+               std::is_const_v< ValueType >  // True for ConstNDArrayView
+            );
+            iface[ "version" ] = 3;
+            // strides in bytes (None would only be valid for C-contiguous; NDArray may not be)
+            iface[ "strides" ] = nb::tuple( strides_list );
+            // stream: None — TNL does not associate a CUDA stream per array;
+            // consumers may enqueue operations on any stream immediately.
+            iface[ "stream" ] = nb::none();
+            return iface;
+         } );
    }
 
    ndarray_indexing( array );

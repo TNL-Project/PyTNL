@@ -9,6 +9,7 @@
 #include "dlpack.h"
 #include "indexing.h"
 #include "buffer_protocol.h"
+#include "cuda_typestr.h"
 
 template< typename ArrayType >
 void
@@ -203,6 +204,33 @@ export_Array( nb::module_& m, const char* name )
             },
             nb::sig( "def __dlpack__(self, **kwargs: typing.Any) -> typing_extensions.CapsuleType" ) )
          .def_static( "__dlpack_device__", dlpack_device< ArrayType > );
+   }
+
+   // Interoperability via CUDA Array Interface (CAI) version 3
+   // https://nvidia.github.io/numba-cuda/user/cuda_array_interface.html
+   if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > ) {
+      array.def_prop_ro(
+         "__cuda_array_interface__",
+         []( ArrayType& array ) -> nb::dict
+         {
+            nb::dict iface;
+            // shape: 1-tuple for 1D arrays
+            iface[ "shape" ] = nb::make_tuple( array.getSize() );
+            // typestr: NumPy-format type string (endianness + kind + itemsize)
+            iface[ "typestr" ] = cuda_typestr< ValueType >();
+            // data: (device_pointer_as_int, read_only_flag)
+            iface[ "data" ] = nb::make_tuple(
+               reinterpret_cast< std::uintptr_t >( array.getData() ),
+               std::is_const_v< ValueType >  // True for ConstArrayView / ConstVectorView
+            );
+            iface[ "version" ] = 3;
+            // strides: None signals C-contiguous layout
+            iface[ "strides" ] = nb::none();
+            // stream: None — TNL does not associate a CUDA stream per array;
+            // consumers may enqueue operations on any stream immediately.
+            iface[ "stream" ] = nb::none();
+            return iface;
+         } );
    }
 
    def_indexing< ArrayType >( array );
