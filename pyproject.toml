@@ -35,12 +35,7 @@ dev = [
     "basedpyright",
 ]
 docs = ["mkdocs", "mkdocs-material"]
-dev-cuda = [
-    # no wheels for Python 3.14 yet :-(
-    # https://github.com/cupy/cupy/issues/9604
-    #"cupy-cuda13x",
-    "cupy", # build from source
-]
+dev-cuda = ["cupy-cuda13x"]
 
 [build-system]
 requires = ["scikit-build-core>=0.10"]
