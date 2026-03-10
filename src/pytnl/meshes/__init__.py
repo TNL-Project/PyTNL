@@ -305,6 +305,20 @@ class _DistributedMeshMeta(pytnl._meta.CPPClassTemplate):
     @overload
     def __getitem__(
         self,
+        key: type[pytnl._meshes.Mesh_Polygon],
+        /,
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Polygon]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Polyhedron],
+        /,
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Polyhedron]: ...
+
+    @overload
+    def __getitem__(
+        self,
         key: type[pytnl._meshes.Mesh_Quadrangle],
         /,
     ) -> type[pytnl._meshes.DistributedMesh_Mesh_Quadrangle]: ...
@@ -340,6 +354,20 @@ class _DistributedMeshMeta(pytnl._meta.CPPClassTemplate):
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
+        key: type[_meshes_cuda.Mesh_Polygon],  # pyright: ignore
+        /,
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Polygon]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
+        self,
+        key: type[_meshes_cuda.Mesh_Polyhedron],  # pyright: ignore
+        /,
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Polyhedron]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
+        self,
         key: type[_meshes_cuda.Mesh_Quadrangle],  # pyright: ignore
         /,
     ) -> type[_meshes_cuda.DistributedMesh_Mesh_Quadrangle]: ...  # pyright: ignore
@@ -366,11 +394,15 @@ class _DistributedMeshMeta(pytnl._meta.CPPClassTemplate):
             | pytnl._meshes.Mesh_Quadrangle
             | pytnl._meshes.Mesh_Tetrahedron
             | pytnl._meshes.Mesh_Triangle
+            | pytnl._meshes.Mesh_Polygon
+            | pytnl._meshes.Mesh_Polyhedron
             | _meshes_cuda.Mesh_Edge  # pyright: ignore
             | _meshes_cuda.Mesh_Hexahedron  # pyright: ignore
             | _meshes_cuda.Mesh_Quadrangle  # pyright: ignore
             | _meshes_cuda.Mesh_Tetrahedron  # pyright: ignore
             | _meshes_cuda.Mesh_Triangle  # pyright: ignore
+            | _meshes_cuda.Mesh_Polygon  # pyright: ignore
+            | _meshes_cuda.Mesh_Polyhedron  # pyright: ignore
         ],
         /,
     ) -> type[Any]:
@@ -765,6 +797,20 @@ class _PVTUWriterMeta(pytnl._meta.CPPClassTemplate):
     @overload
     def __getitem__(
         self,
+        key: type[pytnl._meshes.Mesh_Polygon],
+        /,
+    ) -> type[pytnl._meshes.PVTUWriter_Mesh_Polygon]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Polyhedron],
+        /,
+    ) -> type[pytnl._meshes.PVTUWriter_Mesh_Polyhedron]: ...
+
+    @overload
+    def __getitem__(
+        self,
         key: type[pytnl._meshes.Mesh_Tetrahedron],
         /,
     ) -> type[pytnl._meshes.PVTUWriter_Mesh_Tetrahedron]: ...
@@ -781,6 +827,8 @@ class _PVTUWriterMeta(pytnl._meta.CPPClassTemplate):
         key: type[  # pyright: ignore
             pytnl._meshes.Mesh_Edge
             | pytnl._meshes.Mesh_Hexahedron
+            | pytnl._meshes.Mesh_Polygon
+            | pytnl._meshes.Mesh_Polyhedron
             | pytnl._meshes.Mesh_Quadrangle
             | pytnl._meshes.Mesh_Tetrahedron
             | pytnl._meshes.Mesh_Triangle

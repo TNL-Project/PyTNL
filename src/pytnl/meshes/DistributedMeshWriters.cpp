@@ -12,4 +12,6 @@ export_DistributedMeshWriters( nb::module_& m )
    export_DistributedMeshWriter< PVTUWriter, MeshOfQuadrangles_host, default_format >( m, "PVTUWriter_Mesh_Quadrangle" );
    export_DistributedMeshWriter< PVTUWriter, MeshOfTetrahedrons_host, default_format >( m, "PVTUWriter_Mesh_Tetrahedron" );
    export_DistributedMeshWriter< PVTUWriter, MeshOfHexahedrons_host, default_format >( m, "PVTUWriter_Mesh_Hexahedron" );
+   export_DistributedMeshWriter< PVTUWriter, MeshOfPolygons_host, default_format >( m, "PVTUWriter_Mesh_Polygon" );
+   export_DistributedMeshWriter< PVTUWriter, MeshOfPolyhedrons_host, default_format >( m, "PVTUWriter_Mesh_Polyhedron" );
 }
