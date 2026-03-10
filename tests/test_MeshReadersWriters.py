@@ -66,6 +66,8 @@ suffix_to_reader = {
     ".vti": pytnl.meshes.VTIReader,
     ".vtk": pytnl.meshes.VTKReader,
     ".vtu": pytnl.meshes.VTUReader,
+    ".pvtu": pytnl.meshes.PVTUReader,
+    # TODO: ".pvti": pytnl.meshes.PVTIReader,
 }
 
 # Mapping from topology directory to mesh topology class
@@ -341,6 +343,80 @@ def test_resolveMeshType(file_path: str, expected_vertices: int, expected_cells:
     # Check mesh entities
     assert mesh.getEntitiesCount(mesh.Vertex) == expected_vertices, f"Expected {expected_vertices} points in {file_path}"  # type: ignore[attr-defined]
     assert mesh.getEntitiesCount(mesh.Cell) == expected_cells, f"Expected {expected_cells} cells in {file_path}"  # type: ignore[attr-defined]
+
+
+# This is the same as test_resolveMeshType but for distributed meshes (requires MPI)
+@pytest.mark.mpi
+@pytest.mark.skipif(not shutil.which("tnl-decompose-mesh"), reason="tnl-decompose-mesh is not available")
+@pytest.mark.skipif(mpi4py is None or mpi4py.MPI.COMM_WORLD.Get_size() < 2, reason="Needs at least 2 MPI processes")
+@pytest.mark.parametrize("file_path, expected_vertices, expected_cells", test_cases)
+def test_resolveMeshType_distributed(file_path: str, expected_vertices: int, expected_cells: int, tmp_path: Path) -> None:
+    data_dir = Path(__file__).parent / "data"
+    full_path = (data_dir / file_path).resolve()
+    directory = full_path.parent.name
+
+    # Skip grids
+    if full_path.suffix == ".vti":
+        pytest.skip("not an unstructured mesh")
+
+    # Skip small meshes
+    if expected_cells < 20:
+        pytest.skip("not enough cells to decompose")
+
+    assert mpi4py is not None
+    comm = mpi4py.MPI.COMM_WORLD
+    nproc = comm.Get_size()
+    # rank = comm.Get_rank()
+
+    # Decompose mesh first
+    output_pvtu = tmp_path / "test.pvtu"
+    cmd = f"{TNL_DECOMPOSE_CMD} --input-file {full_path} --output-file {output_pvtu} --subdomains {nproc} {TNL_DECOMPOSE_FLAGS}"
+    subprocess.run(cmd, shell=True, check=True)
+
+    # Get reader class based on suffix
+    suffix = output_pvtu.suffix
+    try:
+        reader_class = suffix_to_reader[suffix]
+    except KeyError:
+        pytest.fail(f"Unsupported file suffix: {suffix}")
+
+    # Get mesh topology based on directory
+    try:
+        topology = topologies_map[directory]
+    except KeyError:
+        pytest.fail(f"Unsupported directory: {directory}")
+
+    mesh_class = pytnl.meshes.DistributedMesh[pytnl.meshes.Mesh[topology]]  # type: ignore[type-arg, valid-type]
+
+    # Test getMeshReader
+    reader = pytnl.meshes.getMeshReader(f"invalid{suffix}")
+    assert isinstance(reader, reader_class), reader
+    reader = pytnl.meshes.getMeshReader(str(output_pvtu))
+    assert isinstance(reader, reader_class), reader
+
+    # Test resolveMeshType
+    with pytest.raises(RuntimeError):
+        pytnl.meshes.resolveMeshType(f"invalid{suffix}")
+    reader, mesh = pytnl.meshes.resolveMeshType(str(output_pvtu))
+    assert isinstance(reader, reader_class), reader
+    assert isinstance(mesh, mesh_class), mesh
+    # Check mesh entities
+    local_mesh = mesh.getLocalMesh()
+    assert local_mesh.getEntitiesCount(local_mesh.Vertex) == 0  # pyright: ignore[reportArgumentType, reportCallIssue]
+    assert local_mesh.getEntitiesCount(local_mesh.Cell) == 0  # pyright: ignore[reportArgumentType, reportCallIssue]
+
+    # Test resolveAndLoadMesh
+    with pytest.raises(RuntimeError):
+        pytnl.meshes.resolveAndLoadMesh(f"invalid{suffix}")
+    reader, mesh = pytnl.meshes.resolveAndLoadMesh(str(output_pvtu))
+    assert isinstance(reader, reader_class), reader
+    assert isinstance(mesh, mesh_class), mesh
+    # Check mesh entities
+    local_mesh = mesh.getLocalMesh()
+    local_vertices = local_mesh.getEntitiesCount(local_mesh.Vertex)  # pyright: ignore[reportArgumentType, reportCallIssue, reportUnknownVariableType]
+    local_cells = local_mesh.getEntitiesCount(local_mesh.Cell)  # pyright: ignore[reportArgumentType, reportCallIssue, reportUnknownVariableType]
+    assert comm.allreduce(local_vertices, op=mpi4py.MPI.SUM) > expected_vertices  # vertices on the interface are counted multiple times
+    assert comm.allreduce(local_cells, op=mpi4py.MPI.SUM) > expected_cells  # ghost cells are counted multiple times
 
 
 # Test for PVTUReader and PVTUWriter (requires MPI)
