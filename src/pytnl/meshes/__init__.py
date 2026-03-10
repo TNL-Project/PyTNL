@@ -293,70 +293,70 @@ class _DistributedMeshMeta(pytnl._meta.CPPClassTemplate):
         self,
         key: type[pytnl._meshes.Mesh_Edge],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Edge]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Edge]: ...
 
     @overload
     def __getitem__(
         self,
         key: type[pytnl._meshes.Mesh_Hexahedron],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Hexahedron]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Hexahedron]: ...
 
     @overload
     def __getitem__(
         self,
         key: type[pytnl._meshes.Mesh_Quadrangle],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Quadrangle]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Quadrangle]: ...
 
     @overload
     def __getitem__(
         self,
         key: type[pytnl._meshes.Mesh_Tetrahedron],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Tetrahedron]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Tetrahedron]: ...
 
     @overload
     def __getitem__(
         self,
         key: type[pytnl._meshes.Mesh_Triangle],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Triangle]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Triangle]: ...
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Edge],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Edge]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Edge]: ...  # pyright: ignore
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Hexahedron],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Hexahedron]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Hexahedron]: ...  # pyright: ignore
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Quadrangle],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Quadrangle]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Quadrangle]: ...  # pyright: ignore
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Tetrahedron],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Tetrahedron]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Tetrahedron]: ...  # pyright: ignore
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Triangle],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Triangle]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Triangle]: ...  # pyright: ignore
 
     def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
         self,
@@ -386,8 +386,8 @@ class DistributedMesh(metaclass=_DistributedMeshMeta):
     This class provides a Python interface to C++ distributed unstructured meshes.
 
     Example:
-    - `DistributedMesh[Mesh[topologies.Edge]]` → `DistributedMesh_Edge`
-    - `DistributedMesh[Mesh[topologies.Polygon]]` → `DistributedMesh_Polygon`
+    - `DistributedMesh[Mesh[topologies.Edge]]` → `DistributedMesh_Mesh_Edge`
+    - `DistributedMesh[Mesh[topologies.Polygon]]` → `DistributedMesh_Mesh_Polygon`
     """
 
 

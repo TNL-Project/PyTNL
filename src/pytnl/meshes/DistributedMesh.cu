@@ -3,9 +3,9 @@
 void
 export_DistributedMeshes( nb::module_& m )
 {
-   export_DistributedMesh< DistributedMeshOfEdges_cuda >( m, "DistributedMesh_Edge" );
-   export_DistributedMesh< DistributedMeshOfTriangles_cuda >( m, "DistributedMesh_Triangle" );
-   export_DistributedMesh< DistributedMeshOfQuadrangles_cuda >( m, "DistributedMesh_Quadrangle" );
-   export_DistributedMesh< DistributedMeshOfTetrahedrons_cuda >( m, "DistributedMesh_Tetrahedron" );
-   export_DistributedMesh< DistributedMeshOfHexahedrons_cuda >( m, "DistributedMesh_Hexahedron" );
+   export_DistributedMesh< DistributedMeshOfEdges_cuda >( m, "DistributedMesh_Mesh_Edge" );
+   export_DistributedMesh< DistributedMeshOfTriangles_cuda >( m, "DistributedMesh_Mesh_Triangle" );
+   export_DistributedMesh< DistributedMeshOfQuadrangles_cuda >( m, "DistributedMesh_Mesh_Quadrangle" );
+   export_DistributedMesh< DistributedMeshOfTetrahedrons_cuda >( m, "DistributedMesh_Mesh_Tetrahedron" );
+   export_DistributedMesh< DistributedMeshOfHexahedrons_cuda >( m, "DistributedMesh_Mesh_Hexahedron" );
 }
