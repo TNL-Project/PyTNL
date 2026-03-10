@@ -14,4 +14,6 @@ export_DistributedMeshReaders( nb::module_& m )
    m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfQuadrangles_cuda > );
    m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTetrahedrons_cuda > );
    m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfHexahedrons_cuda > );
+   m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfPolygons_cuda > );
+   m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfPolyhedrons_cuda > );
 }

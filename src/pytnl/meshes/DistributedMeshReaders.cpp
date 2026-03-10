@@ -14,4 +14,6 @@ export_DistributedMeshReaders( nb::module_& m )
    m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfQuadrangles_host > );
    m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfTetrahedrons_host > );
    m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfHexahedrons_host > );
+   m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfPolygons_host >);
+   m.def( "loadMesh", &PVTUReader::template loadMesh< DistributedMeshOfPolyhedrons_host > );
 }

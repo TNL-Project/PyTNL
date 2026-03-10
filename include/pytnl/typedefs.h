@@ -51,12 +51,16 @@ using DistributedMeshOfTriangles_host = TNL::Meshes::DistributedMeshes::Distribu
 using DistributedMeshOfQuadrangles_host = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfQuadrangles_host >;
 using DistributedMeshOfTetrahedrons_host = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfTetrahedrons_host >;
 using DistributedMeshOfHexahedrons_host = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfHexahedrons_host >;
+using DistributedMeshOfPolygons_host = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfPolygons_host >;
+using DistributedMeshOfPolyhedrons_host = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfPolyhedrons_host >;
 
 using DistributedMeshOfEdges_cuda = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfEdges_cuda >;
 using DistributedMeshOfTriangles_cuda = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfTriangles_cuda >;
 using DistributedMeshOfQuadrangles_cuda = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfQuadrangles_cuda >;
 using DistributedMeshOfTetrahedrons_cuda = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfTetrahedrons_cuda >;
 using DistributedMeshOfHexahedrons_cuda = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfHexahedrons_cuda >;
+using DistributedMeshOfPolygons_cuda = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfPolygons_cuda >;
+using DistributedMeshOfPolyhedrons_cuda = TNL::Meshes::DistributedMeshes::DistributedMesh< MeshOfPolyhedrons_cuda >;
 
 // Config tag for GridTypeResolver and MeshTypeResolver
 struct PyTNLConfigTag

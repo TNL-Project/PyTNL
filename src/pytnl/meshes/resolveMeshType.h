@@ -5,7 +5,7 @@
 #include <TNL/Meshes/TypeResolver/resolveMeshType.h>
 
 template< typename Device >
-nb::typed< nb::tuple, TNL::Meshes::Readers::MeshReader, nb::type_object >
+nb::typed< nb::tuple, TNL::Meshes::Readers::MeshReader, nb::object >
 resolveMeshType( const std::string& file_name, const std::string& file_format = "auto" )
 {
    // NOTE: We cannot get the reader with TNL::Meshes::resolveMeshType,
@@ -25,7 +25,14 @@ resolveMeshType( const std::string& file_name, const std::string& file_format = 
    nb::object py_mesh = nb::none();
    auto wrapper = [ & ]( auto& reader, auto&& mesh ) -> bool
    {
-      py_mesh = nb::cast( mesh );
+      if( reader.getMeshType() == "Meshes::DistributedGrid" || reader.getMeshType() == "Meshes::DistributedMesh" ) {
+         using LocalMesh = std::decay_t< decltype( mesh ) >;
+         using DistributedMesh = TNL::Meshes::DistributedMeshes::DistributedMesh< LocalMesh >;
+         py_mesh = nb::cast( DistributedMesh{ std::move( mesh ) } );
+      }
+      else {
+         py_mesh = nb::cast( std::move( mesh ) );
+      }
       return true;
    };
 
@@ -42,7 +49,7 @@ resolveMeshType( const std::string& file_name, const std::string& file_format = 
 }
 
 template< typename Device >
-nb::typed< nb::tuple, TNL::Meshes::Readers::MeshReader, nb::type_object >
+nb::typed< nb::tuple, TNL::Meshes::Readers::MeshReader, nb::object >
 resolveAndLoadMesh( const std::string& file_name, const std::string& file_format = "auto" )
 {
    nb::tuple reader_and_mesh = resolveMeshType< Device >( file_name, file_format );

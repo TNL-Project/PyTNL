@@ -293,70 +293,98 @@ class _DistributedMeshMeta(pytnl._meta.CPPClassTemplate):
         self,
         key: type[pytnl._meshes.Mesh_Edge],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Edge]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Edge]: ...
 
     @overload
     def __getitem__(
         self,
         key: type[pytnl._meshes.Mesh_Hexahedron],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Hexahedron]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Hexahedron]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Polygon],
+        /,
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Polygon]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Polyhedron],
+        /,
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Polyhedron]: ...
 
     @overload
     def __getitem__(
         self,
         key: type[pytnl._meshes.Mesh_Quadrangle],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Quadrangle]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Quadrangle]: ...
 
     @overload
     def __getitem__(
         self,
         key: type[pytnl._meshes.Mesh_Tetrahedron],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Tetrahedron]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Tetrahedron]: ...
 
     @overload
     def __getitem__(
         self,
         key: type[pytnl._meshes.Mesh_Triangle],
         /,
-    ) -> type[pytnl._meshes.DistributedMesh_Triangle]: ...
+    ) -> type[pytnl._meshes.DistributedMesh_Mesh_Triangle]: ...
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Edge],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Edge]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Edge]: ...  # pyright: ignore
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Hexahedron],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Hexahedron]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Hexahedron]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
+        self,
+        key: type[_meshes_cuda.Mesh_Polygon],  # pyright: ignore
+        /,
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Polygon]: ...  # pyright: ignore
+
+    @overload
+    def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
+        self,
+        key: type[_meshes_cuda.Mesh_Polyhedron],  # pyright: ignore
+        /,
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Polyhedron]: ...  # pyright: ignore
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Quadrangle],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Quadrangle]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Quadrangle]: ...  # pyright: ignore
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Tetrahedron],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Tetrahedron]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Tetrahedron]: ...  # pyright: ignore
 
     @overload
     def __getitem__(  # type: ignore[overload-cannot-match, no-any-unimported, unused-ignore]
         self,
         key: type[_meshes_cuda.Mesh_Triangle],  # pyright: ignore
         /,
-    ) -> type[_meshes_cuda.DistributedMesh_Triangle]: ...  # pyright: ignore
+    ) -> type[_meshes_cuda.DistributedMesh_Mesh_Triangle]: ...  # pyright: ignore
 
     def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
         self,
@@ -366,11 +394,15 @@ class _DistributedMeshMeta(pytnl._meta.CPPClassTemplate):
             | pytnl._meshes.Mesh_Quadrangle
             | pytnl._meshes.Mesh_Tetrahedron
             | pytnl._meshes.Mesh_Triangle
+            | pytnl._meshes.Mesh_Polygon
+            | pytnl._meshes.Mesh_Polyhedron
             | _meshes_cuda.Mesh_Edge  # pyright: ignore
             | _meshes_cuda.Mesh_Hexahedron  # pyright: ignore
             | _meshes_cuda.Mesh_Quadrangle  # pyright: ignore
             | _meshes_cuda.Mesh_Tetrahedron  # pyright: ignore
             | _meshes_cuda.Mesh_Triangle  # pyright: ignore
+            | _meshes_cuda.Mesh_Polygon  # pyright: ignore
+            | _meshes_cuda.Mesh_Polyhedron  # pyright: ignore
         ],
         /,
     ) -> type[Any]:
@@ -386,8 +418,8 @@ class DistributedMesh(metaclass=_DistributedMeshMeta):
     This class provides a Python interface to C++ distributed unstructured meshes.
 
     Example:
-    - `DistributedMesh[Mesh[topologies.Edge]]` → `DistributedMesh_Edge`
-    - `DistributedMesh[Mesh[topologies.Polygon]]` → `DistributedMesh_Polygon`
+    - `DistributedMesh[Mesh[topologies.Edge]]` → `DistributedMesh_Mesh_Edge`
+    - `DistributedMesh[Mesh[topologies.Polygon]]` → `DistributedMesh_Mesh_Polygon`
     """
 
 
@@ -765,6 +797,20 @@ class _PVTUWriterMeta(pytnl._meta.CPPClassTemplate):
     @overload
     def __getitem__(
         self,
+        key: type[pytnl._meshes.Mesh_Polygon],
+        /,
+    ) -> type[pytnl._meshes.PVTUWriter_Mesh_Polygon]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[pytnl._meshes.Mesh_Polyhedron],
+        /,
+    ) -> type[pytnl._meshes.PVTUWriter_Mesh_Polyhedron]: ...
+
+    @overload
+    def __getitem__(
+        self,
         key: type[pytnl._meshes.Mesh_Tetrahedron],
         /,
     ) -> type[pytnl._meshes.PVTUWriter_Mesh_Tetrahedron]: ...
@@ -781,6 +827,8 @@ class _PVTUWriterMeta(pytnl._meta.CPPClassTemplate):
         key: type[  # pyright: ignore
             pytnl._meshes.Mesh_Edge
             | pytnl._meshes.Mesh_Hexahedron
+            | pytnl._meshes.Mesh_Polygon
+            | pytnl._meshes.Mesh_Polyhedron
             | pytnl._meshes.Mesh_Quadrangle
             | pytnl._meshes.Mesh_Tetrahedron
             | pytnl._meshes.Mesh_Triangle
@@ -809,7 +857,7 @@ def resolveMeshType(
     *,
     file_format: str = "auto",
     device_type: type[DT] = pytnl.devices.Host,
-) -> tuple[MeshReader, type]:
+) -> tuple[MeshReader, object]:
     """
     Returns a `(reader, mesh)` pair where `reader` is initialized with the given
     file name (using `getMeshReader`) and `mesh` is empty.
@@ -825,7 +873,7 @@ def resolveAndLoadMesh(
     *,
     file_format: str = "auto",
     device_type: type[DT] = pytnl.devices.Host,
-) -> tuple[MeshReader, type]:
+) -> tuple[MeshReader, object]:
     """
     Returns a `(reader, mesh)` pair where `reader` is initialized with the given
     file name (using `getMeshReader`) and `mesh` contains the mesh loaded from
