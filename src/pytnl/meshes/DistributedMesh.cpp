@@ -17,4 +17,6 @@ export_DistributedMeshes( nb::module_& m )
    // export VTKTypesArrayType
    using VTKTypesArrayType = typename DistributedMeshOfEdges_host::VTKTypesArrayType;
    export_Array< VTKTypesArrayType >( m, "VTKTypesArrayType" );
+   export_Array< typename VTKTypesArrayType::ViewType >( m, "VTKTypesArrayViewType" );
+   export_Array< typename VTKTypesArrayType::ConstViewType >( m, "VTKTypesConstArrayViewType" );
 }
