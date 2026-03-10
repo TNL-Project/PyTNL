@@ -857,7 +857,7 @@ def resolveMeshType(
     *,
     file_format: str = "auto",
     device_type: type[DT] = pytnl.devices.Host,
-) -> tuple[MeshReader, type]:
+) -> tuple[MeshReader, object]:
     """
     Returns a `(reader, mesh)` pair where `reader` is initialized with the given
     file name (using `getMeshReader`) and `mesh` is empty.
@@ -873,7 +873,7 @@ def resolveAndLoadMesh(
     *,
     file_format: str = "auto",
     device_type: type[DT] = pytnl.devices.Host,
-) -> tuple[MeshReader, type]:
+) -> tuple[MeshReader, object]:
     """
     Returns a `(reader, mesh)` pair where `reader` is initialized with the given
     file name (using `getMeshReader`) and `mesh` contains the mesh loaded from

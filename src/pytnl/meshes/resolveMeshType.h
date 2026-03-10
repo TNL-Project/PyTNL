@@ -5,7 +5,7 @@
 #include <TNL/Meshes/TypeResolver/resolveMeshType.h>
 
 template< typename Device >
-nb::typed< nb::tuple, TNL::Meshes::Readers::MeshReader, nb::type_object >
+nb::typed< nb::tuple, TNL::Meshes::Readers::MeshReader, nb::object >
 resolveMeshType( const std::string& file_name, const std::string& file_format = "auto" )
 {
    // NOTE: We cannot get the reader with TNL::Meshes::resolveMeshType,
@@ -42,7 +42,7 @@ resolveMeshType( const std::string& file_name, const std::string& file_format = 
 }
 
 template< typename Device >
-nb::typed< nb::tuple, TNL::Meshes::Readers::MeshReader, nb::type_object >
+nb::typed< nb::tuple, TNL::Meshes::Readers::MeshReader, nb::object >
 resolveAndLoadMesh( const std::string& file_name, const std::string& file_format = "auto" )
 {
    nb::tuple reader_and_mesh = resolveMeshType< Device >( file_name, file_format );
