@@ -401,9 +401,9 @@ def test_resolveMeshType_distributed(file_path: str, expected_vertices: int, exp
     assert isinstance(reader, reader_class), reader
     assert isinstance(mesh, mesh_class), mesh
     # Check mesh entities
-    local_mesh = mesh.getLocalMesh()
-    assert local_mesh.getEntitiesCount(local_mesh.Vertex) == 0  # pyright: ignore[reportArgumentType, reportCallIssue]
-    assert local_mesh.getEntitiesCount(local_mesh.Cell) == 0  # pyright: ignore[reportArgumentType, reportCallIssue]
+    local_mesh = mesh.getLocalMesh()  # pyright: ignore
+    assert local_mesh.getEntitiesCount(local_mesh.Vertex) == 0  # pyright: ignore
+    assert local_mesh.getEntitiesCount(local_mesh.Cell) == 0  # pyright: ignore
 
     # Test resolveAndLoadMesh
     with pytest.raises(RuntimeError):
@@ -412,9 +412,9 @@ def test_resolveMeshType_distributed(file_path: str, expected_vertices: int, exp
     assert isinstance(reader, reader_class), reader
     assert isinstance(mesh, mesh_class), mesh
     # Check mesh entities
-    local_mesh = mesh.getLocalMesh()
-    local_vertices = local_mesh.getEntitiesCount(local_mesh.Vertex)  # pyright: ignore[reportArgumentType, reportCallIssue, reportUnknownVariableType]
-    local_cells = local_mesh.getEntitiesCount(local_mesh.Cell)  # pyright: ignore[reportArgumentType, reportCallIssue, reportUnknownVariableType]
+    local_mesh = mesh.getLocalMesh()  # pyright: ignore
+    local_vertices = local_mesh.getEntitiesCount(local_mesh.Vertex)  # pyright: ignore
+    local_cells = local_mesh.getEntitiesCount(local_mesh.Cell)  # pyright: ignore
     assert comm.allreduce(local_vertices, op=mpi4py.MPI.SUM) > expected_vertices  # vertices on the interface are counted multiple times
     assert comm.allreduce(local_cells, op=mpi4py.MPI.SUM) > expected_cells  # ghost cells are counted multiple times
 
