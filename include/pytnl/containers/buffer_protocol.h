@@ -142,7 +142,7 @@ array_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
    info->shape[ 0 ] = size_py;
    info->strides[ 0 ] = itemsize_py;
 
-   view->buf = obj->getData();
+   view->buf = const_cast< void* >( static_cast< const void* >( obj->getData() ) );
    view->obj = exporter;
    view->len = len_py;
    view->readonly = std::is_const_v< ValueType > ? 1 : 0;
@@ -241,7 +241,7 @@ ndarray_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
       return -1;
    }
 
-   view->buf = obj->getData();
+   view->buf = const_cast< void* >( static_cast< const void* >( obj->getData() ) );
    view->obj = exporter;
    view->len = len_py;
    view->readonly = std::is_const_v< ValueType > ? 1 : 0;
@@ -305,7 +305,7 @@ static_vector_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
    info->shape[ 0 ] = size_py;
    info->strides[ 0 ] = itemsize_py;
 
-   view->buf = obj->getData();
+   view->buf = const_cast< void* >( static_cast< const void* >( obj->getData() ) );
    view->obj = exporter;
    view->len = len_py;
    view->readonly = std::is_const_v< ValueType > ? 1 : 0;
