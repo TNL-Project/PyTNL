@@ -52,6 +52,10 @@ pybuffer_format()
       return "f";
    else if constexpr( std::is_same_v< U, double > )
       return "d";
+   else if constexpr( std::is_same_v< U, std::complex<float> > )
+      return "Zf";
+   else if constexpr( std::is_same_v< U, std::complex<double> > )
+      return "Zd";
    else
       return nullptr;
 }
