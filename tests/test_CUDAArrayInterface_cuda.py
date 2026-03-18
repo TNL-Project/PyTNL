@@ -181,3 +181,102 @@ def test_zero_size_cai_uses_null_pointer(
     # CAI v3: zero-size arrays should export pointer value 0.
     data = cast(tuple[int, bool], cai["data"])
     assert data[0] == 0
+
+
+@pytest.mark.parametrize(
+    "array_type",
+    (
+        _containers_cuda.Array_int,
+        _containers_cuda.Array_float,
+        _containers_cuda.Array_complex,
+    ),
+)
+def test_array_cai_cupy_view_shared_memory(array_type: type[Any]) -> None:
+    if TYPE_CHECKING:
+        import cupy  # type: ignore[import-untyped] # NOQA: PLC0415
+    else:
+        cupy = pytest.importorskip("cupy")
+
+    size = 8
+    array = array_type(size)
+
+    # Use CAI directly (not DLPack).
+    array_cupy = cupy.asarray(array)
+
+    assert array_cupy.shape == (size,)
+    assert cupy.shares_memory(array_cupy, cupy.asarray(array))
+
+    # CuPy -> PyTNL
+    array_cupy[0] = 101
+    assert array[0] == pytest.approx(101)
+
+    # PyTNL -> CuPy
+    array[1] = 202
+    assert array_cupy[1].item() == pytest.approx(202)
+
+
+@pytest.mark.parametrize(
+    "vector_type",
+    (
+        _containers_cuda.Vector_int,
+        _containers_cuda.Vector_float,
+        _containers_cuda.Vector_complex,
+    ),
+)
+def test_vector_cai_cupy_view_shared_memory(vector_type: type[Any]) -> None:
+    if TYPE_CHECKING:
+        import cupy  # type: ignore[import-untyped] # NOQA: PLC0415
+    else:
+        cupy = pytest.importorskip("cupy")
+
+    size = 10
+    vector = vector_type(size)
+
+    # Use CAI directly (not DLPack).
+    vector_cupy = cupy.asarray(vector)
+
+    assert vector_cupy.shape == (size,)
+    assert cupy.shares_memory(vector_cupy, cupy.asarray(vector))
+
+    # CuPy -> PyTNL
+    vector_cupy[2] = 303
+    assert vector[2] == pytest.approx(303)
+
+    # PyTNL -> CuPy
+    vector[3] = 404
+    assert vector_cupy[3].item() == pytest.approx(404)
+
+
+@pytest.mark.parametrize(
+    "ndarray_type, shape",
+    (
+        (_containers_cuda.NDArray_1_int, (6,)),
+        (_containers_cuda.NDArray_2_float, (3, 4)),
+        (_containers_cuda.NDArray_3_complex, (2, 3, 2)),
+    ),
+)
+def test_ndarray_cai_cupy_view_shared_memory(ndarray_type: type[Any], shape: tuple[int, ...]) -> None:
+    if TYPE_CHECKING:
+        import cupy  # type: ignore[import-untyped] # NOQA: PLC0415
+    else:
+        cupy = pytest.importorskip("cupy")
+
+    array = ndarray_type()
+    array.setSizes(*shape)
+
+    # Use CAI directly (not DLPack).
+    array_cupy = cupy.asarray(array)
+
+    assert array_cupy.shape == shape
+    assert cupy.shares_memory(array_cupy, cupy.asarray(array))
+
+    idx0 = tuple(0 for _ in shape)
+    idx1 = tuple(min(1, s - 1) for s in shape)
+
+    # CuPy -> PyTNL
+    array_cupy[idx0] = 505
+    assert array[idx0] == pytest.approx(505)
+
+    # PyTNL -> CuPy
+    array[idx1] = 606
+    assert array_cupy[idx1].item() == pytest.approx(606)
