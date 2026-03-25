@@ -27,10 +27,16 @@ template< int dim, typename T >
 using _ndarray_view = typename _ndarray< dim, T >::ViewType;
 
 template< int dim, typename T >
+using _ndarray_const_view = typename _ndarray< dim, T >::ConstViewType;
+
+template< int dim, typename T >
 using _distributed_ndarray = DistributedNDArray< _ndarray< dim, T > >;
 
 template< int dim, typename T >
 using _distributed_ndarray_view = typename _distributed_ndarray< dim, T >::ViewType;
+
+template< int dim, typename T >
+using _distributed_ndarray_const_view = typename _distributed_ndarray< dim, T >::ConstViewType;
 
 void
 export_NDArray( nb::module_& m )
@@ -59,15 +65,15 @@ export_NDArray( nb::module_& m )
    export_NDArray< _ndarray_view< 2, ComplexType > >( m, "NDArrayView_2_complex" );
    export_NDArray< _ndarray_view< 3, ComplexType > >( m, "NDArrayView_3_complex" );
 
-   export_NDArray< _ndarray_view< 1, IndexType const > >( m, "NDArrayView_1_int_const" );
-   export_NDArray< _ndarray_view< 2, IndexType const > >( m, "NDArrayView_2_int_const" );
-   export_NDArray< _ndarray_view< 3, IndexType const > >( m, "NDArrayView_3_int_const" );
-   export_NDArray< _ndarray_view< 1, RealType const > >( m, "NDArrayView_1_float_const" );
-   export_NDArray< _ndarray_view< 2, RealType const > >( m, "NDArrayView_2_float_const" );
-   export_NDArray< _ndarray_view< 3, RealType const > >( m, "NDArrayView_3_float_const" );
-   export_NDArray< _ndarray_view< 1, ComplexType const > >( m, "NDArrayView_1_complex_const" );
-   export_NDArray< _ndarray_view< 2, ComplexType const > >( m, "NDArrayView_2_complex_const" );
-   export_NDArray< _ndarray_view< 3, ComplexType const > >( m, "NDArrayView_3_complex_const" );
+   export_NDArray< _ndarray_const_view< 1, IndexType > >( m, "NDArrayView_1_int_const" );
+   export_NDArray< _ndarray_const_view< 2, IndexType > >( m, "NDArrayView_2_int_const" );
+   export_NDArray< _ndarray_const_view< 3, IndexType > >( m, "NDArrayView_3_int_const" );
+   export_NDArray< _ndarray_const_view< 1, RealType > >( m, "NDArrayView_1_float_const" );
+   export_NDArray< _ndarray_const_view< 2, RealType > >( m, "NDArrayView_2_float_const" );
+   export_NDArray< _ndarray_const_view< 3, RealType > >( m, "NDArrayView_3_float_const" );
+   export_NDArray< _ndarray_const_view< 1, ComplexType > >( m, "NDArrayView_1_complex_const" );
+   export_NDArray< _ndarray_const_view< 2, ComplexType > >( m, "NDArrayView_2_complex_const" );
+   export_NDArray< _ndarray_const_view< 3, ComplexType > >( m, "NDArrayView_3_complex_const" );
 
    export_DistributedNDArray< _distributed_ndarray< 1, IndexType > >( m, "DistributedNDArray_1_int" );
    export_DistributedNDArray< _distributed_ndarray< 2, IndexType > >( m, "DistributedNDArray_2_int" );
@@ -89,16 +95,16 @@ export_NDArray( nb::module_& m )
    export_DistributedNDArray< _distributed_ndarray_view< 2, ComplexType > >( m, "DistributedNDArrayView_2_complex" );
    export_DistributedNDArray< _distributed_ndarray_view< 3, ComplexType > >( m, "DistributedNDArrayView_3_complex" );
 
-   export_DistributedNDArray< _distributed_ndarray_view< 1, IndexType const > >( m, "DistributedNDArrayView_1_int_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 2, IndexType const > >( m, "DistributedNDArrayView_2_int_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 3, IndexType const > >( m, "DistributedNDArrayView_3_int_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 1, RealType const > >( m, "DistributedNDArrayView_1_float_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 2, RealType const > >( m, "DistributedNDArrayView_2_float_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 3, RealType const > >( m, "DistributedNDArrayView_3_float_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 1, ComplexType const > >( m,
+   export_DistributedNDArray< _distributed_ndarray_const_view< 1, IndexType > >( m, "DistributedNDArrayView_1_int_const" );
+   export_DistributedNDArray< _distributed_ndarray_const_view< 2, IndexType > >( m, "DistributedNDArrayView_2_int_const" );
+   export_DistributedNDArray< _distributed_ndarray_const_view< 3, IndexType > >( m, "DistributedNDArrayView_3_int_const" );
+   export_DistributedNDArray< _distributed_ndarray_const_view< 1, RealType > >( m, "DistributedNDArrayView_1_float_const" );
+   export_DistributedNDArray< _distributed_ndarray_const_view< 2, RealType > >( m, "DistributedNDArrayView_2_float_const" );
+   export_DistributedNDArray< _distributed_ndarray_const_view< 3, RealType > >( m, "DistributedNDArrayView_3_float_const" );
+   export_DistributedNDArray< _distributed_ndarray_const_view< 1, ComplexType > >( m,
                                                                                    "DistributedNDArrayView_1_complex_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 2, ComplexType const > >( m,
+   export_DistributedNDArray< _distributed_ndarray_const_view< 2, ComplexType > >( m,
                                                                                    "DistributedNDArrayView_2_complex_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 3, ComplexType const > >( m,
+   export_DistributedNDArray< _distributed_ndarray_const_view< 3, ComplexType > >( m,
                                                                                    "DistributedNDArrayView_3_complex_const" );
 }

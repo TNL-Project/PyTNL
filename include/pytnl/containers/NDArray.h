@@ -9,6 +9,7 @@
 #include <TNL/Allocators/CudaManaged.h>
 
 #include "dlpack.h"
+#include "buffer_protocol.h"
 
 template< typename Index >
 void
@@ -300,7 +301,10 @@ export_NDArray( nb::module_& m, const char* name )
    using DeviceType = typename ArrayType::DeviceType;
 
    auto array =  //
-      nb::class_< ArrayType, IndexerType >( m, name )
+      nb::class_< ArrayType,
+                  IndexerType >( m,
+                                 name,
+                                 nb::type_slots( pytnl::containers::buffer_protocol::ndarray_buffer_slots< ArrayType >() ) )
          // Typedefs
          .def_prop_ro_static(  //
             "IndexerType",

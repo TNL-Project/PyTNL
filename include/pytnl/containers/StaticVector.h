@@ -4,6 +4,7 @@
 
 #include "indexing.h"
 #include "vector_operators.h"
+#include "buffer_protocol.h"
 
 template< typename VectorType, typename Scope >
 void
@@ -14,7 +15,10 @@ export_StaticVector( Scope& scope, const char* name )
    using RealType = typename VectorType::RealType;
 
    auto vector =  //
-      nb::class_< VectorType >( scope, name )
+      nb::class_< VectorType >(
+         scope,
+         name,
+         nb::type_slots( pytnl::containers::buffer_protocol::static_vector_buffer_slots< VectorType >() ) )
          // NOTE: the nb::init<...> does not work due to list-initialization and
          //       std::list_initializer constructor in ArrayType
          .def( my_init< RealType >() )

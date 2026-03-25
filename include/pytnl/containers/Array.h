@@ -8,6 +8,7 @@
 
 #include "dlpack.h"
 #include "indexing.h"
+#include "buffer_protocol.h"
 
 template< typename ArrayType >
 void
@@ -19,7 +20,7 @@ export_Array( nb::module_& m, const char* name )
 
    // NOTE: ArrayType can be Array or ArrayView
    auto array =  //
-      nb::class_< ArrayType >( m, name )
+      nb::class_< ArrayType >( m, name, nb::type_slots( pytnl::containers::buffer_protocol::array_buffer_slots< ArrayType >() ) )
          // Constructors
          .def( nb::init<>() )
 
