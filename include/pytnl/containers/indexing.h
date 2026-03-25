@@ -39,11 +39,12 @@ def_indexing( Scope& scope )
    using Index = typename Array::IndexType;
    using Value = typename Array::ValueType;
 
-   scope.def( "__len__",
-              &Array::getSize,
-              // need to set custom signature because StaticArray has static getSize
-              // and .def() generates a signature without argument by default
-              nb::sig( "def __len__(self) -> int" ) );
+   scope.def(
+      "__len__",
+      &Array::getSize,
+      // need to set custom signature because StaticArray has static getSize
+      // and .def() generates a signature without argument by default
+      nb::sig( "def __len__(self) -> int" ) );
 
    scope.def(
       "__iter__",
@@ -55,33 +56,36 @@ def_indexing( Scope& scope )
                throw NotImplementedError( "The __iter__ method is not implemented yet for GPU arrays." );
             }
          }
-         return nb::make_iterator( nb::type< Array >(),
-                                   "Iterator",
-                                   RawIterator< Value >( array.getData() ),
-                                   RawIterator< Value >( array.getData() + array.getSize() ) );
+         return nb::make_iterator(
+            nb::type< Array >(),
+            "Iterator",
+            RawIterator< Value >( array.getData() ),
+            RawIterator< Value >( array.getData() + array.getSize() ) );
       },
       nb::keep_alive< 0, 1 >()  // keep array alive while iterator is used
    );
 
-   scope.def( "__getitem__",
-              []( Array& a, Index i )
-              {
-                 check_array_index( a.getSize(), i );
-                 // getElement is equivalent to operator[] on host but works on cuda
-                 return a.getElement( i );
-              } );
+   scope.def(
+      "__getitem__",
+      []( Array& a, Index i )
+      {
+         check_array_index( a.getSize(), i );
+         // getElement is equivalent to operator[] on host but works on cuda
+         return a.getElement( i );
+      } );
 
-   scope.def( "__setitem__",
-              []( Array& a, Index i, const Value& e )
-              {
-                 if constexpr( std::is_const_v< typename Array::ValueType > )
-                    throw nb::type_error( "Cannot set element of a read-only array" );
-                 else {
-                    check_array_index( a.getSize(), i );
-                    // setElement is equivalent to operator[] on host but works on cuda
-                    a.setElement( i, e );
-                 }
-              } );
+   scope.def(
+      "__setitem__",
+      []( Array& a, Index i, const Value& e )
+      {
+         if constexpr( std::is_const_v< typename Array::ValueType > )
+            throw nb::type_error( "Cannot set element of a read-only array" );
+         else {
+            check_array_index( a.getSize(), i );
+            // setElement is equivalent to operator[] on host but works on cuda
+            a.setElement( i, e );
+         }
+      } );
 }
 
 template< typename Array, typename Scope >
@@ -114,8 +118,7 @@ def_slice_indexing( Scope& scope )
          auto [ start, stop, step, slicelength ] = slice.compute( a.getSize() );
 
          if( slicelength != (std::size_t) value.getSize() )
-            throw std::runtime_error( "Left and right hand size of slice "
-                                      "assignment have different sizes!" );
+            throw std::runtime_error( "Left and right hand size of slice assignment have different sizes!" );
 
          for( std::size_t i = 0; i < slicelength; ++i ) {
             // setElement/getElement is equivalent to operator[] on host but works on cuda

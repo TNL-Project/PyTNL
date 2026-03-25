@@ -103,11 +103,12 @@ export_Vector( nb::module_& m, const char* name )
          .def_static( "getSerializationType", &VectorType::getSerializationType )
 
          // Copy/Deepcopy
-         .def( "__copy__",
-               []( const VectorType& self )
-               {
-                  return VectorType( self );
-               } )
+         .def(
+            "__copy__",
+            []( const VectorType& self )
+            {
+               return VectorType( self );
+            } )
          .def(
             "__deepcopy__",
             []( const VectorType& self, nb::typed< nb::dict, nb::str, nb::any > )

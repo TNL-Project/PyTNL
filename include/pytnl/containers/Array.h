@@ -20,7 +20,8 @@ export_Array( nb::module_& m, const char* name )
 
    // NOTE: ArrayType can be Array or ArrayView
    auto array =  //
-      nb::class_< ArrayType >( m, name, nb::type_slots( pytnl::containers::buffer_protocol::array_buffer_slots< ArrayType >() ) )
+      nb::class_< ArrayType >(
+         m, name, nb::type_slots( pytnl::containers::buffer_protocol::array_buffer_slots< ArrayType >() ) )
          // Constructors
          .def( nb::init<>() )
 
@@ -187,13 +188,14 @@ export_Array( nb::module_& m, const char* name )
                   device_id = TNL::Backend::getDevice();
 
                using array_api_t = nb::ndarray< nb::array_api, ValueType >;
-               array_api_t array_api( self.p->getData(),
-                                      { static_cast< std::size_t >( self.p->getSize() ) },
-                                      self.h,  // pass the Python object associated with `self` as owner
-                                      {},      // strides
-                                      nb::dtype< ValueType >(),
-                                      dlpack_device< ArrayType >().first,
-                                      device_id );
+               array_api_t array_api(
+                  self.p->getData(),
+                  { static_cast< std::size_t >( self.p->getSize() ) },
+                  self.h,  // pass the Python object associated with `self` as owner
+                  {},      // strides
+                  nb::dtype< ValueType >(),
+                  dlpack_device< ArrayType >().first,
+                  device_id );
 
                // call the array_api's __dlpack__ Python method to properly handle the kwargs
                nb::object aa = nb::cast( array_api, nb::rv_policy::reference_internal, self.h );
@@ -210,11 +212,12 @@ export_Array( nb::module_& m, const char* name )
          .def( nb::init< const ArrayType& >() )
          // FIXME: needed for implicit conversion from Array, but AllocatorType is ignored
          .def( nb::init_implicit< TNL::Containers::Array< std::remove_const_t< ValueType >, DeviceType, IndexType >& >() )
-         .def( "bind",
-               []( ArrayType& self, const ArrayType& other )
-               {
-                  self.bind( other );
-               } );
+         .def(
+            "bind",
+            []( ArrayType& self, const ArrayType& other )
+            {
+               self.bind( other );
+            } );
    }
    else {
       // TODO: slicing should work for views too
@@ -238,11 +241,12 @@ export_Array( nb::module_& m, const char* name )
          .def_static( "getSerializationType", &ArrayType::getSerializationType )
 
          // Deepcopy support https://pybind11.readthedocs.io/en/stable/advanced/classes.html#deepcopy-support
-         .def( "__copy__",
-               []( const ArrayType& self )
-               {
-                  return ArrayType( self );
-               } )
+         .def(
+            "__copy__",
+            []( const ArrayType& self )
+            {
+               return ArrayType( self );
+            } )
          .def(
             "__deepcopy__",
             []( const ArrayType& self, nb::typed< nb::dict, nb::str, nb::any > )

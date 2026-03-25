@@ -8,14 +8,15 @@
 using namespace TNL::Containers;
 
 template< int dim, typename T >
-using _ndarray = NDArray< T,
-                          make_sizes_holder< IndexType, dim >,
-                          std::make_index_sequence< dim >,  // identity by default
-                          TNL::Devices::Cuda,
-                          IndexType,
-                          make_sizes_holder< IndexType, dim >  // all overlaps are set at runtime
-                          //ConstStaticSizesHolder< IndexType, dim, 0 >  // ConstStaticSizesHolder does not have Python bindings
-                          >;
+using _ndarray = NDArray<
+   T,
+   make_sizes_holder< IndexType, dim >,
+   std::make_index_sequence< dim >,  // identity by default
+   TNL::Devices::Cuda,
+   IndexType,
+   make_sizes_holder< IndexType, dim >  // all overlaps are set at runtime
+   //ConstStaticSizesHolder< IndexType, dim, 0 >  // ConstStaticSizesHolder does not have Python bindings
+   >;
 
 template< int dim, typename T >
 using _ndarray_view = typename _ndarray< dim, T >::ViewType;
@@ -88,10 +89,10 @@ export_NDArray( nb::module_& m )
    export_DistributedNDArray< _distributed_ndarray_view< 1, RealType const > >( m, "DistributedNDArrayView_1_float_const" );
    export_DistributedNDArray< _distributed_ndarray_view< 2, RealType const > >( m, "DistributedNDArrayView_2_float_const" );
    export_DistributedNDArray< _distributed_ndarray_view< 3, RealType const > >( m, "DistributedNDArrayView_3_float_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 1, ComplexType const > >( m,
-                                                                                   "DistributedNDArrayView_1_complex_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 2, ComplexType const > >( m,
-                                                                                   "DistributedNDArrayView_2_complex_const" );
-   export_DistributedNDArray< _distributed_ndarray_view< 3, ComplexType const > >( m,
-                                                                                   "DistributedNDArrayView_3_complex_const" );
+   export_DistributedNDArray< _distributed_ndarray_view< 1, ComplexType const > >(
+      m, "DistributedNDArrayView_1_complex_const" );
+   export_DistributedNDArray< _distributed_ndarray_view< 2, ComplexType const > >(
+      m, "DistributedNDArrayView_2_complex_const" );
+   export_DistributedNDArray< _distributed_ndarray_view< 3, ComplexType const > >(
+      m, "DistributedNDArrayView_3_complex_const" );
 }

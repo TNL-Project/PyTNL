@@ -16,9 +16,7 @@ export_StaticVector( Scope& scope, const char* name )
 
    auto vector =  //
       nb::class_< VectorType >(
-         scope,
-         name,
-         nb::type_slots( pytnl::containers::buffer_protocol::static_vector_buffer_slots< VectorType >() ) )
+         scope, name, nb::type_slots( pytnl::containers::buffer_protocol::static_vector_buffer_slots< VectorType >() ) )
          // NOTE: the nb::init<...> does not work due to list-initialization and
          //       std::list_initializer constructor in ArrayType
          .def( my_init< RealType >() )

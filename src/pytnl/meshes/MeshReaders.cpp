@@ -36,15 +36,16 @@ export_MeshReaders( nb::module_& m )
       // bindings against the actual class, NOT the trampoline
       .def( "reset", &MeshReader::reset )
       .def( "detectMesh", &MeshReader::detectMesh )
-      .def( "loadMesh",
-            []( nb::object self, nb::object mesh ) -> void
-            {
-               // call the loadMesh function from the same Python module that contains the mesh
-               const auto module_name = nb::cast< std::string >( mesh.attr( "__class__" ).attr( "__module__" ) );
-               nb::object module = nb::module_::import_( module_name.c_str() );
-               nb::object loadMesh = module.attr( "loadMesh" );
-               loadMesh( self, mesh );
-            } )
+      .def(
+         "loadMesh",
+         []( nb::object self, nb::object mesh ) -> void
+         {
+            // call the loadMesh function from the same Python module that contains the mesh
+            const auto module_name = nb::cast< std::string >( mesh.attr( "__class__" ).attr( "__module__" ) );
+            nb::object module = nb::module_::import_( module_name.c_str() );
+            nb::object loadMesh = module.attr( "loadMesh" );
+            loadMesh( self, mesh );
+         } )
       .def( "readPointData", &MeshReader::readPointData )
       .def( "readCellData", &MeshReader::readCellData );
 
@@ -60,11 +61,12 @@ export_MeshReaders( nb::module_& m )
    nb::class_< TNL::Meshes::Readers::PVTUReader, XMLVTK >( m, "PVTUReader" ).def( nb::init< std::string >() );
 
    auto getMeshReader =  //
-      m.def( "getMeshReader",
-             TNL::Meshes::Readers::getMeshReader,
-             nb::arg( "file_name" ),
-             nb::kw_only(),
-             nb::arg( "file_format" ) = "auto",
-             "Returns the MeshReader instance for given file based on file extension "
-             "(does not call `reader.detectMesh` so it succeeds even for invalid file)" );
+      m.def(
+         "getMeshReader",
+         TNL::Meshes::Readers::getMeshReader,
+         nb::arg( "file_name" ),
+         nb::kw_only(),
+         nb::arg( "file_format" ) = "auto",
+         "Returns the MeshReader instance for given file based on file extension "
+         "(does not call `reader.detectMesh` so it succeeds even for invalid file)" );
 }

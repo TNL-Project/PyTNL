@@ -301,10 +301,8 @@ export_NDArray( nb::module_& m, const char* name )
    using DeviceType = typename ArrayType::DeviceType;
 
    auto array =  //
-      nb::class_< ArrayType,
-                  IndexerType >( m,
-                                 name,
-                                 nb::type_slots( pytnl::containers::buffer_protocol::ndarray_buffer_slots< ArrayType >() ) )
+      nb::class_< ArrayType, IndexerType >(
+         m, name, nb::type_slots( pytnl::containers::buffer_protocol::ndarray_buffer_slots< ArrayType >() ) )
          // Typedefs
          .def_prop_ro_static(  //
             "IndexerType",
@@ -443,14 +441,15 @@ export_NDArray( nb::module_& m, const char* name )
                   } );
 
                using array_api_t = nb::ndarray< nb::array_api, ValueType >;
-               array_api_t array_api( self.p->getData(),
-                                      dim,
-                                      sizes.data(),
-                                      self.h,  // pass the Python object associated with `self` as owner
-                                      strides.data(),
-                                      nb::dtype< ValueType >(),
-                                      dlpack_device< ArrayType >().first,
-                                      device_id );
+               array_api_t array_api(
+                  self.p->getData(),
+                  dim,
+                  sizes.data(),
+                  self.h,  // pass the Python object associated with `self` as owner
+                  strides.data(),
+                  nb::dtype< ValueType >(),
+                  dlpack_device< ArrayType >().first,
+                  device_id );
 
                // call the array_api's __dlpack__ Python method to properly handle the kwargs
                nb::object aa = nb::cast( array_api, nb::rv_policy::reference_internal, self.h );
@@ -468,14 +467,16 @@ export_NDArray( nb::module_& m, const char* name )
          .def( nb::init< const ArrayType& >() )
          // FIXME: needed for implicit conversion from NDArray, but AllocatorType is ignored
          //.def( nb::init_implicit< TNL::Containers::NDArray< ... >& >() )
-         .def( "bind",
-               []( ArrayType& self, const ArrayType& other )
-               {
-                  self.bind( other );
-               } )
-         .def( "reset",
-               &ArrayType::reset,
-               "Reset the array view to the empty state. There is no deallocation, it does not affect other views." )
+         .def(
+            "bind",
+            []( ArrayType& self, const ArrayType& other )
+            {
+               self.bind( other );
+            } )
+         .def(
+            "reset",
+            &ArrayType::reset,
+            "Reset the array view to the empty state. There is no deallocation, it does not affect other views." )
          //
          ;
    }
@@ -483,10 +484,11 @@ export_NDArray( nb::module_& m, const char* name )
       // Additional NDArray-specific methods
       array
          // Size management
-         .def( "setSizes",
-               &ArrayType::setSize,  // Note: C++ method should be renamed
-               nb::arg( "sizes" ),
-               "Set sizes of the array using an instance of SizesHolder (a tuple of ints in Python)" )
+         .def(
+            "setSizes",
+            &ArrayType::setSize,  // Note: C++ method should be renamed
+            nb::arg( "sizes" ),
+            "Set sizes of the array using an instance of SizesHolder (a tuple of ints in Python)" )
          .def(
             "setSizes",
             []( ArrayType& self, const nb::args& sizes )
@@ -520,20 +522,22 @@ export_NDArray( nb::module_& m, const char* name )
                self.setLike( other );
             },
             nb::arg( "other" ) )
-         .def( "reset",
-               &ArrayType::reset,
-               "Reset the array to the empty state. The current data will be deallocated, "
-               "thus all pointers and views to the array elements will become invalid." )
+         .def(
+            "reset",
+            &ArrayType::reset,
+            "Reset the array to the empty state. The current data will be deallocated, "
+            "thus all pointers and views to the array elements will become invalid." )
 
          // Fill
          .def( "setValue", &ArrayType::setValue, nb::arg( "value" ) )
 
          // Deepcopy support https://pybind11.readthedocs.io/en/stable/advanced/classes.html#deepcopy-support
-         .def( "__copy__",
-               []( const ArrayType& self )
-               {
-                  return ArrayType( self );
-               } )
+         .def(
+            "__copy__",
+            []( const ArrayType& self )
+            {
+               return ArrayType( self );
+            } )
          .def(
             "__deepcopy__",
             []( const ArrayType& self, nb::typed< nb::dict, nb::str, nb::any > )

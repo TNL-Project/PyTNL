@@ -26,9 +26,8 @@ using Grid_3_cuda = TNL::Meshes::Grid< 3, RealType, TNL::Devices::Cuda, IndexTyp
 
 using LocalIndexType = short int;
 template< typename Topology, typename Device = TNL::Devices::Host >
-using DefaultMeshTemplate =
-   TNL::Meshes::Mesh< TNL::Meshes::DefaultConfig< Topology, Topology::dimension, RealType, IndexType, LocalIndexType >,
-                      Device >;
+using DefaultMeshTemplate = TNL::Meshes::
+   Mesh< TNL::Meshes::DefaultConfig< Topology, Topology::dimension, RealType, IndexType, LocalIndexType >, Device >;
 
 using MeshOfEdges_host = DefaultMeshTemplate< TNL::Meshes::Topologies::Edge >;
 using MeshOfTriangles_host = DefaultMeshTemplate< TNL::Meshes::Topologies::Triangle >;

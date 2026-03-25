@@ -14,17 +14,22 @@ export_GridEntity( PyGrid& scope, const char* name )
    auto entity =
       nb::class_< GridEntity >( scope, name )
          .def( nb::init< typename GridEntity::GridType >(), nb::rv_policy::reference_internal )
-         .def( nb::init< typename GridEntity::GridType, typename GridEntity::CoordinatesType >(),
-               nb::rv_policy::reference_internal )
-         .def( nb::init< typename GridEntity::GridType,
-                         typename GridEntity::CoordinatesType,
-                         typename GridEntity::CoordinatesType >(),
-               nb::rv_policy::reference_internal )
-         .def( nb::init< typename GridEntity::GridType,
-                         typename GridEntity::CoordinatesType,
-                         typename GridEntity::CoordinatesType,
-                         typename GridEntity::IndexType >(),
-               nb::rv_policy::reference_internal )
+         .def(
+            nb::init< typename GridEntity::GridType, typename GridEntity::CoordinatesType >(),
+            nb::rv_policy::reference_internal )
+         .def(
+            nb::init<
+               typename GridEntity::GridType,
+               typename GridEntity::CoordinatesType,
+               typename GridEntity::CoordinatesType >(),
+            nb::rv_policy::reference_internal )
+         .def(
+            nb::init<
+               typename GridEntity::GridType,
+               typename GridEntity::CoordinatesType,
+               typename GridEntity::CoordinatesType,
+               typename GridEntity::IndexType >(),
+            nb::rv_policy::reference_internal )
          .def( nb::init< typename GridEntity::GridType, typename GridEntity::IndexType >(), nb::rv_policy::reference_internal )
          .def_static( "getEntityDimension", &GridEntity::getEntityDimension )
          .def_static( "getMeshDimension", &GridEntity::getMeshDimension )
@@ -66,21 +71,27 @@ export_Grid( nb::module_& m, const char* name )
          .def( "getProportions", &Grid::getProportions, nb::rv_policy::reference_internal )
          // NOTE: if combined into getEntity, the return type would depend on
          // the runtime parameter (entity)
-         .def( "getCell",
-               nb::overload_cast< typename Grid::IndexType >( &Grid::template getEntity< typename Grid::Cell >, nb::const_ ) )
-         .def( "getCell",
-               nb::overload_cast< const typename Grid::CoordinatesType& >( &Grid::template getEntity< typename Grid::Cell >,
-                                                                           nb::const_ ) )
-         .def( "getFace",
-               nb::overload_cast< typename Grid::IndexType >( &Grid::template getEntity< typename Grid::Face >, nb::const_ ) )
-         .def( "getFace",
-               nb::overload_cast< const typename Grid::CoordinatesType& >( &Grid::template getEntity< typename Grid::Face >,
-                                                                           nb::const_ ) )
-         .def( "getVertex",
-               nb::overload_cast< typename Grid::IndexType >( &Grid::template getEntity< typename Grid::Vertex >, nb::const_ ) )
-         .def( "getVertex",
-               nb::overload_cast< const typename Grid::CoordinatesType& >( &Grid::template getEntity< typename Grid::Vertex >,
-                                                                           nb::const_ ) )
+         .def(
+            "getCell",
+            nb::overload_cast< typename Grid::IndexType >( &Grid::template getEntity< typename Grid::Cell >, nb::const_ ) )
+         .def(
+            "getCell",
+            nb::overload_cast< const typename Grid::CoordinatesType& >(
+               &Grid::template getEntity< typename Grid::Cell >, nb::const_ ) )
+         .def(
+            "getFace",
+            nb::overload_cast< typename Grid::IndexType >( &Grid::template getEntity< typename Grid::Face >, nb::const_ ) )
+         .def(
+            "getFace",
+            nb::overload_cast< const typename Grid::CoordinatesType& >(
+               &Grid::template getEntity< typename Grid::Face >, nb::const_ ) )
+         .def(
+            "getVertex",
+            nb::overload_cast< typename Grid::IndexType >( &Grid::template getEntity< typename Grid::Vertex >, nb::const_ ) )
+         .def(
+            "getVertex",
+            nb::overload_cast< const typename Grid::CoordinatesType& >(
+               &Grid::template getEntity< typename Grid::Vertex >, nb::const_ ) )
          .def( "getEntityIndex", &Grid::template getEntityIndex< typename Grid::Cell > )
          .def( "getEntityIndex", &Grid::template getEntityIndex< typename Grid::Vertex > )
          .def( "getCellMeasure", &Grid::getCellMeasure, nb::rv_policy::reference_internal )
