@@ -30,10 +30,35 @@ check-code:
     just ensure-command ruff
     ruff check
 
-# Checks the code formatting using ruff
+# Checks the code formatting using clang-format and ruff
 check-format:
+    just --unstable --fmt --check
+    just ensure-command clang-format
+    # Note that find -exec always exists with 0 exit code, whereas xargs runs
+    # clang-format only once and preserves its exit code.
+    find ./include/ ./src/ \
+         \( -name '*.h' \
+         -o -name '*.hpp' \
+         -o -name '*.cpp' \
+         -o -name '*.cu' \) \
+         -print0 | xargs -0 clang-format --dry-run -Werror --style file
     just ensure-command ruff
     ruff format --diff
+
+# Reformats supported files using clang-format and ruff
+format:
+    just --unstable --fmt
+    just ensure-command clang-format
+    # Note that find -exec always exists with 0 exit code, whereas xargs runs
+    # clang-format only once and preserves its exit code.
+    find ./include/ ./src/ \
+         \( -name '*.h' \
+         -o -name '*.hpp' \
+         -o -name '*.cpp' \
+         -o -name '*.cu' \) \
+         -print0 | xargs -0 clang-format -i --style file
+    just ensure-command ruff
+    ruff format .
 
 # Checks for typing issues using mypy
 check-typing:
