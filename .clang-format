@@ -29,7 +29,7 @@ EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: LogicalBlock
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 1
-SeparateDefinitionBlocks: Leave  # 'Always' breaks formatting of __cuda_callable__ etc.
+SeparateDefinitionBlocks: Leave # 'Always' breaks formatting of __cuda_callable__ etc.
 
 SpacesInParens: Custom
 SpacesInParensOptions:
@@ -62,24 +62,29 @@ Cpp11BracedListStyle: false
 PackConstructorInitializers: Never
 ConstructorInitializerIndentWidth: 0
 
+BreakAfterAttributes: Never
+BreakAfterOpenBracketBracedList: true
+BreakAfterOpenBracketFunction: true
+BreakAfterOpenBracketIf: false
+BreakAfterOpenBracketLoop: false
 BreakAfterReturnType: All
-AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakBeforeMultilineStrings: true
 BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterCaseLabel:  false
-  AfterClass:      true
+  AfterCaseLabel: false
+  AfterClass: true
   AfterControlStatement: MultiLine
-  AfterEnum:       true
-  AfterFunction:   true
-  AfterNamespace:  false
-  AfterStruct:     true
-  AfterUnion:      true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: true
   AfterExternBlock: true
   BeforeLambdaBody: true
-  BeforeCatch:     true
-  BeforeElse:      true
-  BeforeWhile:     false
-  IndentBraces:    false
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeWhile: false
+  IndentBraces: false
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: true
@@ -89,7 +94,6 @@ BreakInheritanceList: BeforeColon
 BreakConstructorInitializers: BeforeColon
 BreakTemplateDeclarations: Yes
 BreakBeforeConceptDeclarations: Always
-BreakAfterAttributes: Never
 
 AlignAfterOpenBracket: Align
 AlignArrayOfStructures: None
@@ -98,7 +102,7 @@ AlignConsecutiveAssignments: None
 AlignConsecutiveBitFields: None
 AlignConsecutiveDeclarations: None
 AlignEscapedNewlines: Left
-AlignOperands:   AlignAfterOperator
+AlignOperands: AlignAfterOperator
 AlignTrailingComments:
   Kind: Always
   OverEmptyLines: 0
@@ -189,7 +193,7 @@ PenaltyExcessCharacter: 500
 SortIncludes: Never
 
 # NOTE: disabling this option breaks indentation of comments, see https://github.com/llvm/llvm-project/issues/53425
-ReflowComments:  true
+ReflowComments: true
 
 InsertTrailingCommas: Wrapped
 RemoveParentheses: ReturnStatement
