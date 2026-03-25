@@ -621,7 +621,7 @@ def test_deepcopy(array_type: type[A], data: st.DataObject) -> None:
 # ----------------------
 
 
-@settings(deadline=2500)  # some cupy functions use JIT compilation which takes a while
+@settings(deadline=5000)  # some cupy functions use JIT compilation which takes a while
 @pytest.mark.parametrize("array_type", array_types)
 @given(data=st.data())
 def test_dlpack(array_type: type[A], data: st.DataObject) -> None:

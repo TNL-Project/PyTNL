@@ -105,22 +105,24 @@ export_Matrix( nb::module_& m, const char* name )
          .def( "load", &Matrix::load )
 
          .def( "print", &Matrix::print )
-         .def( "__str__",
-               []( Matrix& m )
-               {
-                  std::stringstream ss;
-                  ss << m;
-                  return ss.str();
-               } )
+         .def(
+            "__str__",
+            []( Matrix& m )
+            {
+               std::stringstream ss;
+               ss << m;
+               return ss.str();
+            } )
 
          // Matrix
          .def( "setDimensions", nb::overload_cast< IndexType, IndexType >( &Matrix::setDimensions ) )
          // TODO: export for more types
-         .def( "setLike",
-               []( Matrix& matrix, const Matrix& other ) -> void
-               {
-                  matrix.setLike( other );
-               } )
+         .def(
+            "setLike",
+            []( Matrix& matrix, const Matrix& other ) -> void
+            {
+               matrix.setLike( other );
+            } )
          .def( "getAllocatedElementsCount", &Matrix::getAllocatedElementsCount )
          .def( "getNonzeroElementsCount", &Matrix::getNonzeroElementsCount )
          .def( "reset", &Matrix::reset )
@@ -136,11 +138,12 @@ export_Matrix( nb::module_& m, const char* name )
          .def( "getCompressedRowLengths", &Matrix::template getCompressedRowLengths< IndexVectorType > )
          .def( "getRowCapacity", &Matrix::getRowCapacity )
          // TODO: implement bounds checking
-         .def( "getRow",
-               []( Matrix& matrix, IndexType rowIdx ) -> typename Matrix::RowView
-               {
-                  return matrix.getRow( rowIdx );
-               } )
+         .def(
+            "getRow",
+            []( Matrix& matrix, IndexType rowIdx ) -> typename Matrix::RowView
+            {
+               return matrix.getRow( rowIdx );
+            } )
          // TODO: implement bounds checking
          .def( "setElement", &Matrix::setElement )
          // TODO: implement bounds checking
@@ -155,11 +158,12 @@ export_Matrix( nb::module_& m, const char* name )
          //.def("addMatrix",           &Matrix::addMatrix)
          //.def("getTransposition",    &Matrix::getTransposition)
          // TODO: export for more types
-         .def( "assign",
-               []( Matrix& matrix, const Matrix& other ) -> Matrix&
-               {
-                  return matrix = other;
-               } )
+         .def(
+            "assign",
+            []( Matrix& matrix, const Matrix& other ) -> Matrix&
+            {
+               return matrix = other;
+            } )
 
          // accessors for internal vectors
          .def( "getValues", nb::overload_cast<>( &Matrix::getValues ), nb::rv_policy::reference_internal )

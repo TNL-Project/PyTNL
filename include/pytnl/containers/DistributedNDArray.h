@@ -303,14 +303,16 @@ export_DistributedNDArray( nb::module_& m, const char* name )
       array  //
              // FIXME: needed for implicit conversion from NDArray, but AllocatorType is ignored
              //.def( nb::init_implicit< TNL::Containers::DistributedNDArray< TNL::Containers::NDArray< ... > >& >() )
-         .def( "bind",
-               []( ArrayType& self, const ArrayType& other )
-               {
-                  self.bind( other );
-               } )
-         .def( "reset",
-               &ArrayType::reset,
-               "Reset the array view to the empty state. There is no deallocation, it does not affect other views." )
+         .def(
+            "bind",
+            []( ArrayType& self, const ArrayType& other )
+            {
+               self.bind( other );
+            } )
+         .def(
+            "reset",
+            &ArrayType::reset,
+            "Reset the array view to the empty state. There is no deallocation, it does not affect other views." )
          //
          ;
    }
@@ -351,10 +353,11 @@ export_DistributedNDArray( nb::module_& m, const char* name )
                self.setLike( other );
             },
             nb::arg( "other" ) )
-         .def( "reset",
-               &ArrayType::reset,
-               "Reset the array to the empty state. The current data will be deallocated, "
-               "thus all pointers and views to the array elements will become invalid." )
+         .def(
+            "reset",
+            &ArrayType::reset,
+            "Reset the array to the empty state. The current data will be deallocated, "
+            "thus all pointers and views to the array elements will become invalid." )
          .def(
             "setDistribution",
             []( ArrayType& self,
@@ -394,11 +397,12 @@ export_DistributedNDArray( nb::module_& m, const char* name )
          .def( "setValue", &ArrayType::setValue, nb::arg( "value" ) )
 
          // Deepcopy support https://pybind11.readthedocs.io/en/stable/advanced/classes.html#deepcopy-support
-         .def( "__copy__",
-               []( const ArrayType& self )
-               {
-                  return ArrayType( self );
-               } )
+         .def(
+            "__copy__",
+            []( const ArrayType& self )
+            {
+               return ArrayType( self );
+            } )
          .def(
             "__deepcopy__",
             []( const ArrayType& self, nb::typed< nb::dict, nb::str, nb::any > )

@@ -11,8 +11,7 @@
 
 #include <pytnl/pytnl.h>
 
-namespace pytnl::containers::buffer_protocol
-{
+namespace pytnl::containers::buffer_protocol {
 
 struct BufferInfo
 {
@@ -52,9 +51,9 @@ pybuffer_format()
       return "f";
    else if constexpr( std::is_same_v< U, double > )
       return "d";
-   else if constexpr( std::is_same_v< U, std::complex<float> > )
+   else if constexpr( std::is_same_v< U, std::complex< float > > )
       return "Zf";
-   else if constexpr( std::is_same_v< U, std::complex<double> > )
+   else if constexpr( std::is_same_v< U, std::complex< double > > )
       return "Zd";
    else
       return nullptr;
@@ -63,8 +62,7 @@ pybuffer_format()
 inline bool
 checked_cast_to_py_ssize( std::size_t value, Py_ssize_t& out )
 {
-   constexpr std::size_t max_py =
-      static_cast< std::size_t >( std::numeric_limits< Py_ssize_t >::max() );
+   constexpr std::size_t max_py = static_cast< std::size_t >( std::numeric_limits< Py_ssize_t >::max() );
    if( value > max_py )
       return false;
    out = static_cast< Py_ssize_t >( value );
@@ -87,8 +85,7 @@ checked_mul_py_ssize( Py_ssize_t a, Py_ssize_t b, Py_ssize_t& out )
 }
 
 template< typename DeviceType >
-constexpr bool
-is_host_device_v = std::is_same_v< DeviceType, TNL::Devices::Host >;
+constexpr bool is_host_device_v = std::is_same_v< DeviceType, TNL::Devices::Host >;
 
 template< typename ArrayType >
 int
@@ -103,9 +100,10 @@ array_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
    }
 
    if constexpr( ! is_host_device_v< DeviceType > ) {
-      PyErr_SetString( PyExc_BufferError,
-                       "Buffer protocol is only available for host device arrays. "
-                       "Use __dlpack__ / __cuda_array_interface__ for non-host memory." );
+      PyErr_SetString(
+         PyExc_BufferError,
+         "Buffer protocol is only available for host device arrays. "
+         "Use __dlpack__ / __cuda_array_interface__ for non-host memory." );
       return -1;
    }
 
@@ -116,7 +114,7 @@ array_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
    }
 
    ArrayType* obj = nb::inst_ptr< ArrayType >( nb::handle( exporter ) );
-   BufferInfo* info = new ( std::nothrow ) BufferInfo( 1 );
+   BufferInfo* info = new( std::nothrow ) BufferInfo( 1 );
    if( info == nullptr ) {
       PyErr_NoMemory();
       return -1;
@@ -175,9 +173,10 @@ ndarray_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
    }
 
    if constexpr( ! is_host_device_v< DeviceType > ) {
-      PyErr_SetString( PyExc_BufferError,
-                       "Buffer protocol is only available for host device arrays. "
-                       "Use __dlpack__ / __cuda_array_interface__ for non-host memory." );
+      PyErr_SetString(
+         PyExc_BufferError,
+         "Buffer protocol is only available for host device arrays. "
+         "Use __dlpack__ / __cuda_array_interface__ for non-host memory." );
       return -1;
    }
 
@@ -192,7 +191,7 @@ ndarray_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
    constexpr int ndim = static_cast< int >( NDArrayType::getDimension() );
    static_assert( ndim > 0, "NDArray dimension must be positive" );
 
-   BufferInfo* info = new ( std::nothrow ) BufferInfo( ndim );
+   BufferInfo* info = new( std::nothrow ) BufferInfo( ndim );
    if( info == nullptr ) {
       PyErr_NoMemory();
       return -1;
@@ -228,9 +227,11 @@ ndarray_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
    info->strides[ static_cast< std::size_t >( ndim - 1 ) ] = itemsize_py;
    for( int i = ndim - 2; i >= 0; i-- ) {
       Py_ssize_t stride = 0;
-      if( ! checked_mul_py_ssize( info->strides[ static_cast< std::size_t >( i + 1 ) ],
-                                  info->shape[ static_cast< std::size_t >( i + 1 ) ],
-                                  stride ) ) {
+      if( ! checked_mul_py_ssize(
+             info->strides[ static_cast< std::size_t >( i + 1 ) ],
+             info->shape[ static_cast< std::size_t >( i + 1 ) ],
+             stride ) )
+      {
          delete info;
          PyErr_SetString( PyExc_OverflowError, "Stride computation overflow" );
          return -1;
@@ -279,7 +280,7 @@ static_vector_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
    }
 
    StaticVectorType* obj = nb::inst_ptr< StaticVectorType >( nb::handle( exporter ) );
-   BufferInfo* info = new ( std::nothrow ) BufferInfo( 1 );
+   BufferInfo* info = new( std::nothrow ) BufferInfo( 1 );
    if( info == nullptr ) {
       PyErr_NoMemory();
       return -1;
@@ -335,11 +336,9 @@ template< typename ArrayType >
 inline PyType_Slot*
 array_buffer_slots()
 {
-   static PyType_Slot slots[] = {
-      { Py_bf_getbuffer, reinterpret_cast< void* >( &array_getbuffer< ArrayType > ) },
-      { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
-      { 0, nullptr }
-   };
+   static PyType_Slot slots[] = { { Py_bf_getbuffer, reinterpret_cast< void* >( &array_getbuffer< ArrayType > ) },
+                                  { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
+                                  { 0, nullptr } };
    return slots;
 }
 
@@ -347,11 +346,9 @@ template< typename NDArrayType >
 inline PyType_Slot*
 ndarray_buffer_slots()
 {
-   static PyType_Slot slots[] = {
-      { Py_bf_getbuffer, reinterpret_cast< void* >( &ndarray_getbuffer< NDArrayType > ) },
-      { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
-      { 0, nullptr }
-   };
+   static PyType_Slot slots[] = { { Py_bf_getbuffer, reinterpret_cast< void* >( &ndarray_getbuffer< NDArrayType > ) },
+                                  { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
+                                  { 0, nullptr } };
    return slots;
 }
 
@@ -359,11 +356,10 @@ template< typename StaticVectorType >
 inline PyType_Slot*
 static_vector_buffer_slots()
 {
-   static PyType_Slot slots[] = {
-      { Py_bf_getbuffer, reinterpret_cast< void* >( &static_vector_getbuffer< StaticVectorType > ) },
-      { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
-      { 0, nullptr }
-   };
+   static PyType_Slot slots[] = { { Py_bf_getbuffer,
+                                    reinterpret_cast< void* >( &static_vector_getbuffer< StaticVectorType > ) },
+                                  { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
+                                  { 0, nullptr } };
    return slots;
 }
 

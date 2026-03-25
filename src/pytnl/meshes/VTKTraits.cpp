@@ -30,23 +30,27 @@ export_VTKTraits( nb::module_& m )
       .value( "Polyhedron", TNL::Meshes::VTK::EntityShape::Polyhedron );
    nb::enum_< TNL::Meshes::VTK::CellGhostTypes >( m, "VTKCellGhostTypes" )
       .value( "DUPLICATECELL", TNL::Meshes::VTK::CellGhostTypes::DUPLICATECELL, "the cell is present on multiple processors" )
-      .value( "HIGHCONNECTIVITYCELL",
-              TNL::Meshes::VTK::CellGhostTypes::HIGHCONNECTIVITYCELL,
-              "the cell has more neighbors than in a regular mesh" )
-      .value( "LOWCONNECTIVITYCELL",
-              TNL::Meshes::VTK::CellGhostTypes::LOWCONNECTIVITYCELL,
-              "the cell has less neighbors than in a regular mesh" )
+      .value(
+         "HIGHCONNECTIVITYCELL",
+         TNL::Meshes::VTK::CellGhostTypes::HIGHCONNECTIVITYCELL,
+         "the cell has more neighbors than in a regular mesh" )
+      .value(
+         "LOWCONNECTIVITYCELL",
+         TNL::Meshes::VTK::CellGhostTypes::LOWCONNECTIVITYCELL,
+         "the cell has less neighbors than in a regular mesh" )
       .value( "REFINEDCELL", TNL::Meshes::VTK::CellGhostTypes::REFINEDCELL, "other cells are present that refines it" )
       .value( "EXTERIORCELL", TNL::Meshes::VTK::CellGhostTypes::EXTERIORCELL, "the cell is on the exterior of the data set" )
-      .value( "HIDDENCELL",
-              TNL::Meshes::VTK::CellGhostTypes::HIDDENCELL,
-              "the cell is needed to maintain connectivity, but the data values "
-              "should be ignored" );
+      .value(
+         "HIDDENCELL",
+         TNL::Meshes::VTK::CellGhostTypes::HIDDENCELL,
+         "the cell is needed to maintain connectivity, but the data values "
+         "should be ignored" );
    nb::enum_< TNL::Meshes::VTK::PointGhostTypes >( m, "VTKPointGhostTypes" )
       .value(
          "DUPLICATEPOINT", TNL::Meshes::VTK::PointGhostTypes::DUPLICATEPOINT, "the cell is present on multiple processors" )
-      .value( "HIDDENPOINT",
-              TNL::Meshes::VTK::PointGhostTypes::HIDDENPOINT,
-              "the point is needed to maintain connectivity, but the data "
-              "values should be ignored" );
+      .value(
+         "HIDDENPOINT",
+         TNL::Meshes::VTK::PointGhostTypes::HIDDENPOINT,
+         "the point is needed to maintain connectivity, but the data "
+         "values should be ignored" );
 }

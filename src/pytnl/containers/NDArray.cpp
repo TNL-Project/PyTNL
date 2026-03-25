@@ -6,22 +6,23 @@
 using namespace TNL::Containers;
 
 template< std::size_t dim >
-using _ndindexer =
-   NDArrayIndexer< make_sizes_holder< IndexType, dim >,  // all sizes are set at runtime
-                   make_sizes_holder< IndexType, dim >,  // all strides are set at runtime
-                   make_sizes_holder< IndexType, dim >   // all overlaps are set at runtime
-                   //ConstStaticSizesHolder< IndexType, dim, 0 >  // ConstStaticSizesHolder does not have Python bindings
-                   >;
+using _ndindexer = NDArrayIndexer<
+   make_sizes_holder< IndexType, dim >,  // all sizes are set at runtime
+   make_sizes_holder< IndexType, dim >,  // all strides are set at runtime
+   make_sizes_holder< IndexType, dim >   // all overlaps are set at runtime
+   //ConstStaticSizesHolder< IndexType, dim, 0 >  // ConstStaticSizesHolder does not have Python bindings
+   >;
 
 template< int dim, typename T >
-using _ndarray = NDArray< T,
-                          make_sizes_holder< IndexType, dim >,
-                          std::make_index_sequence< dim >,  // identity by default
-                          TNL::Devices::Host,
-                          IndexType,
-                          make_sizes_holder< IndexType, dim >  // all overlaps are set at runtime
-                          //ConstStaticSizesHolder< IndexType, dim, 0 >  // ConstStaticSizesHolder does not have Python bindings
-                          >;
+using _ndarray = NDArray<
+   T,
+   make_sizes_holder< IndexType, dim >,
+   std::make_index_sequence< dim >,  // identity by default
+   TNL::Devices::Host,
+   IndexType,
+   make_sizes_holder< IndexType, dim >  // all overlaps are set at runtime
+   //ConstStaticSizesHolder< IndexType, dim, 0 >  // ConstStaticSizesHolder does not have Python bindings
+   >;
 
 template< int dim, typename T >
 using _ndarray_view = typename _ndarray< dim, T >::ViewType;
@@ -101,10 +102,10 @@ export_NDArray( nb::module_& m )
    export_DistributedNDArray< _distributed_ndarray_const_view< 1, RealType > >( m, "DistributedNDArrayView_1_float_const" );
    export_DistributedNDArray< _distributed_ndarray_const_view< 2, RealType > >( m, "DistributedNDArrayView_2_float_const" );
    export_DistributedNDArray< _distributed_ndarray_const_view< 3, RealType > >( m, "DistributedNDArrayView_3_float_const" );
-   export_DistributedNDArray< _distributed_ndarray_const_view< 1, ComplexType > >( m,
-                                                                                   "DistributedNDArrayView_1_complex_const" );
-   export_DistributedNDArray< _distributed_ndarray_const_view< 2, ComplexType > >( m,
-                                                                                   "DistributedNDArrayView_2_complex_const" );
-   export_DistributedNDArray< _distributed_ndarray_const_view< 3, ComplexType > >( m,
-                                                                                   "DistributedNDArrayView_3_complex_const" );
+   export_DistributedNDArray< _distributed_ndarray_const_view< 1, ComplexType > >(
+      m, "DistributedNDArrayView_1_complex_const" );
+   export_DistributedNDArray< _distributed_ndarray_const_view< 2, ComplexType > >(
+      m, "DistributedNDArrayView_2_complex_const" );
+   export_DistributedNDArray< _distributed_ndarray_const_view< 3, ComplexType > >(
+      m, "DistributedNDArrayView_3_complex_const" );
 }

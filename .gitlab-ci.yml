@@ -28,13 +28,13 @@ workflow:
   - export OMPI_ALLOW_RUN_AS_ROOT=1
   - export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 
-ruff format:
+check format:
   stage: lint
   image: "quay.io/archlinux/archlinux:base"
   before_script:
-    - pacman -Syu --needed --noconfirm ruff
+    - pacman -Syu --needed --noconfirm just ruff clang
   script:
-    - ruff format --diff
+    - just check-format
   variables:
     FORCE_COLOR: 1
 

@@ -30,11 +30,12 @@ export_MeshWriter( nb::module_& m, const char* name )
    // nb::object to avoid type casting.
    using PythonWriter = PyMeshWriter< Writer, default_format >;
    nb::class_< PythonWriter >( m, name )
-      .def( nb::init< nb::object, TNL::Meshes::VTK::FileFormat >(),
-            nb::keep_alive< 1, 2 >(),
-            nb::arg( "stream" ),
-            nb::kw_only(),
-            nb::arg( "format" ) = default_format )
+      .def(
+         nb::init< nb::object, TNL::Meshes::VTK::FileFormat >(),
+         nb::keep_alive< 1, 2 >(),
+         nb::arg( "stream" ),
+         nb::kw_only(),
+         nb::arg( "format" ) = default_format )
       .def( "writeMetadata", &Writer::writeMetadata, nb::kw_only(), nb::arg( "cycle" ) = -1, nb::arg( "time" ) = -1 )
       .def( "writeVertices", &Writer::template writeEntities< 0 > )
       .def( "writeCells", &Writer::template writeEntities<> )

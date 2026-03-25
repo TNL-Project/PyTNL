@@ -238,8 +238,7 @@ public:
       nanobind::ssize_t py_n_read;
       if( PyBytes_AsStringAndSize( read_buffer.ptr(), &read_buffer_data, &py_n_read ) == -1 ) {
          setg( 0, 0, 0 );
-         throw std::invalid_argument( "The method 'read' of the Python file object "
-                                      "did not return a string." );
+         throw std::invalid_argument( "The method 'read' of the Python file object did not return a string." );
       }
       off_type n_read = (off_type) py_n_read;
       pos_of_read_buffer_end_in_py_file += n_read;

@@ -31,28 +31,33 @@ export_DistributedMeshWriter( nb::module_& m, const char* name )
    // nb::object to avoid type casting.
    using PythonWriter = PyMeshWriter< Writer, default_format >;
    nb::class_< PythonWriter >( m, name )
-      .def( nb::init< nb::object, TNL::Meshes::VTK::FileFormat >(),
-            nb::keep_alive< 1, 2 >(),
-            nb::arg( "stream" ),
-            nb::kw_only(),
-            nb::arg( "format" ) = default_format )
+      .def(
+         nb::init< nb::object, TNL::Meshes::VTK::FileFormat >(),
+         nb::keep_alive< 1, 2 >(),
+         nb::arg( "stream" ),
+         nb::kw_only(),
+         nb::arg( "format" ) = default_format )
       .def( "writeMetadata", &Writer::writeMetadata, nb::kw_only(), nb::arg( "cycle" ) = -1, nb::arg( "time" ) = -1 )
-      .def( "writeVertices",
-            static_cast< void ( Writer::* )( const Mesh& ) >( &Writer::template writeEntities< 0 > ),
-            nb::arg( "distributedMesh" ) )
-      .def( "writeVertices",
-            static_cast< void ( Writer::* )( const LocalMesh&, unsigned, unsigned ) >( &Writer::template writeEntities< 0 > ),
-            nb::arg( "localMesh" ),
-            nb::arg( "GhostLevel" ) = 0,
-            nb::arg( "MinCommonVertices" ) = 0 )
-      .def( "writeCells",
-            static_cast< void ( Writer::* )( const Mesh& ) >( &Writer::template writeEntities<> ),
-            nb::arg( "distributedMesh" ) )
-      .def( "writeCells",
-            static_cast< void ( Writer::* )( const LocalMesh&, unsigned, unsigned ) >( &Writer::template writeEntities<> ),
-            nb::arg( "localMesh" ),
-            nb::arg( "GhostLevel" ) = 0,
-            nb::arg( "MinCommonVertices" ) = 0 )
+      .def(
+         "writeVertices",
+         static_cast< void ( Writer::* )( const Mesh& ) >( &Writer::template writeEntities< 0 > ),
+         nb::arg( "distributedMesh" ) )
+      .def(
+         "writeVertices",
+         static_cast< void ( Writer::* )( const LocalMesh&, unsigned, unsigned ) >( &Writer::template writeEntities< 0 > ),
+         nb::arg( "localMesh" ),
+         nb::arg( "GhostLevel" ) = 0,
+         nb::arg( "MinCommonVertices" ) = 0 )
+      .def(
+         "writeCells",
+         static_cast< void ( Writer::* )( const Mesh& ) >( &Writer::template writeEntities<> ),
+         nb::arg( "distributedMesh" ) )
+      .def(
+         "writeCells",
+         static_cast< void ( Writer::* )( const LocalMesh&, unsigned, unsigned ) >( &Writer::template writeEntities<> ),
+         nb::arg( "localMesh" ),
+         nb::arg( "GhostLevel" ) = 0,
+         nb::arg( "MinCommonVertices" ) = 0 )
       // INCONSISTENCY: the C++ methods writePPointData, writePCellData,
       // writePDataArray do not take the whole array as parameter, only the
       // ValueType as a template parameter. Since this does not map nicely to
@@ -110,8 +115,9 @@ export_DistributedMeshWriter( nb::module_& m, const char* name )
       // NOTE: only the overload intended for sequential writing is exported,
       // because we don't have type casters for MPI_Comm (ideally, it would be
       // compatible with the mpi4py objects)
-      .def( "addPiece",
-            static_cast< std::string ( Writer::* )( const std::string&, unsigned ) >( &Writer::addPiece ),
-            nb::arg( "mainFileName" ),
-            nb::arg( "subdomainIndex" ) );
+      .def(
+         "addPiece",
+         static_cast< std::string ( Writer::* )( const std::string&, unsigned ) >( &Writer::addPiece ),
+         nb::arg( "mainFileName" ),
+         nb::arg( "subdomainIndex" ) );
 }

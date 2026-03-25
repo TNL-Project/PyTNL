@@ -61,20 +61,22 @@ template< typename Device >
 void
 export_resolveMeshType( nb::module_& m )
 {
-   m.def( "resolveMeshType",
-          resolveMeshType< Device >,
-          nb::arg( "file_name" ),
-          nb::kw_only(),
-          nb::arg( "file_format" ) = "auto",
-          "Returns a `(reader, mesh)` pair where `reader` is initialized "
-          "with the given file name (using `getMeshReader`) and `mesh` is empty." );
+   m.def(
+      "resolveMeshType",
+      resolveMeshType< Device >,
+      nb::arg( "file_name" ),
+      nb::kw_only(),
+      nb::arg( "file_format" ) = "auto",
+      "Returns a `(reader, mesh)` pair where `reader` is initialized "
+      "with the given file name (using `getMeshReader`) and `mesh` is empty." );
 
-   m.def( "resolveAndLoadMesh",
-          resolveAndLoadMesh< Device >,
-          nb::arg( "file_name" ),
-          nb::kw_only(),
-          nb::arg( "file_format" ) = "auto",
-          "Returns a `(reader, mesh)` pair where `reader` is initialized "
-          "with the given file name (using `getMeshReader`) and `mesh` contains "
-          "the mesh loaded from the given file (using `reader.loadMesh(mesh)`)." );
+   m.def(
+      "resolveAndLoadMesh",
+      resolveAndLoadMesh< Device >,
+      nb::arg( "file_name" ),
+      nb::kw_only(),
+      nb::arg( "file_format" ) = "auto",
+      "Returns a `(reader, mesh)` pair where `reader` is initialized "
+      "with the given file name (using `getMeshReader`) and `mesh` contains "
+      "the mesh loaded from the given file (using `reader.loadMesh(mesh)`)." );
 }
