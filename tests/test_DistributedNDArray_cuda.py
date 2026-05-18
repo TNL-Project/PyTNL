@@ -529,8 +529,8 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     array_cupy = cupy.from_dlpack(array.getLocalView())
 
     # Check that the array is writable
-    # FIXME: CuPy does not have the writeable flag yet https://github.com/cupy/cupy/issues/2616
-    # assert array_cupy.flags.writeable
+    # FIXME: CuPy does not have the writeable flag yet https://github.com/cupy/cupy/issues/2616  # spellchecker:disable-line
+    # assert array_cupy.flags.writeable  # spellchecker:disable-line
 
     # Check shape
     local_shape = tuple(end - begin for begin, end in zip(local_begin, local_end))

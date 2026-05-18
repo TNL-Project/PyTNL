@@ -514,7 +514,7 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     array_np = np.from_dlpack(array.getLocalView())
 
     # Check that the array is writable
-    assert array_np.flags.writeable
+    assert array_np.flags.writeable  # spellchecker:disable-line
 
     # Check shape
     local_shape = tuple(end - begin for begin, end in zip(local_begin, local_end))
@@ -557,7 +557,7 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     # Get NumPy array from view
     view = array.getView()
     view_np = np.from_dlpack(view.getLocalView())
-    assert view_np.flags.writeable
+    assert view_np.flags.writeable  # spellchecker:disable-line
     assert view_np.shape == local_shape, f"Expected shape {local_shape}, got {view_np.shape}"
     assert view_np.dtype == array_np.dtype
     assert np.all(view_np == array_np), "Data mismatch in NumPy array from view"
@@ -565,7 +565,7 @@ def test_dlpack(shape: tuple[int, ...]) -> None:
     # Get NumPy array from const view
     const_view = array.getConstView()
     const_view_np = np.from_dlpack(const_view.getConstLocalView())
-    assert not const_view_np.flags.writeable
+    assert not const_view_np.flags.writeable  # spellchecker:disable-line
     assert const_view_np.shape == local_shape, f"Expected shape {local_shape}, got {const_view_np.shape}"
     assert const_view_np.dtype == array_np.dtype
     assert np.all(const_view_np == array_np), "Data mismatch in NumPy array from const view"

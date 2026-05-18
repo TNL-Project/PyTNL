@@ -625,7 +625,7 @@ def test_dlpack(array_type: type[A], data: st.DataObject) -> None:
     array_np = np.from_dlpack(array)
 
     # Check that the array is writable
-    assert array_np.flags.writeable
+    assert array_np.flags.writeable  # spellchecker:disable-line
 
     # Check shape
     assert array_np.shape == dims, f"Expected shape {dims}, got {array_np.shape}"
@@ -655,7 +655,7 @@ def test_dlpack(array_type: type[A], data: st.DataObject) -> None:
     # Get NumPy array from view
     view = array.getView()
     view_np = np.from_dlpack(view)
-    assert view_np.flags.writeable
+    assert view_np.flags.writeable  # spellchecker:disable-line
     assert view_np.shape == dims, f"Expected shape {dims}, got {view_np.shape}"
     assert view_np.dtype == array_np.dtype
     assert np.all(view_np == list(array)), "Data mismatch in NumPy array from view"
@@ -663,7 +663,7 @@ def test_dlpack(array_type: type[A], data: st.DataObject) -> None:
     # Get NumPy array from const view
     const_view = array.getConstView()
     const_view_np = np.from_dlpack(const_view)
-    assert not const_view_np.flags.writeable
+    assert not const_view_np.flags.writeable  # spellchecker:disable-line
     assert const_view_np.shape == dims, f"Expected shape {dims}, got {const_view_np.shape}"
     assert const_view_np.dtype == array_np.dtype
     assert np.all(const_view_np == list(array)), "Data mismatch in NumPy array from const view"

@@ -158,7 +158,7 @@ def test_array_buffer_numpy_zero_copy_writable(array_type: _ContainerTypeWithVal
     assert arr_np.shape == (n,)
     assert arr_np.dtype == expected_dtype
     assert arr_np.flags["C_CONTIGUOUS"]
-    assert arr_np.flags["WRITEABLE"]
+    assert arr_np.flags["WRITEABLE"]  # spellchecker:disable-line
 
     v1 = _first_mutated_value(value_type)
     arr_np[0] = v1
@@ -181,7 +181,7 @@ def test_array_const_view_buffer_readonly(array_type: _ContainerTypeWithValueTyp
     arr_np = np.asarray(const_view)
 
     assert mv.readonly
-    assert arr_np.flags["WRITEABLE"] is False
+    assert arr_np.flags["WRITEABLE"] is False  # spellchecker:disable-line
     assert arr_np.shape == (n,)
 
     assert isinstance(mv.format, str)
@@ -206,7 +206,7 @@ def test_vector_buffer_numpy_zero_copy_writable(vector_type: _ContainerTypeWithV
     assert arr_np.shape == (n,)
     assert arr_np.dtype == expected_dtype
     assert arr_np.flags["C_CONTIGUOUS"]
-    assert arr_np.flags["WRITEABLE"]
+    assert arr_np.flags["WRITEABLE"]  # spellchecker:disable-line
 
     v1 = _first_mutated_value(value_type)
     arr_np[2] = v1
@@ -229,7 +229,7 @@ def test_vector_const_view_buffer_readonly(vector_type: _ContainerTypeWithValueT
     arr_np = np.asarray(const_view)
 
     assert mv.readonly
-    assert arr_np.flags["WRITEABLE"] is False
+    assert arr_np.flags["WRITEABLE"] is False  # spellchecker:disable-line
     assert arr_np.shape == (n,)
 
     assert isinstance(mv.format, str)
@@ -262,7 +262,7 @@ def test_static_vector_buffer_numpy_zero_copy_writable(sv_type: _StaticVectorTyp
     assert arr_np.shape == (n,)
     assert arr_np.dtype == expected_dtype
     assert arr_np.flags["C_CONTIGUOUS"]
-    assert arr_np.flags["WRITEABLE"]
+    assert arr_np.flags["WRITEABLE"]  # spellchecker:disable-line
 
     v1 = _first_mutated_value(value_type)
     arr_np[0] = v1
@@ -298,7 +298,7 @@ def test_ndarray_buffer_numpy_shape_strides_dtype_and_zero_copy(dim: int, value_
     assert arr_np.shape == shape
     assert arr_np.dtype == expected_dtype
     assert arr_np.flags["C_CONTIGUOUS"]
-    assert arr_np.flags["WRITEABLE"]
+    assert arr_np.flags["WRITEABLE"]  # spellchecker:disable-line
 
     # Verify C-contiguous strides
     itemsize = arr_np.dtype.itemsize
@@ -344,7 +344,7 @@ def test_ndarray_const_view_buffer_readonly(dim: int, value_type: type, shape: t
     arr_np = np.asarray(const_view)
 
     assert mv.readonly
-    assert arr_np.flags["WRITEABLE"] is False
+    assert arr_np.flags["WRITEABLE"] is False  # spellchecker:disable-line
     assert arr_np.shape == shape
     assert arr_np.flags["C_CONTIGUOUS"]
 
