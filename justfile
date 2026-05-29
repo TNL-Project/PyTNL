@@ -148,6 +148,46 @@ create-pypi-release:
     printf "Pushing the sdist tarball to PyPI...\n"
     twine upload "./dist/$project-$current_version.tar.gz"
 
+# Creates a GitLab release using the glab CLI tool
+create-gitlab-release:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    just ensure-command git
+
+    # Get the current version from the last git tag
+    current_version="$(git tag --sort=version:refname | tail -n 1)"
+    if [[ -z "$current_version" ]]; then
+        printf "No current version found!\n" >&2
+        exit 1
+    fi
+
+    # Check that we are on the main branch
+    if [[ "$(git branch --show-current)" != "main" ]]; then
+        printf "You are not on the main branch!\n" >&2
+        exit 1
+    fi
+
+    # Pull the latest changes
+    git pull --tags origin
+
+    # Get the previous version (if any)
+    previous_version="$(git tag --sort=version:refname | tail -n 2 | head -n 1)"
+
+    # Prepare initial release notes (can be edited manually on GitLab)
+    release_notes="# Release notes - version $current_version\n\n"
+    if [[ -n "$previous_version" ]]; then
+        release_notes+="## Merge requests\n\n$(git log --pretty=format:"* %w(0,0,2)%b" --merges "$previous_version..$current_version")\n\n"
+        release_notes+="## Detailed changes\n\n$(git log --pretty=format:"* %s (%H)" --no-merges "$previous_version..$current_version")\n\n"
+    fi
+    # Run through echo to interpret escapes such as \n
+    release_notes="$(echo -e "$release_notes")"
+
+    just ensure-command glab
+
+    printf "Creating GitLab release %s\n" "$current_version"
+    glab release create "$current_version" --no-update --ref="$current_version" --name="$current_version" --notes="$release_notes"
+
 # Creates a tag and pushes it (if it does exist yet) and creates a release for it
 release:
     #!/usr/bin/env bash
@@ -174,3 +214,4 @@ release:
     git push origin refs/tags/"$current_version"
 
     just create-pypi-release
+    just create-gitlab-release
