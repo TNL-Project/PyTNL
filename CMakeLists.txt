@@ -121,7 +121,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(FetchContent)
 FetchContent_Declare(TNL
     GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git
-    GIT_TAG 0.2.0
+    GIT_TAG 0.3.0
     SYSTEM
     EXCLUDE_FROM_ALL
 )
