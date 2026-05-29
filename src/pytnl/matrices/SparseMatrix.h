@@ -71,9 +71,15 @@ void
 export_Segments( Scope& s, const char* name )
 {
    auto segments = nb::class_< Segments >( s, name )
-                      .def( "getSegmentsCount", &Segments::getSegmentsCount )
-                      .def( "getSegmentSize", &Segments::getSegmentSize )
-                      .def( "getSize", &Segments::getSize )
+                      .def( "getSegmentCount", &Segments::getSegmentCount )
+                      // Ellpack has a getSegmentSize overload without arguments
+                      .def(
+                         "getSegmentSize",
+                         []( const Segments& segments, typename Segments::IndexType segmentIdx ) -> typename Segments::IndexType
+                         {
+                            return segments.getSegmentSize( segmentIdx );
+                         } )
+                      .def( "getElementCount", &Segments::getElementCount )
                       .def( "getStorageSize", &Segments::getStorageSize )
                       .def( "getGlobalIndex", &Segments::getGlobalIndex )
       // FIXME: this does not compile
