@@ -92,6 +92,7 @@ export_Matrix( nb::module_& m, const char* name )
    using RealType = typename Matrix::RealType;
    using DeviceType = typename Matrix::DeviceType;
    using IndexType = typename Matrix::IndexType;
+   using ComputeRealType = typename Matrix::ComputeRealType;
 
    using VectorType = TNL::Containers::Vector< RealType, DeviceType, IndexType >;
    using IndexVectorType = TNL::Containers::Vector< IndexType, DeviceType, IndexType >;
@@ -153,7 +154,18 @@ export_Matrix( nb::module_& m, const char* name )
          // TODO: reduceRows, reduceAllRows, forElements, forAllElements,
          // forRows, forAllRows
          // TODO: export for more types
-         .def( "vectorProduct", &Matrix::template vectorProduct< VectorType, VectorType > )
+         .def(
+            "vectorProduct",
+            []( Matrix& matrix,
+                const VectorType& inVector,
+                VectorType& outVector,
+                ComputeRealType matrixMultiplicator = 1.0,
+                ComputeRealType outVectorMultiplicator = 0.0,
+                IndexType begin = 0,
+                IndexType end = 0 ) -> void
+            {
+               matrix.vectorProduct( inVector, outVector, matrixMultiplicator, outVectorMultiplicator, begin, end );
+            } )
          // TODO: these two don't work
          //.def("addMatrix",           &Matrix::addMatrix)
          //.def("getTransposition",    &Matrix::getTransposition)
