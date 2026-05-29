@@ -84,7 +84,7 @@ Arch_cmake:
 
 Arch_cmake_cuda:
   stage: build
-  image: "jlk.fjfi.cvut.cz:5000/fjfi-mmg/archlinux-cuda:latest"
+  image: "registry.gitlab.com/tnl-project/container-images/archlinux-cuda:latest"
   tags:
     - nvidia
   # don't wait for jobs in previous stages to complete before starting this job
@@ -144,7 +144,7 @@ Arch_pip:
 
 Arch_pip_cuda:
   stage: build
-  image: "jlk.fjfi.cvut.cz:5000/fjfi-mmg/archlinux-cuda:latest"
+  image: "registry.gitlab.com/tnl-project/container-images/archlinux-cuda:latest"
   tags:
     - nvidia
   # don't wait for jobs in previous stages to complete before starting this job
