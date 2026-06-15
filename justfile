@@ -1,5 +1,10 @@
 #!/usr/bin/env -S just --working-directory . --justfile
 
+# Flags for tools that do not respect the FORCE_COLOR environment variable
+
+color := if env("FORCE_COLOR", "") == "1" { "--color" } else { "" }
+color_always := if env("FORCE_COLOR", "") == "1" { "--color always" } else { "" }
+
 venv_bin := ".venv/bin"
 
 # Installs the project using pip. Since this is the first recipe it is run by default.
@@ -72,7 +77,7 @@ check-typing:
 # Checks for common spelling mistakes using typos
 check-typos:
     just _ensure-command typos
-    typos
+    typos {{ color_always }} --sort
 
 # Checks justfile recipe for shell issues using shellcheck
 check-recipe recipe:
