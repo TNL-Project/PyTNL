@@ -22,6 +22,12 @@ def main() -> None:
     except ValueError:
         print("Error: Dimensions must be integers. Exiting.")
         return
+    if rows <= 0 or cols <= 0:
+        print("Error: Dimensions must be positive. Exiting.")
+        return
+    if nnz < 0:
+        print("Error: Number of non-zero elements must be non-negative. Exiting.")
+        return
     if nnz > rows * cols:
         print(f"Error: Too many non-zero elements ({nnz}) for the matrix size ({rows}x{cols}). Exiting.")
         return
