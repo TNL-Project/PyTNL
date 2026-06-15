@@ -34,14 +34,14 @@ def main() -> None:
 
     # 2. Generating random values to fill matrice
     numbers: list[tuple[int, int, float]] = []
-    already_filled: list[tuple[int, int]] = []
+    already_filled: set[tuple[int, int]] = set()
     while len(numbers) < nnz:
         r = random.randint(0, rows - 1)
         c = random.randint(0, cols - 1)
         v = random.random()
         if (r, c) not in already_filled:
             numbers.append((r, c, v))
-            already_filled.append((r, c))
+            already_filled.add((r, c))
 
     # 3. Build CSR Matrix
     csr = CSR()
