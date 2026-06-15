@@ -83,10 +83,10 @@ check-recipes:
     just check-recipe 'create-pypi-release'
     just check-recipe 'release'
 
-# Runs all tests
-test:
+# Runs all tests (extra args are forwarded to pytest, e.g. just test -m cuda -n 0)
+test *args:
     just ensure-command pytest
-    pytest -vv
+    pytest {{ args }}
 
 # Ensures that one or more required commands are installed
 ensure-command +command:
