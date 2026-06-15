@@ -1,26 +1,13 @@
-set(src_containers
-    containers/ArrayVector.cpp
-    containers/StaticVector.cpp
-    containers/NDArray.cpp
-    containers/containers.cpp
-)
+set(src_containers containers/ArrayVector.cpp containers/StaticVector.cpp containers/NDArray.cpp containers/containers.cpp)
 nanobind_add_module(_containers ${src_containers})
-set(src_containers_cuda
-    containers/ArrayVector.cu
-    containers/NDArray.cu
-    containers/containers.cu
-)
-if (PyTNL_BUILD_CUDA)
+set(src_containers_cuda containers/ArrayVector.cu containers/NDArray.cu containers/containers.cu)
+if(PyTNL_BUILD_CUDA)
     nanobind_add_module(_containers_cuda ${src_containers_cuda})
 endif()
-set(src_matrices
-    matrices/matrices.cpp
-)
+set(src_matrices matrices/matrices.cpp)
 nanobind_add_module(matrices ${src_matrices})
-set(src_matrices_cuda
-    matrices/matrices.cu
-)
-if (PyTNL_BUILD_CUDA)
+set(src_matrices_cuda matrices/matrices.cu)
+if(PyTNL_BUILD_CUDA)
     nanobind_add_module(matrices_cuda ${src_matrices_cuda})
 endif()
 set(src_meshes
@@ -60,7 +47,7 @@ nanobind_add_module(_meshes ${src_meshes})
 target_compile_definitions(_meshes PUBLIC "-DHAVE_ZLIB -DHAVE_TINYXML2")
 target_link_libraries(_meshes PUBLIC ZLIB::ZLIB tinyxml2::tinyxml2)
 
-if (PyTNL_BUILD_CUDA)
+if(PyTNL_BUILD_CUDA)
     nanobind_add_module(_meshes_cuda ${src_meshes_cuda})
 
     # add dependencies
@@ -69,11 +56,7 @@ if (PyTNL_BUILD_CUDA)
 endif()
 
 # define a list of modules
-set(modules
-    _containers
-    matrices
-    _meshes
-)
+set(modules _containers matrices _meshes)
 
 # define a mapping for stub files
 # (needed because the stubgen in recursive mode may generate multiple files
@@ -91,15 +74,20 @@ set(module_depends_matrices _containers)
 set(module_depends__meshes _containers)
 
 # add CUDA modules
-if (PyTNL_BUILD_CUDA)
-    list(APPEND modules
-            _containers_cuda
-            matrices_cuda
-            _meshes_cuda
-    )
+if(PyTNL_BUILD_CUDA)
+    list(APPEND modules _containers_cuda matrices_cuda _meshes_cuda)
     set(module_depends__containers_cuda _containers)
     set(module_depends_matrices_cuda _containers_cuda _containers)
     set(module_depends__meshes_cuda _containers_cuda _meshes _containers)
+endif()
+
+# locate nanobind's stubgen.py (layout differs between system package and FetchContent)
+if(EXISTS ${NB_DIR}/stubgen.py)
+    set(NB_STUBGEN ${NB_DIR}/stubgen.py)
+elseif(EXISTS ${NB_DIR}/src/stubgen.py)
+    set(NB_STUBGEN ${NB_DIR}/src/stubgen.py)
+else()
+    message(FATAL_ERROR "Could not find stubgen.py under NB_DIR=${NB_DIR}")
 endif()
 
 # set common properties
@@ -118,14 +106,31 @@ foreach(target IN ITEMS ${modules})
     target_link_libraries(${target} PUBLIC MPI::MPI_CXX)
 
     # generate stub files for Python static type checking
-    nanobind_add_stub(
-        ${target}_stub
-        MODULE ${target}
-        RECURSIVE
+    #
+    # We replace nanobind_add_stub with a custom command that sets PYTHONPATH
+    # to prioritize the build directory over any installed version. This is
+    # necessary because an existing editable install would shadow the freshly
+    # built modules, causing stubgen to import the wrong (or missing) modules.
+    #
+    # We also set OpenMPI environment variables to suppress GPU accelerator
+    # detection, which can fail at build time and cause MPI_Init to abort.
+    set(_stubgen_args -q -r -m ${target})
+    foreach(_py_path $<TARGET_FILE_DIR:${target}> $<TARGET_FILE_DIR:${target}>/..)
+        list(APPEND _stubgen_args -i "${_py_path}")
+    endforeach()
+    # Use -O (output directory) instead of -o (output file) because
+    # recursive mode may produce multiple .pyi files
+    list(APPEND _stubgen_args -O "${CMAKE_CURRENT_BINARY_DIR}")
+
+    add_custom_command(
         OUTPUT ${module_stubs_${target}}
-        PYTHON_PATH $<TARGET_FILE_DIR:${target}> $<TARGET_FILE_DIR:${target}>/..
-        DEPENDS ${target} ${module_depends_${target}}
+        COMMAND
+            ${CMAKE_COMMAND} -E env PYTHONPATH=$<TARGET_FILE_DIR:${target}>/..:$<TARGET_FILE_DIR:${target}>
+            OMPI_MCA_accelerator=null ${Python_EXECUTABLE} ${NB_STUBGEN} ${_stubgen_args}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        DEPENDS ${target} ${module_depends_${target}} "${NB_STUBGEN}"
     )
+    add_custom_target(${target}_stub ALL DEPENDS ${module_stubs_${target}})
 
     # install the module
     install(TARGETS ${target} DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl)
@@ -133,16 +138,10 @@ foreach(target IN ITEMS ${modules})
     # install the stub file(s)
     list(GET module_stubs_${target} 0 _first_stub)
     get_filename_component(_module_directory ${_first_stub} DIRECTORY)
-    if (NOT _module_directory STREQUAL "")
-        install(
-            DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${_module_directory}
-            DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl
-        )
+    if(NOT _module_directory STREQUAL "")
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${_module_directory} DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl)
     else()
-        install(
-            FILES ${CMAKE_CURRENT_BINARY_DIR}/${module_stubs_${target}}
-            DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl
-        )
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${module_stubs_${target}} DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl)
     endif()
 endforeach()
 

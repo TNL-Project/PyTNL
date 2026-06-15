@@ -51,7 +51,7 @@ CAV = TypeVar(
 
 # List of array types to test
 array_types = A.__constraints__
-array_and_const_view_types = zip(array_types + array_types, AV.__constraints__ + CAV.__constraints__)
+array_and_const_view_types = list(zip(array_types + array_types, AV.__constraints__ + CAV.__constraints__))
 
 
 # ----------------------

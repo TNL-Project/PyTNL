@@ -27,12 +27,14 @@ workflow:
   # running as root does not matter inside Docker containers
   - export OMPI_ALLOW_RUN_AS_ROOT=1
   - export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+  # avoid Open MPI abort on dual-accelerator hosts or runners without GPU hardware
+  - export OMPI_MCA_accelerator=${OMPI_MCA_accelerator:-null}
 
 check format:
   stage: lint
   image: "quay.io/archlinux/archlinux:base"
   before_script:
-    - pacman -Syu --needed --noconfirm just ruff clang
+    - pacman -Syu --needed --noconfirm just ruff clang python-gersemi
   script:
     - just check-format
   variables:
@@ -89,6 +91,8 @@ Arch_cmake_cuda:
     - nvidia
   # don't wait for jobs in previous stages to complete before starting this job
   needs: []
+  variables:
+    OMPI_MCA_accelerator: "cuda"
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
     - pacman -Suy --needed --noconfirm python-numpy python-mpi4py python-cupy
@@ -149,6 +153,8 @@ Arch_pip_cuda:
     - nvidia
   # don't wait for jobs in previous stages to complete before starting this job
   needs: []
+  variables:
+    OMPI_MCA_accelerator: "cuda"
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
   script:
@@ -190,7 +196,7 @@ Python_build:
         IMAGE_TAG:
           - "3.12-alpine"
           - "3.13-alpine"
-          - "3.14-alpine"
+          - "3.14.5-alpine"
         # IPO/LTO does not work on Alpine:
         # error: inlining failed in call to 'always_inline' 'vsnprintf': function body can be overwritten at link time
         PyTNL_ENABLE_INTERPROCEDURAL_OPTIMIZATION: "OFF"
