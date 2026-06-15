@@ -203,19 +203,31 @@ if __name__ == "__main__":
             size = SIZE_ADD
             size_inp = input(f"Select vector size (enter for default: {SIZE_ADD}): ")
             if size_inp != "":
-                size = int(size_inp)
+                try:
+                    size = int(size_inp)
+                except ValueError:
+                    print("Invalid size, using default.")
+                    size = SIZE_ADD
             add_comparison(size)
         elif oper == "dotproduct" or oper == "d":
             size = SIZE_DOT
             size_inp = input(f"Select vector size (enter for default: {SIZE_DOT}): ")
             if size_inp != "":
-                size = int(size_inp)
+                try:
+                    size = int(size_inp)
+                except ValueError:
+                    print("Invalid size, using default.")
+                    size = SIZE_DOT
             dot_comparison(size)
         elif oper == "norm" or oper == "n":
             size = SIZE_NORM
             size_inp = input(f"Select vector size (enter for default: {SIZE_NORM}): ")
             if size_inp != "":
-                size = int(size_inp)
+                try:
+                    size = int(size_inp)
+                except ValueError:
+                    print("Invalid size, using default.")
+                    size = SIZE_NORM
             norm_comparison(size)
         elif oper == "all" or oper == "A":
             add_comparison(SIZE_ADD)
