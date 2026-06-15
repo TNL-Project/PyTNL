@@ -49,19 +49,19 @@ def add_comparison(size: int) -> None:
     print("\nIn vanilla python:")
     # adding in python using a for-loop
     c_py = [float(i) for i in range(size)]
-    before_time = time.time()
+    before_time = time.perf_counter()
     for i in range(size):
         c_py[i] = a[i] + b[i]
-    result_time = time.time() - before_time
+    result_time = time.perf_counter() - before_time
     print(f"TIME: {result_time} seconds")
 
     print("\nUsing TNL library (best time of three):")
     # using inbuilt __add__ method, best of three times
     result_times = []
     for _ in range(3):
-        before_time = time.time()
+        before_time = time.perf_counter()
         c_tnl = a_tnl + b_tnl  # noqa: F841
-        result_times.append(time.time() - before_time)
+        result_times.append(time.perf_counter() - before_time)
     print(f"TIME: {min(result_times)} seconds")
 
     print("\nUsing numpy (best time of three):")
@@ -70,9 +70,9 @@ def add_comparison(size: int) -> None:
     a_np = np.array(a)
     b_np = np.array(b)
     for _ in range(3):
-        before_time = time.time()
+        before_time = time.perf_counter()
         c_np = np.add(a_np, b_np)  # noqa: F841
-        result_times.append(time.time() - before_time)
+        result_times.append(time.perf_counter() - before_time)
     print(f"TIME: {min(result_times)} seconds")
     print("\n" + 50 * "*" + "\n")
 
@@ -103,10 +103,10 @@ def dot_comparison(size: int) -> None:
 
     print("\nIn vanilla python:")
     c: float = 0
-    before_time = time.time()
+    before_time = time.perf_counter()
     for i in range(size):
         c += a[i] * b[i]
-    result_time = time.time() - before_time
+    result_time = time.perf_counter() - before_time
     print(f"TIME: {result_time} seconds")
 
     # TODO update once python implementation of TNL vector dot product is available
@@ -116,9 +116,9 @@ def dot_comparison(size: int) -> None:
     a_tnl_np = np.from_dlpack(a_tnl)
     b_tnl_np = np.from_dlpack(b_tnl)
     for _ in range(3):
-        before_time = time.time()
+        before_time = time.perf_counter()
         np.vecdot(a_tnl_np, b_tnl_np)
-        result_times.append(time.time() - before_time)
+        result_times.append(time.perf_counter() - before_time)
     print(f"TIME: {min(result_times)} seconds")
 
     print("\nUsing numpy (best time of three):")
@@ -127,9 +127,9 @@ def dot_comparison(size: int) -> None:
     a_np = np.array(a)
     b_np = np.array(b)
     for _ in range(3):
-        before_time = time.time()
+        before_time = time.perf_counter()
         np.vecdot(a_np, b_np)
-        result_times.append(time.time() - before_time)
+        result_times.append(time.perf_counter() - before_time)
     print(f"TIME: {min(result_times)} seconds")
     print("\n" + 50 * "*" + "\n")
 
@@ -159,11 +159,11 @@ def norm_comparison(size: int) -> None:
     result_times: list[float]
 
     print("\nIn vanilla python:")
-    before_time = time.time()
+    before_time = time.perf_counter()
     for i in range(size):
         c_res: float = math.sqrt(sum(i * i for i in a))  # noqa: F841
         d_res: float = math.sqrt(sum(i * i for i in b))  # noqa: F841
-    result_time = time.time() - before_time
+    result_time = time.perf_counter() - before_time
     print(f"TIME: {result_time} seconds")
 
     # TODO update once python implementation of TNL vector norm is available
@@ -173,10 +173,10 @@ def norm_comparison(size: int) -> None:
     b_tnl_np = np.from_dlpack(b_tnl)
     result_times = []
     for _ in range(3):
-        before_time = time.time()
+        before_time = time.perf_counter()
         np.linalg.vector_norm(a_tnl_np)
         np.linalg.vector_norm(b_tnl_np)
-        result_times.append(time.time() - before_time)
+        result_times.append(time.perf_counter() - before_time)
     print(f"TIME: {min(result_times)} seconds")
 
     print("\nUsing numpy (best time of three):")
@@ -185,10 +185,10 @@ def norm_comparison(size: int) -> None:
     a_np = np.array(a)
     b_np = np.array(b)
     for _ in range(3):
-        before_time = time.time()
+        before_time = time.perf_counter()
         np.linalg.vector_norm(a_np)
         np.linalg.vector_norm(b_np)
-        result_times.append(time.time() - before_time)
+        result_times.append(time.perf_counter() - before_time)
     print(f"TIME: {min(result_times)} seconds")
     print("\n" + 50 * "*" + "\n")
 
