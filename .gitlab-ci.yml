@@ -27,6 +27,8 @@ workflow:
   # running as root does not matter inside Docker containers
   - export OMPI_ALLOW_RUN_AS_ROOT=1
   - export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+  # avoid Open MPI abort on dual-accelerator hosts or runners without GPU hardware
+  - export OMPI_MCA_accelerator=${OMPI_MCA_accelerator:-null}
 
 check format:
   stage: lint
@@ -89,6 +91,8 @@ Arch_cmake_cuda:
     - nvidia
   # don't wait for jobs in previous stages to complete before starting this job
   needs: []
+  variables:
+    OMPI_MCA_accelerator: "cuda"
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
     - pacman -Suy --needed --noconfirm python-numpy python-mpi4py python-cupy
@@ -149,6 +153,8 @@ Arch_pip_cuda:
     - nvidia
   # don't wait for jobs in previous stages to complete before starting this job
   needs: []
+  variables:
+    OMPI_MCA_accelerator: "cuda"
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
   script:
