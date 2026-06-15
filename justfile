@@ -38,7 +38,7 @@ check-code:
     just _ensure-command ruff
     ruff check
 
-# Checks the code formatting using clang-format and ruff
+# Checks the code formatting using clang-format, gersemi, and ruff
 check-format:
     just --unstable --fmt --check
     just _ensure-command clang-format
@@ -50,6 +50,8 @@ check-format:
          -o -name '*.cpp' \
          -o -name '*.cu' \) \
          -print0 | xargs -0 clang-format --dry-run -Werror --style file
+    just _ensure-command gersemi
+    gersemi {{ color }} --diff --check .
     just _ensure-command ruff
     ruff format --diff
 
@@ -65,6 +67,8 @@ format:
          -o -name '*.cpp' \
          -o -name '*.cu' \) \
          -print0 | xargs -0 clang-format -i --style file
+    just _ensure-command gersemi
+    gersemi {{ color }} --in-place .
     just _ensure-command ruff
     ruff format .
 

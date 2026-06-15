@@ -34,7 +34,7 @@ check format:
   stage: lint
   image: "quay.io/archlinux/archlinux:base"
   before_script:
-    - pacman -Syu --needed --noconfirm just ruff clang
+    - pacman -Syu --needed --noconfirm just ruff clang python-gersemi
   script:
     - just check-format
   variables:
