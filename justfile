@@ -1,22 +1,25 @@
 #!/usr/bin/env -S just --working-directory . --justfile
 
+venv_bin := ".venv/bin"
+
 # Installs the project using pip. Since this is the first recipe it is run by default.
 install:
-    just _ensure-command pip
-    pip install --no-build-isolation -ve .[dev,dev-cuda]
+    just _ensure-venv
+    {{ venv_bin }}/pip install scikit-build-core
+    {{ venv_bin }}/pip install --no-build-isolation -ve .[dev,dev-cuda]
 
 # Runs all checks
 check: check-format check-code check-typing check-typos check-recipes
 
 # Builds an sdist tarball of the project using python-build
 build-sdist:
-    just _ensure-command pyproject-build python
-    python -m build --sdist --no-isolation
+    just _ensure-venv
+    {{ venv_bin }}/python -m build --sdist --no-isolation
 
 # Builds a wheel of the project using python-build
 build-wheel:
-    just _ensure-command pyproject-build python
-    python -m build --wheel --no-isolation
+    just _ensure-venv
+    {{ venv_bin }}/python -m build --wheel --no-isolation
 
 # Builds a wheel and an sdist tarball of the project using python-build
 build: build-sdist build-wheel
@@ -60,12 +63,11 @@ format:
     just _ensure-command ruff
     ruff format .
 
-# Checks for typing issues using mypy
+# Checks for typing issues using pyright and mypy
 check-typing:
-    just _ensure-command basedpyright
-    basedpyright
-    just _ensure-command mypy
-    mypy
+    just _ensure-venv
+    {{ venv_bin }}/basedpyright
+    {{ venv_bin }}/mypy
 
 # Checks for common spelling mistakes using typos
 check-typos:
@@ -80,13 +82,14 @@ check-recipe recipe:
 # Checks all justfile recipes with inline bash for shell issues using shellcheck
 check-recipes:
     just check-recipe '_ensure-command command'
+    just check-recipe '_ensure-venv'
     just check-recipe 'create-pypi-release'
     just check-recipe 'release'
 
 # Runs all tests (extra args are forwarded to pytest, e.g. just test -m cuda -n 0)
 test *args:
-    just _ensure-command pytest
-    pytest {{ args }}
+    just _ensure-venv
+    {{ venv_bin }}/pytest {{ args }}
 
 # Ensures that one or more required commands are installed
 _ensure-command +command:
@@ -101,6 +104,14 @@ _ensure-command +command:
             exit 1
         fi
     done
+
+# Ensures that a virtual environment exists in .venv (run `just install` to populate it)
+_ensure-venv:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ ! -d .venv ]]; then
+        python3 -m venv .venv
+    fi
 
 # Gets the project name from the pyproject.toml
 get-project-name:
