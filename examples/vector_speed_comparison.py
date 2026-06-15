@@ -37,7 +37,7 @@ def add_comparison(size: int) -> None:
 
     for i in range(size):
         a_tnl.setElement(i, a[i])
-        b_tnl.setElement(i, a[i])
+        b_tnl.setElement(i, b[i])
 
     print(f"\nAdding vectors of size {size}:")
     print("Using the same vectors for each approach")
@@ -92,7 +92,7 @@ def dot_comparison(size: int) -> None:
 
     for i in range(size):
         a_tnl.setElement(i, a[i])
-        b_tnl.setElement(i, a[i])
+        b_tnl.setElement(i, b[i])
 
     print(f"\nDot product vectors of size {size}:")
     print("Using the same vectors for each approach")
@@ -149,7 +149,7 @@ def norm_comparison(size: int) -> None:
 
     for i in range(size):
         a_tnl.setElement(i, a[i])
-        b_tnl.setElement(i, a[i])
+        b_tnl.setElement(i, b[i])
 
     print(f"\nNormalisation of two vectors of size {size}:")
     print("Using the same vectors for each approach")
