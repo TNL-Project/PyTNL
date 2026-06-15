@@ -155,13 +155,6 @@ create-gitlab-release:
 
     just _ensure-command git
 
-    # Get the current version from the last git tag
-    current_version="$(git tag --sort=version:refname | tail -n 1)"
-    if [[ -z "$current_version" ]]; then
-        printf "No current version found!\n" >&2
-        exit 1
-    fi
-
     # Check that we are on the main branch
     if [[ "$(git branch --show-current)" != "main" ]]; then
         printf "You are not on the main branch!\n" >&2
@@ -170,6 +163,13 @@ create-gitlab-release:
 
     # Pull the latest changes
     git pull --tags origin
+
+    # Get the current version from the last git tag
+    current_version="$(git tag --sort=version:refname | tail -n 1)"
+    if [[ -z "$current_version" ]]; then
+        printf "No current version found!\n" >&2
+        exit 1
+    fi
 
     # Get the previous version (if any)
     previous_version="$(git tag --sort=version:refname | tail -n 2 | head -n 1)"
@@ -193,6 +193,18 @@ release:
     #!/usr/bin/env bash
     set -euo pipefail
 
+    just _ensure-command git
+
+    # Check that we are on the main branch
+    if [[ "$(git branch --show-current)" != "main" ]]; then
+        printf "You are not on the main branch!\n" >&2
+        exit 1
+    fi
+
+    # Pull the latest changes
+    git pull --tags origin
+
+    # Get the current version of the project
     current_version="$(just get-current-version)"
     readonly current_version="$current_version"
     if [[ -z "$current_version" ]]; then
@@ -200,18 +212,21 @@ release:
         exit 1
     fi
 
+    # Check that the tag does not exist yet
     if [[ -n "$(git tag -l "$current_version")" ]]; then
         printf "The tag %s exists already!\n" "$current_version" >&2
         exit 1
     fi
 
-    just _ensure-command git
-
+    # Create a new tag and push it
     git push origin
     printf "Creating tag %s...\n" "$current_version"
     git tag -a "$current_version" -m "version $current_version"
     printf "Pushing tag %s...\n" "$current_version"
     git push origin refs/tags/"$current_version"
 
-    just create-pypi-release
+    # Create a release on GitLab
     just create-gitlab-release
+
+    # Create a release on PyPI
+    just create-pypi-release
