@@ -102,6 +102,15 @@ if (PyTNL_BUILD_CUDA)
     set(module_depends__meshes_cuda _containers_cuda _meshes _containers)
 endif()
 
+# locate nanobind's stubgen.py (layout differs between system package and FetchContent)
+if (EXISTS ${NB_DIR}/stubgen.py)
+    set(NB_STUBGEN ${NB_DIR}/stubgen.py)
+elseif (EXISTS ${NB_DIR}/src/stubgen.py)
+    set(NB_STUBGEN ${NB_DIR}/src/stubgen.py)
+else()
+    message(FATAL_ERROR "Could not find stubgen.py under NB_DIR=${NB_DIR}")
+endif()
+
 # set common properties
 foreach(target IN ITEMS ${modules})
     # enable position-independent code
@@ -118,14 +127,31 @@ foreach(target IN ITEMS ${modules})
     target_link_libraries(${target} PUBLIC MPI::MPI_CXX)
 
     # generate stub files for Python static type checking
-    nanobind_add_stub(
-        ${target}_stub
-        MODULE ${target}
-        RECURSIVE
-        OUTPUT ${module_stubs_${target}}
-        PYTHON_PATH $<TARGET_FILE_DIR:${target}> $<TARGET_FILE_DIR:${target}>/..
-        DEPENDS ${target} ${module_depends_${target}}
+    #
+    # We replace nanobind_add_stub with a custom command that sets PYTHONPATH
+    # to prioritize the build directory over any installed version. This is
+    # necessary because an existing editable install would shadow the freshly
+    # built modules, causing stubgen to import the wrong (or missing) modules.
+    #
+    # We also set OpenMPI environment variables to suppress GPU accelerator
+    # detection, which can fail at build time and cause MPI_Init to abort.
+    set(_stubgen_args -q -r -m ${target})
+    foreach(_py_path $<TARGET_FILE_DIR:${target}> $<TARGET_FILE_DIR:${target}>/..)
+        list(APPEND _stubgen_args -i "${_py_path}")
+    endforeach()
+    # Use -O (output directory) instead of -o (output file) because
+    # recursive mode may produce multiple .pyi files
+    list(APPEND _stubgen_args -O "${CMAKE_CURRENT_BINARY_DIR}")
+
+    add_custom_command(OUTPUT ${module_stubs_${target}}
+        COMMAND ${CMAKE_COMMAND} -E env
+            PYTHONPATH=$<TARGET_FILE_DIR:${target}>/..:$<TARGET_FILE_DIR:${target}>
+            OMPI_MCA_accelerator=null
+            ${Python_EXECUTABLE} ${NB_STUBGEN} ${_stubgen_args}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        DEPENDS ${target} ${module_depends_${target}} "${NB_STUBGEN}"
     )
+    add_custom_target(${target}_stub ALL DEPENDS ${module_stubs_${target}})
 
     # install the module
     install(TARGETS ${target} DESTINATION ${PyTNL_PYTHON_SITE_PACKAGES_DIR}/pytnl)
