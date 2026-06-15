@@ -2,7 +2,7 @@
 
 # Installs the project using pip. Since this is the first recipe it is run by default.
 install:
-    just ensure-command pip
+    just _ensure-command pip
     pip install --no-build-isolation -ve .[dev,dev-cuda]
 
 # Runs all checks
@@ -10,12 +10,12 @@ check: check-format check-code check-typing check-typos check-recipes
 
 # Builds an sdist tarball of the project using python-build
 build-sdist:
-    just ensure-command pyproject-build python
+    just _ensure-command pyproject-build python
     python -m build --sdist --no-isolation
 
 # Builds a wheel of the project using python-build
 build-wheel:
-    just ensure-command pyproject-build python
+    just _ensure-command pyproject-build python
     python -m build --wheel --no-isolation
 
 # Builds a wheel and an sdist tarball of the project using python-build
@@ -27,13 +27,13 @@ clean:
 
 # Checks the code using ruff
 check-code:
-    just ensure-command ruff
+    just _ensure-command ruff
     ruff check
 
 # Checks the code formatting using clang-format and ruff
 check-format:
     just --unstable --fmt --check
-    just ensure-command clang-format
+    just _ensure-command clang-format
     # Note that find -exec always exists with 0 exit code, whereas xargs runs
     # clang-format only once and preserves its exit code.
     find ./include/ ./src/ \
@@ -42,13 +42,13 @@ check-format:
          -o -name '*.cpp' \
          -o -name '*.cu' \) \
          -print0 | xargs -0 clang-format --dry-run -Werror --style file
-    just ensure-command ruff
+    just _ensure-command ruff
     ruff format --diff
 
 # Reformats supported files using clang-format and ruff
 format:
     just --unstable --fmt
-    just ensure-command clang-format
+    just _ensure-command clang-format
     # Note that find -exec always exists with 0 exit code, whereas xargs runs
     # clang-format only once and preserves its exit code.
     find ./include/ ./src/ \
@@ -57,39 +57,39 @@ format:
          -o -name '*.cpp' \
          -o -name '*.cu' \) \
          -print0 | xargs -0 clang-format -i --style file
-    just ensure-command ruff
+    just _ensure-command ruff
     ruff format .
 
 # Checks for typing issues using mypy
 check-typing:
-    just ensure-command basedpyright
+    just _ensure-command basedpyright
     basedpyright
-    just ensure-command mypy
+    just _ensure-command mypy
     mypy
 
 # Checks for common spelling mistakes using typos
 check-typos:
-    just ensure-command typos
+    just _ensure-command typos
     typos
 
 # Checks justfile recipe for shell issues using shellcheck
 check-recipe recipe:
-    just ensure-command grep shellcheck
+    just _ensure-command grep shellcheck
     just -vv -n {{ recipe }} 2>&1 | grep -v '===> Running recipe' | shellcheck -
 
 # Checks all justfile recipes with inline bash for shell issues using shellcheck
 check-recipes:
-    just check-recipe 'ensure-command command'
+    just check-recipe '_ensure-command command'
     just check-recipe 'create-pypi-release'
     just check-recipe 'release'
 
 # Runs all tests (extra args are forwarded to pytest, e.g. just test -m cuda -n 0)
 test *args:
-    just ensure-command pytest
+    just _ensure-command pytest
     pytest {{ args }}
 
 # Ensures that one or more required commands are installed
-ensure-command +command:
+_ensure-command +command:
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -104,12 +104,12 @@ ensure-command +command:
 
 # Gets the project name from the pyproject.toml
 get-project-name:
-    just ensure-command yq
+    just _ensure-command yq
     yq -r '.project.name' pyproject.toml
 
 # Gets the current version of the project from the pyproject.toml
 get-current-version:
-    just ensure-command yq
+    just _ensure-command yq
     yq -r '.project.version' pyproject.toml
 
 # Builds a sdist tarball of the project and uploads it to PyPI using twine
@@ -130,7 +130,7 @@ create-pypi-release:
         exit 1
     fi
 
-    just ensure-command git twine # gpg glab
+    just _ensure-command git twine # gpg glab
 
     if ! git tag --points-at | grep "$current_version" >/dev/null; then
         printf "Current project version is %s, but HEAD is not the tag %s!\n" "$current_version" "$current_version" >&2
@@ -153,7 +153,7 @@ create-gitlab-release:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    just ensure-command git
+    just _ensure-command git
 
     # Get the current version from the last git tag
     current_version="$(git tag --sort=version:refname | tail -n 1)"
@@ -183,7 +183,7 @@ create-gitlab-release:
     # Run through echo to interpret escapes such as \n
     release_notes="$(echo -e "$release_notes")"
 
-    just ensure-command glab
+    just _ensure-command glab
 
     printf "Creating GitLab release %s\n" "$current_version"
     glab release create "$current_version" --no-update --ref="$current_version" --name="$current_version" --notes="$release_notes"
@@ -205,7 +205,7 @@ release:
         exit 1
     fi
 
-    just ensure-command git
+    just _ensure-command git
 
     git push origin
     printf "Creating tag %s...\n" "$current_version"
