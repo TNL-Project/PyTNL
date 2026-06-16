@@ -119,7 +119,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Find or fetch dependencies
 include(FetchContent)
-FetchContent_Declare(TNL GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git GIT_TAG 0.3.0 SYSTEM EXCLUDE_FROM_ALL)
+FetchContent_Declare(TNL GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git GIT_TAG 0.4.0 SYSTEM EXCLUDE_FROM_ALL)
 set(TNL_EXPORT_INTERFACE_TARGETS ON) # needed for adding to the interface target
 FetchContent_MakeAvailable(TNL)
 
