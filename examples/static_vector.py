@@ -1,7 +1,7 @@
 import pytnl.containers as containers
 
 
-def run_static_vector_example() -> None:
+def main() -> None:
     """Example demonstrating the usage of PyTNL StaticVector."""
     print("--- PyTNL StaticVector Example ---")
 
@@ -34,4 +34,4 @@ def run_static_vector_example() -> None:
 
 
 if __name__ == "__main__":
-    run_static_vector_example()
+    main()
