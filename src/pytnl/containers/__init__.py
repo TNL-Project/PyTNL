@@ -14,11 +14,13 @@ if TYPE_CHECKING:
 
 __all__ = [
     "Array",
+    "ArrayView",
     "DistributedNDArray",
     "NDArray",
     "NDArrayIndexer",
     "StaticVector",
     "Vector",
+    "VectorView",
 ]
 
 
@@ -119,6 +121,106 @@ class Array(metaclass=_ArrayMeta):
     - `Array[int]` → `_containers.Array_int`
     - `Array[float, devices.Cuda]` → `_containers_cuda.Array_float`
     - `Array[complex, devices.Host]` → `_containers.Array_complex`
+    """
+
+
+class _ArrayViewMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "ArrayView"
+    _template_parameters = (
+        ("value_type", type),
+        ("device_type", type),
+    )
+    _device_parameter = "device_type"
+
+    # NOTE: Python's typing `float` type accepts even `int` so the overloads
+    # "overlap" and `float` must be carefully ordered last so that pyright
+    # selects the first overload in a tie.
+    # https://stackoverflow.com/a/62734976
+
+    @overload
+    def __getitem__(  # type: ignore[overload-overlap]
+        self,
+        key: type[bool] | tuple[type[bool], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.ArrayView_bool]: ...
+
+    @overload
+    def __getitem__(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        key: type[int] | tuple[type[int], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.ArrayView_int]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[float] | tuple[type[float], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.ArrayView_float]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[complex] | tuple[type[complex], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.ArrayView_complex]: ...
+
+    @overload
+    def __getitem__(  # type: ignore[overload-overlap, no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[bool], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.ArrayView_bool]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[int], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.ArrayView_int]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[float], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.ArrayView_float]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[complex], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.ArrayView_complex]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    def __getitem__(
+        self,
+        key: type[bool | VT] | tuple[type[bool | VT], type[DT]],
+        /,
+    ) -> type[Any]:
+        if isinstance(key, tuple):
+            items = key
+        else:
+            # make a tuple of arguments, use host as the default device
+            items = (key, pytnl.devices.Host)
+        return self._get_cpp_class(items)
+
+
+class ArrayView(metaclass=_ArrayViewMeta):
+    """
+    Allows `ArrayView[value_type, device_type]` syntax to resolve to
+    the appropriate C++ `ArrayView` class.
+
+    This class provides a Python interface to C++ array views of a specific
+    value type and device type.
+
+    The `device_type` argument is optional and defaults to `pytnl.devices.Host`.
+
+    Examples:
+    - `ArrayView[int]` → `_containers.ArrayView_int`
+    - `ArrayView[float, devices.Cuda]` → `_containers_cuda.ArrayView_float`
+    - `ArrayView[complex, devices.Host]` → `_containers.ArrayView_complex`
     """
 
 
@@ -303,6 +405,92 @@ class StaticVector(metaclass=_StaticVectorMeta):
     Examples:
     - `StaticVector[3, float]` → `StaticVector_3_float`
     - `StaticVector[2, int]` → `StaticVector_2_int`
+    """
+
+
+class _VectorViewMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "VectorView"
+    _template_parameters = (
+        ("value_type", type),
+        ("device_type", type),
+    )
+    _device_parameter = "device_type"
+
+    # NOTE: Python's typing `float` type accepts even `int` so the overloads
+    # "overlap" and `float` must be carefully ordered last so that pyright
+    # selects the first overload in a tie.
+    # https://stackoverflow.com/a/62734976
+
+    @overload
+    def __getitem__(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        key: type[int] | tuple[type[int], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.VectorView_int]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[float] | tuple[type[float], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.VectorView_float]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[complex] | tuple[type[complex], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.VectorView_complex]: ...
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[int], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.VectorView_int]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[float], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.VectorView_float]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[complex], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.VectorView_complex]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    def __getitem__(
+        self,
+        key: type[VT] | tuple[type[VT], type[DT]],
+        /,
+    ) -> type[Any]:
+        if isinstance(key, tuple):
+            items = key
+        else:
+            # make a tuple of arguments, use host as the default device
+            items = (key, pytnl.devices.Host)
+        return self._get_cpp_class(items)
+
+
+class VectorView(metaclass=_VectorViewMeta):
+    """
+    Allows `VectorView[value_type, device_type]` syntax to resolve to
+    the appropriate C++ `VectorView` class.
+
+    This class provides a Python interface to C++ vector views of a specific
+    value type and device type.
+
+    The `device_type` argument is optional and defaults to `pytnl.devices.Host`.
+
+    Examples:
+    - `VectorView[int]` → `_containers.VectorView_int`
+    - `VectorView[float, devices.Cuda]` → `_containers_cuda.VectorView_float`
+    - `VectorView[complex, devices.Host]` → `_containers.VectorView_complex`
     """
 
 

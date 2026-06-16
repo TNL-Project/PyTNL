@@ -127,9 +127,19 @@ def test_pythonization() -> None:
     assert pytnl.containers.Array[int, Cuda] is _containers_cuda.Array_int
     assert pytnl.containers.Array[float, Cuda] is _containers_cuda.Array_float
     assert pytnl.containers.Array[complex, Cuda] is _containers_cuda.Array_complex
+
     assert pytnl.containers.Vector[int, Cuda] is _containers_cuda.Vector_int
     assert pytnl.containers.Vector[float, Cuda] is _containers_cuda.Vector_float
     assert pytnl.containers.Vector[complex, Cuda] is _containers_cuda.Vector_complex
+
+    assert pytnl.containers.ArrayView[bool, Cuda] is _containers_cuda.ArrayView_bool
+    assert pytnl.containers.ArrayView[int, Cuda] is _containers_cuda.ArrayView_int
+    assert pytnl.containers.ArrayView[float, Cuda] is _containers_cuda.ArrayView_float
+    assert pytnl.containers.ArrayView[complex, Cuda] is _containers_cuda.ArrayView_complex
+
+    assert pytnl.containers.VectorView[int, Cuda] is _containers_cuda.VectorView_int
+    assert pytnl.containers.VectorView[float, Cuda] is _containers_cuda.VectorView_float
+    assert pytnl.containers.VectorView[complex, Cuda] is _containers_cuda.VectorView_complex
 
 
 def test_typedefs() -> None:
@@ -144,6 +154,15 @@ def test_typedefs() -> None:
     assert pytnl.containers.Vector[int, Cuda].ValueType is int
     assert pytnl.containers.Vector[float, Cuda].ValueType is float
     assert pytnl.containers.Vector[complex, Cuda].ValueType is complex
+
+    assert pytnl.containers.ArrayView[bool, Cuda].ValueType is bool
+    assert pytnl.containers.ArrayView[int, Cuda].ValueType is int
+    assert pytnl.containers.ArrayView[float, Cuda].ValueType is float
+    assert pytnl.containers.ArrayView[complex, Cuda].ValueType is complex
+
+    assert pytnl.containers.VectorView[int, Cuda].ValueType is int
+    assert pytnl.containers.VectorView[float, Cuda].ValueType is float
+    assert pytnl.containers.VectorView[complex, Cuda].ValueType is complex
 
 
 @pytest.mark.parametrize("array_type", array_types)
