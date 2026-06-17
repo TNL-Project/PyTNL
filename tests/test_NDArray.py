@@ -7,7 +7,7 @@ import pytest
 
 import pytnl._containers
 from pytnl._meta import DIMS, VT, is_dim_guard
-from pytnl.containers import NDArray
+from pytnl.containers import NDArray, NDArrayView
 
 # Type alias for indexer types
 type Indexer = pytnl._containers.NDArrayIndexer_1 | pytnl._containers.NDArrayIndexer_2 | pytnl._containers.NDArrayIndexer_3
@@ -59,6 +59,29 @@ def test_typedefs(dim: DIMS, value_type: type[VT]) -> None:
     # Test IndexType
     assert indexer_type.IndexType is int
     assert ndarray_class.IndexType is int
+
+
+@pytest.mark.parametrize("dim, value_type", TYPEDEFS_PARAMS)
+def test_ndarrayview_pythonization(dim: DIMS, value_type: type[VT]) -> None:
+    ndarray_view_class = NDArrayView[dim, value_type]  # type: ignore[type-arg,valid-type]
+    expected_name = f"NDArrayView_{dim}_{value_type.__name__}"
+    expected_class = cast(type[Any], getattr(pytnl._containers, expected_name))
+    assert ndarray_view_class is expected_class, f"NDArrayView[{dim}, {value_type.__name__}] dispatch failed"
+
+    # Verify that NDArray.getView() returns the correct NDArrayView type
+    ndarray_class = NDArray[dim, value_type]  # type: ignore[type-arg,valid-type]
+    a = ndarray_class()
+    a.setSizes(tuple(1 for _ in range(dim)))  # pyright: ignore[reportArgumentType,reportCallIssue]
+    view = a.getView()
+    assert isinstance(view, ndarray_view_class)
+
+
+@pytest.mark.parametrize("dim, value_type", TYPEDEFS_PARAMS)
+def test_ndarrayview_typedefs(dim: DIMS, value_type: type[VT]) -> None:
+    ndarray_view_class = NDArrayView[dim, value_type]  # type: ignore[type-arg,valid-type]
+
+    assert ndarray_view_class.ValueType is value_type
+    assert ndarray_view_class.IndexType is int
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)

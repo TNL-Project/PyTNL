@@ -11,8 +11,13 @@ import pytest
 
 import pytnl._containers
 from pytnl._meta import DIMS, VT, is_dim_guard
-from pytnl.containers import NDArray
+from pytnl.containers import NDArray, NDArrayView
 from pytnl.devices import Cuda
+
+if TYPE_CHECKING:
+    import pytnl._containers_cuda as _containers_cuda
+else:
+    _containers_cuda = pytest.importorskip("pytnl._containers_cuda")
 
 # Mark all tests in this module
 pytestmark = pytest.mark.cuda
@@ -67,6 +72,28 @@ def test_typedefs(dim: DIMS, value_type: type[VT]) -> None:
     # Test IndexType
     assert indexer_type.IndexType is int
     assert ndarray_class.IndexType is int
+
+
+@pytest.mark.parametrize("dim, value_type", TYPEDEFS_PARAMS)
+def test_ndarrayview_pythonization(dim: DIMS, value_type: type[VT]) -> None:
+    ndarray_view_class = NDArrayView[dim, value_type, Cuda]  # type: ignore[type-arg,valid-type]
+    expected_name = f"NDArrayView_{dim}_{value_type.__name__}"
+    expected_class = cast(type[Any], getattr(_containers_cuda, expected_name))
+    assert ndarray_view_class is expected_class, f"NDArrayView[{dim}, {value_type.__name__}, Cuda] dispatch failed"
+
+    ndarray_class = NDArray[dim, value_type, Cuda]  # type: ignore[type-arg,valid-type]
+    a = ndarray_class()
+    a.setSizes(tuple(1 for _ in range(dim)))  # type: ignore[arg-type]
+    view = a.getView()
+    assert isinstance(view, ndarray_view_class)
+
+
+@pytest.mark.parametrize("dim, value_type", TYPEDEFS_PARAMS)
+def test_ndarrayview_typedefs(dim: DIMS, value_type: type[VT]) -> None:
+    ndarray_view_class = NDArrayView[dim, value_type, Cuda]  # type: ignore[type-arg,valid-type]
+
+    assert ndarray_view_class.ValueType is value_type
+    assert ndarray_view_class.IndexType is int
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)

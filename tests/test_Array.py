@@ -116,9 +116,19 @@ def test_pythonization() -> None:
     assert pytnl.containers.Array[int] is pytnl._containers.Array_int
     assert pytnl.containers.Array[float] is pytnl._containers.Array_float
     assert pytnl.containers.Array[complex] is pytnl._containers.Array_complex
+
     assert pytnl.containers.Vector[int] is pytnl._containers.Vector_int
     assert pytnl.containers.Vector[float] is pytnl._containers.Vector_float
     assert pytnl.containers.Vector[complex] is pytnl._containers.Vector_complex
+
+    assert pytnl.containers.ArrayView[bool] is pytnl._containers.ArrayView_bool
+    assert pytnl.containers.ArrayView[int] is pytnl._containers.ArrayView_int
+    assert pytnl.containers.ArrayView[float] is pytnl._containers.ArrayView_float
+    assert pytnl.containers.ArrayView[complex] is pytnl._containers.ArrayView_complex
+
+    assert pytnl.containers.VectorView[int] is pytnl._containers.VectorView_int
+    assert pytnl.containers.VectorView[float] is pytnl._containers.VectorView_float
+    assert pytnl.containers.VectorView[complex] is pytnl._containers.VectorView_complex
 
 
 def test_typedefs() -> None:
@@ -133,6 +143,15 @@ def test_typedefs() -> None:
     assert pytnl.containers.Vector[int].ValueType is int
     assert pytnl.containers.Vector[float].ValueType is float
     assert pytnl.containers.Vector[complex].ValueType is complex
+
+    assert pytnl.containers.ArrayView[bool].ValueType is bool
+    assert pytnl.containers.ArrayView[int].ValueType is int
+    assert pytnl.containers.ArrayView[float].ValueType is float
+    assert pytnl.containers.ArrayView[complex].ValueType is complex
+
+    assert pytnl.containers.VectorView[int].ValueType is int
+    assert pytnl.containers.VectorView[float].ValueType is float
+    assert pytnl.containers.VectorView[complex].ValueType is complex
 
 
 @pytest.mark.parametrize("array_type", array_types)
