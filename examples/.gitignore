@@ -1,0 +1,3 @@
+# Compiled benchmark binaries
+benchmark_ode_cpu
+benchmark_ode_cuda
