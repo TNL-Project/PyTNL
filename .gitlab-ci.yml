@@ -69,7 +69,7 @@ Arch_cmake:
   needs: []
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
-    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py
+    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py python-numba
     - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis
   script:
     - *env_setup
@@ -95,7 +95,7 @@ Arch_cmake_cuda:
     OMPI_MCA_accelerator: "cuda"
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
-    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py python-cupy
+    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py python-numba python-cupy python-numba-cuda
     - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis
   script:
     - *env_setup
@@ -117,7 +117,7 @@ Arch_python_build:
   needs: []
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
-    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py
+    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py python-numba
     - pacman -Suy --needed --noconfirm python-build python-installer python-scikit-build-core
     - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis
   script:
@@ -161,7 +161,7 @@ Arch_pip_cuda:
     - *env_setup
     - python -m venv .venv
     - source .venv/bin/activate
-    - python -m pip install .[dev,dev-cuda] -v
+    - python -m pip install .[dev,cuda] -v
     - pytest -m cuda -n 0
     - mpirun -np 2 pytest -m "mpi and cuda" -n 0
     - mypy
@@ -216,7 +216,7 @@ Ubuntu_cmake:
     - apt update
     - apt -y install build-essential git cmake ninja-build
     - apt -y install python3-dev libopenmpi-dev
-    #- apt -y install python3-numpy python3-mpi4py
+    #- apt -y install python3-numpy python3-mpi4py python3-numba
     - apt -y install python3-pytest python3-pytest-xdist python3-psutil python3-hypothesis
     - apt -y install python3-venv
   script:
@@ -227,7 +227,7 @@ Ubuntu_cmake:
     # FIXME: hack because docker.io/library/ubuntu:rolling has old numpy version (2.2.4)
     - python3 -m venv --system-site-packages .venv
     - source .venv/bin/activate
-    - python3 -m pip install numpy>=2.2.5 mpi4py
+    - python3 -m pip install numpy>=2.2.5 mpi4py numba
     - python3 -m pytest
     - mpirun -np 2 python3 -m pytest -m mpi -n 0
   parallel:

@@ -11,7 +11,7 @@ venv_bin := ".venv/bin"
 install:
     just _ensure-venv
     {{ venv_bin }}/pip install scikit-build-core
-    {{ venv_bin }}/pip install --no-build-isolation -ve .[dev,dev-cuda]
+    {{ venv_bin }}/pip install --no-build-isolation -ve .[dev,cuda]
 
 # Runs all checks
 check: check-format check-code check-typing check-typos check-recipes
