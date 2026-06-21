@@ -17,6 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=2.2.5", # older versions never set the writeable flag in np.from_dlpack()
+    "mpi4py",
 ]
 
 [project.urls]
@@ -25,17 +26,19 @@ Repository = "https://gitlab.com/tnl-project/pytnl"
 Issues = "https://gitlab.com/tnl-project/pytnl/-/issues"
 
 [project.optional-dependencies]
+cuda = ["cupy-cuda13x", "numba-cuda[cu13]"]
 dev = [
     "hypothesis",
     "pytest",
     "pytest-xdist[psutil]",
     "ruff",
-    "mpi4py",
     "basedmypy",
     "basedpyright",
 ]
 docs = ["mkdocs", "mkdocs-material"]
-dev-cuda = ["cupy-cuda13x"]
+examples = [
+    "numba" # not available on Alpine (musl) — llvmlite has no musllinux wheels
+]
 
 [build-system]
 requires = ["scikit-build-core>=0.10"]
