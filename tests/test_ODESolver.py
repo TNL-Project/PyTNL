@@ -4,52 +4,32 @@ from typing import Any
 import pytest
 
 from pytnl.containers import Vector
-from pytnl.solvers import (
-    SSPRK3,
-    BogackiShampin,
-    CashKarp,
-    DormandPrince,
-    Euler,
-    Fehlberg2,
-    Fehlberg5,
-    Heun2,
-    Heun3,
-    Kutta,
-    KuttaMerson,
-    Midpoint,
-    ODESolver,
-    OriginalRungeKutta,
-    Ralston2,
-    Ralston3,
-    Ralston4,
-    Rule38,
-    VanDerHouwenWray,
-)
+from pytnl.solvers import ODESolver, ode_methods
 
 # Non-adaptive methods (fixed step only)
 NON_ADAPTIVE_METHODS = [
-    Euler,
-    OriginalRungeKutta,
-    Midpoint,
-    Heun3,
-    Kutta,
-    Ralston2,
-    Ralston3,
-    Ralston4,
-    Rule38,
-    SSPRK3,
-    VanDerHouwenWray,
+    ode_methods.Euler,
+    ode_methods.OriginalRungeKutta,
+    ode_methods.Midpoint,
+    ode_methods.Heun3,
+    ode_methods.Kutta,
+    ode_methods.Ralston2,
+    ode_methods.Ralston3,
+    ode_methods.Ralston4,
+    ode_methods.Rule38,
+    ode_methods.SSPRK3,
+    ode_methods.VanDerHouwenWray,
 ]
 
 # Adaptive methods (support setAdaptivity)
 ADAPTIVE_METHODS = [
-    DormandPrince,
-    CashKarp,
-    KuttaMerson,
-    Fehlberg2,
-    Fehlberg5,
-    BogackiShampin,
-    Heun2,
+    ode_methods.DormandPrince,
+    ode_methods.CashKarp,
+    ode_methods.KuttaMerson,
+    ode_methods.Fehlberg2,
+    ode_methods.Fehlberg5,
+    ode_methods.BogackiShampin,
+    ode_methods.Heun2,
 ]
 
 
@@ -152,8 +132,8 @@ def test_heat_equation_adaptive(method: type) -> None:
 
 
 def test_solver_properties() -> None:
-    """Verify getter/setter pairs and isStatic on ODESolver[Euler]."""
-    solver = ODESolver[Euler]()
+    """Verify getter/setter pairs and isStatic on ODESolver[ode_methods.Euler]."""
+    solver = ODESolver[ode_methods.Euler]()
 
     solver.setTime(1.5)
     assert solver.getTime() == 1.5
@@ -170,4 +150,44 @@ def test_solver_properties() -> None:
     solver.setAdaptivity(0.001)
     assert solver.getAdaptivity() == 0.001
 
-    assert not ODESolver[Euler].isStatic()
+    assert not ODESolver[ode_methods.Euler].isStatic()
+
+
+def test_iterate() -> None:
+    """Verify init() + iterate() advances the solution by one time step."""
+    n = 11
+    h = 1.0 / (n - 1)
+    tau = 0.1 * h * h
+    h_sqr_inv = 1.0 / (h * h)
+
+    u = Vector[float](n)
+    for i in range(n):
+        x = i * h
+        u[i] = 1.0 if 0.4 <= x <= 0.6 else 0.0
+
+    u_initial = [u[i] for i in range(n)]
+    rhs = _make_rhs(n, h_sqr_inv)
+
+    solver = ODESolver[ode_methods.Euler]()
+    solver.setTau(tau)
+    solver.setTime(0.0)
+    solver.setStopTime(tau)
+    solver.init(u)
+
+    assert solver.getTime() == 0.0
+    assert solver.getIterations() == 0
+
+    solver.iterate(u, rhs)
+
+    assert solver.getTime() == pytest.approx(tau), "iterate did not advance time by tau"
+    assert solver.getIterations() == 1, "iterate did not increment iteration counter"
+
+    u_after = [u[i] for i in range(n)]
+    assert u_after != u_initial, "iterate did not modify the solution"
+
+
+def test_get_method() -> None:
+    """Verify getMethod() returns the underlying method object."""
+    solver = ODESolver[ode_methods.Euler]()
+    method = solver.getMethod()
+    assert type(method) is ode_methods.Euler

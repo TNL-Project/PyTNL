@@ -29,7 +29,7 @@ from numba import cuda, jit, prange
 
 from pytnl import devices
 from pytnl.containers import Vector
-from pytnl.solvers import Fehlberg2, ODESolver
+from pytnl.solvers import ODESolver, ode_methods
 
 
 @jit(nopython=True, parallel=True, fastmath=True)
@@ -126,7 +126,7 @@ def main() -> None:
     rhs_cpu(0.0, tau, warm_u_cpu.getView(), warm_fu_cpu.getView())
 
     # --- GPU solve ---
-    solver_gpu = ODESolver[Fehlberg2, devices.Cuda]()
+    solver_gpu = ODESolver[ode_methods.Fehlberg2, devices.Cuda]()
     solver_gpu.setTau(tau)
     solver_gpu.setTime(0.0)
     solver_gpu.setAdaptivity(adaptivity)
@@ -142,7 +142,7 @@ def main() -> None:
     gpu_iterations = solver_gpu.getIterations()
 
     # --- CPU solve ---
-    solver_cpu = ODESolver[Fehlberg2]()
+    solver_cpu = ODESolver[ode_methods.Fehlberg2]()
     solver_cpu.setTau(tau)
     solver_cpu.setTime(0.0)
     solver_cpu.setAdaptivity(adaptivity)

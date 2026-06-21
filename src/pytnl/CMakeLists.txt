@@ -42,7 +42,7 @@ set(src_meshes_cuda
     meshes/meshes.cu
 )
 nanobind_add_module(_meshes ${src_meshes})
-set(src_solvers solvers/solvers.cpp)
+set(src_solvers solvers/ode_methods.cpp solvers/solvers.cpp)
 nanobind_add_module(_solvers ${src_solvers})
 set(src_solvers_cuda solvers/solvers.cu)
 if(PyTNL_BUILD_CUDA)
@@ -73,7 +73,7 @@ set(module_stubs_matrices matrices.pyi)
 set(module_stubs_matrices_cuda matrices_cuda.pyi)
 set(module_stubs__meshes _meshes/__init__.pyi _meshes/topologies.pyi)
 set(module_stubs__meshes_cuda _meshes_cuda.pyi)
-set(module_stubs__solvers _solvers.pyi)
+set(module_stubs__solvers _solvers/__init__.pyi _solvers/ode_methods.pyi)
 set(module_stubs__solvers_cuda _solvers_cuda.pyi)
 
 # define a mapping for dependencies between the modules

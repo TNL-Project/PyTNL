@@ -58,6 +58,11 @@ NB_MODULE( _solvers_cuda, m )
    // (no device template parameter) and are already registered in
    // pytnl._solvers. The ODESolver classes below inherit from the
    // ExplicitSolver base class found via the import above.
+   //
+   // Method types (Euler, DormandPrince, etc.) are also not re-registered
+   // here. They use the same RealType (double) in both modules, so the types
+   // registered by export_ode_methods() in pytnl._solvers are reused. Calling
+   // export_ode_methods() again would cause a duplicate-registration error.
 
    export_ODESolver< BogackiShampin, Vector >( m, "ODESolver_BogackiShampin" );
    export_ODESolver< CashKarp, Vector >( m, "ODESolver_CashKarp" );

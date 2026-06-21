@@ -11,7 +11,7 @@ import pytest
 
 from pytnl import devices
 from pytnl.containers import Vector
-from pytnl.solvers import Euler, ODESolver
+from pytnl.solvers import ODESolver, ode_methods
 
 from .test_ODESolver import ADAPTIVE_METHODS, NON_ADAPTIVE_METHODS, _make_rhs
 
@@ -104,8 +104,8 @@ def test_heat_equation_adaptive(method: type) -> None:
 
 
 def test_solver_properties_cuda() -> None:
-    """Verify getter/setter pairs and isStatic on ODESolver[Euler, devices.Cuda]."""
-    solver = ODESolver[Euler, devices.Cuda]()
+    """Verify getter/setter pairs and isStatic on ODESolver[ode_methods.Euler, devices.Cuda]."""
+    solver = ODESolver[ode_methods.Euler, devices.Cuda]()
 
     solver.setTime(1.5)
     assert solver.getTime() == 1.5
@@ -122,13 +122,13 @@ def test_solver_properties_cuda() -> None:
     solver.setAdaptivity(0.001)
     assert solver.getAdaptivity() == 0.001
 
-    assert not ODESolver[Euler, devices.Cuda].isStatic()
+    assert not ODESolver[ode_methods.Euler, devices.Cuda].isStatic()
 
 
 def test_module_dispatch() -> None:
-    """Verify ODESolver[Euler] resolves to Host module and ODESolver[Euler, Cuda] to CUDA module."""
-    host_cls = ODESolver[Euler]
-    cuda_cls = ODESolver[Euler, devices.Cuda]
+    """Verify ODESolver[ode_methods.Euler] resolves to Host module and ODESolver[ode_methods.Euler, Cuda] to CUDA module."""
+    host_cls = ODESolver[ode_methods.Euler]
+    cuda_cls = ODESolver[ode_methods.Euler, devices.Cuda]
 
     assert host_cls.__module__ == "pytnl._solvers"
     assert cuda_cls.__module__ == "pytnl._solvers_cuda"
@@ -136,7 +136,7 @@ def test_module_dispatch() -> None:
 
 
 def test_numba_cuda_jit_rhs() -> None:
-    """ODESolver[Euler, devices.Cuda] with numba @cuda.jit RHS kernel via DLPack.
+    """ODESolver[ode_methods.Euler, devices.Cuda] with numba @cuda.jit RHS kernel via DLPack.
 
     This test exercises the actual GPU-accelerated RHS path: the solver passes
     CUDA VectorView objects to the Python callback, which launches a numba
@@ -200,7 +200,7 @@ def test_numba_cuda_jit_rhs() -> None:
     nb_cuda.synchronize()
 
     # Solve on GPU with numba @cuda.jit RHS
-    solver_gpu = ODESolver[Euler, devices.Cuda]()
+    solver_gpu = ODESolver[ode_methods.Euler, devices.Cuda]()
     solver_gpu.setTau(tau)
     solver_gpu.setTime(0.0)
     solver_gpu.setStopTime(final_t)
@@ -210,7 +210,7 @@ def test_numba_cuda_jit_rhs() -> None:
     assert result, "CUDA solver with numba @cuda.jit RHS did not converge"
 
     # Solve on CPU for comparison
-    solver_cpu = ODESolver[Euler]()
+    solver_cpu = ODESolver[ode_methods.Euler]()
     solver_cpu.setTau(tau)
     solver_cpu.setTime(0.0)
     solver_cpu.setStopTime(final_t)

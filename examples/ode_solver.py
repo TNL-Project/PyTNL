@@ -1,7 +1,7 @@
 from typing import Any
 
 from pytnl.containers import Vector
-from pytnl.solvers import DormandPrince, Euler, ODESolver
+from pytnl.solvers import ODESolver, ode_methods
 
 
 def main() -> None:
@@ -36,7 +36,7 @@ def main() -> None:
             u_dp[i] = 0.0
 
     # --- Euler (fixed step) ---
-    solver_euler = ODESolver[Euler]()
+    solver_euler = ODESolver[ode_methods.Euler]()
     solver_euler.setTau(tau)
     solver_euler.setTime(0.0)
 
@@ -52,7 +52,7 @@ def main() -> None:
     print(f"  Euler:   t={solver_euler.getTime():.4f}, max={max(u_euler):.6f}, u[0]={u_euler[0]}, u[{n - 1}]={u_euler[n - 1]}")
 
     # --- DormandPrince (adaptive) ---
-    solver_dp = ODESolver[DormandPrince]()
+    solver_dp = ODESolver[ode_methods.DormandPrince]()
     solver_dp.setTau(tau)
     solver_dp.setTime(0.0)
     solver_dp.setAdaptivity(adaptivity)

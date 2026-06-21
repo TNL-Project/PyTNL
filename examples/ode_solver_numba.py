@@ -7,7 +7,7 @@ from typing import Any
 from numba import jit
 
 from pytnl.containers import Vector
-from pytnl.solvers import DormandPrince, Euler, ODESolver
+from pytnl.solvers import ODESolver, ode_methods
 
 
 @jit(nopython=True)
@@ -52,7 +52,7 @@ def main() -> None:
     def run_solver(rhs_func: Any, label: str) -> tuple[Any, float]:  # noqa: ANN401
         u = Vector[float](n)
         init(u)
-        solver = ODESolver[Euler]()
+        solver = ODESolver[ode_methods.Euler]()
         solver.setTau(tau)
         solver.setTime(0.0)
         start = time.perf_counter()
@@ -85,7 +85,7 @@ def main() -> None:
 
     u_dp = Vector[float](n)
     init(u_dp)
-    solver_dp = ODESolver[DormandPrince]()
+    solver_dp = ODESolver[ode_methods.DormandPrince]()
     solver_dp.setTau(tau)
     solver_dp.setTime(0.0)
     solver_dp.setAdaptivity(adaptivity)

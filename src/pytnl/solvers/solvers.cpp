@@ -45,6 +45,9 @@ using Rule38 = TNL::Solvers::ODE::Methods::Rule38< RealType >;
 using SSPRK3 = TNL::Solvers::ODE::Methods::SSPRK3< RealType >;
 using VanDerHouwenWray = TNL::Solvers::ODE::Methods::VanDerHouwenWray< RealType >;
 
+void
+export_ode_methods( nb::module_& m );
+
 // Python module definition
 NB_MODULE( _solvers, m )
 {
@@ -56,6 +59,8 @@ NB_MODULE( _solvers, m )
    export_IterativeSolver< RealType, IndexType >( m, "IterativeSolver_float_int" );
 
    export_ExplicitSolver< RealType, IndexType >( m, "ExplicitSolver_float_int" );
+
+   export_ode_methods( m );
 
    export_ODESolver< BogackiShampin, Vector >( m, "ODESolver_BogackiShampin" );
    export_ODESolver< CashKarp, Vector >( m, "ODESolver_CashKarp" );
