@@ -53,7 +53,7 @@ if(PyTNL_USE_CUDA)
     check_language(CUDA)
     if(CMAKE_CUDA_COMPILER)
         enable_language(CUDA)
-        set(PyTNL_BUILD_CUDA TRUE)
+        set(PyTNL_BUILD_CUDA TRUE CACHE BOOL "Whether CUDA modules are being built" FORCE)
 
         # Set C++ standard
         set(CMAKE_CUDA_STANDARD 17)
@@ -72,7 +72,15 @@ if(PyTNL_USE_CUDA)
         # nanobind sets only the CXX_VISIBILITY_PRESET cmake target property to hidden,
         # which does not affect intermediate CUDA objects
         set(CMAKE_CUDA_VISIBILITY_PRESET hidden)
+
+        message(STATUS "PyTNL: CUDA support enabled (arch: ${CMAKE_CUDA_ARCHITECTURES})")
+    else()
+        set(PyTNL_BUILD_CUDA FALSE CACHE BOOL "Whether CUDA modules are being built" FORCE)
+        message(STATUS "PyTNL: CUDA support disabled (no CUDA compiler found)")
     endif()
+else()
+    set(PyTNL_BUILD_CUDA FALSE CACHE BOOL "Whether CUDA modules are being built" FORCE)
+    message(STATUS "PyTNL: CUDA support disabled (PyTNL_USE_CUDA=OFF)")
 endif()
 
 # make cache variable so it can be used in downstream projects

@@ -7,11 +7,29 @@ color_always := if env("FORCE_COLOR", "") == "1" { "--color always" } else { "" 
 
 venv_bin := ".venv/bin"
 
-# Installs the project using pip. Since this is the first recipe it is run by default.
-install:
+# Note: The first recipe is run by default.
+
+# Installs the project using pip (Default includes CUDA; pass "host" for CPU-only)
+install variant="cuda":
+    #!/usr/bin/env bash
+    set -euo pipefail
     just _ensure-venv
     {{ venv_bin }}/pip install scikit-build-core
-    {{ venv_bin }}/pip install --no-build-isolation -ve .[dev,cuda]
+    variant="{{ variant }}"
+    case "$variant" in
+        cuda)
+            {{ venv_bin }}/pip install --no-build-isolation -ve '.[dev,cuda]' \
+                -C cmake.define.PyTNL_USE_CUDA=ON
+            ;;
+        host)
+            {{ venv_bin }}/pip install --no-build-isolation -ve '.[dev]' \
+                -C cmake.define.PyTNL_USE_CUDA=OFF
+            ;;
+        *)
+            echo "Unknown variant '$variant'. Use 'cuda' (default) or 'host'." >&2
+            exit 1
+            ;;
+    esac
 
 # Runs all checks
 check: check-format check-code check-typing check-typos check-recipes
@@ -90,6 +108,7 @@ check-recipe recipe:
 
 # Checks all justfile recipes with inline bash for shell issues using shellcheck
 check-recipes:
+    just check-recipe 'install'
     just check-recipe '_ensure-command command'
     just check-recipe '_ensure-venv'
     just check-recipe 'create-pypi-release'
