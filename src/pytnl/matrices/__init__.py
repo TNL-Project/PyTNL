@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     import pytnl._matrices_cuda as _matrices_cuda  # type: ignore[import-not-found, unused-ignore]
 
 __all__ = [
+    "DenseMatrix",
+    "DenseMatrixConstRowView",
+    "DenseMatrixRowView",
     "SparseMatrix",
     "SparseMatrixConstRowView",
     "SparseMatrixRowView",
@@ -111,6 +114,66 @@ class _SparseMatrixMeta(pytnl._meta.CPPClassTemplate):
         return self._get_cpp_class(items)
 
 
+class _DenseMatrixMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._matrices
+    _class_prefix = "DenseMatrix"
+    _template_parameters = (
+        ("value_type", type),
+        ("device_type", type),
+    )
+    _device_parameter = "device_type"
+
+    @overload
+    def __getitem__(self, key: type[float], /) -> type[pytnl._matrices.DenseMatrix_float]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: tuple[type[float], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._matrices.DenseMatrix_float]: ...
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[float], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_matrices_cuda.DenseMatrix_float]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    def __getitem__(
+        self,
+        key: type[Any] | tuple[type[Any], type[Any]],
+        /,
+    ) -> type[Any]:
+        if not isinstance(key, tuple):
+            # DenseMatrix[float] → default device=Host
+            items: tuple[Any, ...] = (key, pytnl.devices.Host)
+        else:
+            # DenseMatrix[float, Host] / DenseMatrix[float, Cuda]
+            items = key
+
+        value_type = items[0]
+        if value_type is not float:
+            raise TypeError(f"DenseMatrix supports only float value type, got {value_type.__name__}")
+        return self._get_cpp_class(items)
+
+
+class DenseMatrix(metaclass=_DenseMatrixMeta):
+    """
+    Allows `DenseMatrix[value_type, device_type]` syntax to resolve to
+    the appropriate C++ dense matrix class.
+
+    Only `float` (C++ `double`) is supported as the value type. Other types
+    like `int` or `complex` will raise `TypeError`.
+
+    The `device_type` argument is optional and defaults to `pytnl.devices.Host`.
+
+    Examples:
+    - `DenseMatrix[float]` → DenseMatrix on Host
+    - `DenseMatrix[float, devices.Cuda]` → DenseMatrix on Cuda
+    """
+
+
 class SparseMatrix(metaclass=_SparseMatrixMeta):
     """
     Allows `SparseMatrix[value_type, device_type, format]` syntax to resolve to
@@ -135,6 +198,8 @@ class SparseMatrix(metaclass=_SparseMatrixMeta):
 
 
 # Re-export helper types from the C++ module
+DenseMatrixRowView = pytnl._matrices.DenseMatrixRowView
+DenseMatrixConstRowView = pytnl._matrices.DenseMatrixConstRowView
 SparseMatrixRowView = pytnl._matrices.SparseMatrixRowView
 SparseMatrixConstRowView = pytnl._matrices.SparseMatrixConstRowView
 copySparseMatrix = pytnl._matrices.copySparseMatrix
