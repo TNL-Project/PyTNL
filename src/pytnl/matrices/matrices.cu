@@ -4,9 +4,11 @@
 #include <TNL/Algorithms/Segments/CSR.h>
 #include <TNL/Algorithms/Segments/Ellpack.h>
 #include <TNL/Algorithms/Segments/SlicedEllpack.h>
+#include <TNL/Matrices/DenseMatrix.h>
 #include <TNL/Matrices/SparseMatrix.h>
 #include <TNL/Matrices/SparseOperations.h>
 
+#include "DenseMatrix.h"
 #include "SparseMatrix.h"
 
 template< typename Device, typename Index, typename IndexAllocator >
@@ -20,6 +22,8 @@ using CSR_cuda = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Cuda, Inde
 using E_cuda = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Cuda, IndexType, TNL::Matrices::GeneralMatrix, Ellpack >;
 using SE_cuda =
    TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Cuda, IndexType, TNL::Matrices::GeneralMatrix, SlicedEllpack >;
+
+using Dense_cuda = TNL::Matrices::DenseMatrix< RealType, TNL::Devices::Cuda, IndexType >;
 
 void
 export_SparseMatrices( nb::module_& m )
@@ -42,6 +46,15 @@ export_SparseMatrices( nb::module_& m )
    m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_cuda, E_cuda > );
 }
 
+void
+export_DenseMatrices( nb::module_& m )
+{
+   export_DenseMatrix< Dense_cuda >( m, "DenseMatrix_float" );
+
+   export_DenseRowView< typename Dense_cuda::RowView >( m, "DenseMatrixRowView" );
+   export_DenseRowView< typename Dense_cuda::ConstRowView >( m, "DenseMatrixConstRowView" );
+}
+
 // Python module definition
 NB_MODULE( _matrices_cuda, m )
 {
@@ -54,4 +67,5 @@ NB_MODULE( _matrices_cuda, m )
    // defined only in the Host module (_matrices), which __init__.py always
    // imports before any CUDA usage
    export_SparseMatrices( m );
+   export_DenseMatrices( m );
 }

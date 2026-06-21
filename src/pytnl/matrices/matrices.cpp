@@ -4,9 +4,11 @@
 #include <TNL/Algorithms/Segments/CSR.h>
 #include <TNL/Algorithms/Segments/Ellpack.h>
 #include <TNL/Algorithms/Segments/SlicedEllpack.h>
+#include <TNL/Matrices/DenseMatrix.h>
 #include <TNL/Matrices/SparseMatrix.h>
 #include <TNL/Matrices/SparseOperations.h>
 
+#include "DenseMatrix.h"
 #include "SparseMatrix.h"
 
 template< typename Device, typename Index, typename IndexAllocator >
@@ -20,6 +22,8 @@ using CSR_host = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, Inde
 using E_host = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, Ellpack >;
 using SE_host =
    TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, SlicedEllpack >;
+
+using Dense_host = TNL::Matrices::DenseMatrix< RealType, TNL::Devices::Host, IndexType >;
 
 void
 export_format_tags( nb::module_& m )
@@ -66,6 +70,15 @@ export_SparseMatrices( nb::module_& m )
    m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, E_host > );
 }
 
+void
+export_DenseMatrices( nb::module_& m )
+{
+   export_DenseMatrix< Dense_host >( m, "DenseMatrix_float" );
+
+   export_DenseRowView< typename Dense_host::RowView >( m, "DenseMatrixRowView" );
+   export_DenseRowView< typename Dense_host::ConstRowView >( m, "DenseMatrixConstRowView" );
+}
+
 // Python module definition
 NB_MODULE( _matrices, m )
 {
@@ -76,4 +89,5 @@ NB_MODULE( _matrices, m )
 
    export_format_tags( m );
    export_SparseMatrices( m );
+   export_DenseMatrices( m );
 }
