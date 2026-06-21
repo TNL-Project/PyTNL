@@ -3,7 +3,7 @@
 import random
 
 from pytnl.containers import Vector
-from pytnl.matrices import CSR
+from pytnl.matrices import SparseMatrix
 
 ROWS = 5
 COLS = 5
@@ -26,7 +26,7 @@ def main() -> None:
             numbers.append((r, c, v))
             already_filled.add((r, c))
 
-    csr = CSR()
+    csr = SparseMatrix[float]()
     csr.setDimensions(ROWS, COLS)
 
     caps = Vector[int](ROWS, 0)
