@@ -24,9 +24,9 @@ using SE_cuda =
 void
 export_SparseMatrices( nb::module_& m )
 {
-   export_Matrix< CSR_cuda >( m, "CSR" );
-   export_Matrix< E_cuda >( m, "Ellpack" );
-   export_Matrix< SE_cuda >( m, "SlicedEllpack" );
+   export_Matrix< CSR_cuda >( m, "SparseMatrix_float_CSR" );
+   export_Matrix< E_cuda >( m, "SparseMatrix_float_Ellpack" );
+   export_Matrix< SE_cuda >( m, "SparseMatrix_float_SlicedEllpack" );
 
    // NOTE: all exported formats (CSR, Ellpack, SlicedEllpack) use the same
    // SegmentView, so the RowView and ConstRowView are also the same types in all
@@ -43,12 +43,15 @@ export_SparseMatrices( nb::module_& m )
 }
 
 // Python module definition
-NB_MODULE( matrices_cuda, m )
+NB_MODULE( _matrices_cuda, m )
 {
    register_exceptions( m );
 
    // import depending modules
    nb::module_::import_( "pytnl._containers_cuda" );
 
+   // format tags are not exported here — they are device-independent and
+   // defined only in the Host module (_matrices), which __init__.py always
+   // imports before any CUDA usage
    export_SparseMatrices( m );
 }

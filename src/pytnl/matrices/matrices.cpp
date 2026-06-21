@@ -22,11 +22,35 @@ using SE_host =
    TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, SlicedEllpack >;
 
 void
+export_format_tags( nb::module_& m )
+{
+   auto submodule = m.def_submodule( "formats" );
+
+   // NOTE: The SparseMatrix class template in C++ has a template-template
+   // parameter of this form:
+   //    template< typename Device_, typename Index_, typename IndexAllocator_ > class Segments = Algorithms::Segments::CSR,
+   // As this is not usable in Python bindings, we add bindings for empty tag
+   // classes instead to facilitate format selection from Python. Each tag
+   // class is combined with a Device and Index types in Python and mapped to
+   // the appropriate Segments class.
+   struct CSR
+   {};
+   struct Ellpack
+   {};
+   struct SlicedEllpack
+   {};
+
+   nb::class_< CSR >( submodule, "CSR", "Compressed Sparse Row format" );
+   nb::class_< Ellpack >( submodule, "Ellpack", "ELLPACK format" );
+   nb::class_< SlicedEllpack >( submodule, "SlicedEllpack", "Sliced ELLPACK format" );
+}
+
+void
 export_SparseMatrices( nb::module_& m )
 {
-   export_Matrix< CSR_host >( m, "CSR" );
-   export_Matrix< E_host >( m, "Ellpack" );
-   export_Matrix< SE_host >( m, "SlicedEllpack" );
+   export_Matrix< CSR_host >( m, "SparseMatrix_float_CSR" );
+   export_Matrix< E_host >( m, "SparseMatrix_float_Ellpack" );
+   export_Matrix< SE_host >( m, "SparseMatrix_float_SlicedEllpack" );
 
    // NOTE: all exported formats (CSR, Ellpack, SlicedEllpack) use the same
    // SegmentView, so the RowView and ConstRowView are also the same types in all
@@ -43,12 +67,13 @@ export_SparseMatrices( nb::module_& m )
 }
 
 // Python module definition
-NB_MODULE( matrices, m )
+NB_MODULE( _matrices, m )
 {
    register_exceptions( m );
 
    // import depending modules
    nb::module_::import_( "pytnl._containers" );
 
+   export_format_tags( m );
    export_SparseMatrices( m );
 }
