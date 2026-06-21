@@ -34,7 +34,7 @@ export_RowView( Scope& s, const char* name )
       ;
 
    if constexpr( ! std::is_const_v< typename RowView::RealType > ) {
-      s.def( "setValue", &RowView::setValue )
+      rowView.def( "setValue", &RowView::setValue )
          .def( "setColumnIndex", &RowView::setColumnIndex )
          .def( "setElement", &RowView::setElement );
    }
