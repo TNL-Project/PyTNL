@@ -117,10 +117,20 @@ foreach(target IN ITEMS ${modules})
 
     # generate stub files for Python static type checking
     #
-    # We replace nanobind_add_stub with a custom command that sets PYTHONPATH
-    # to prioritize the build directory over any installed version. This is
-    # necessary because an existing editable install would shadow the freshly
-    # built modules, causing stubgen to import the wrong (or missing) modules.
+    # PYTHONPATH prioritizes the build directory over an existing editable
+    # install, but that alone is not enough: scikit-build-core's editable
+    # install registers a meta path finder via a .pth file in site-packages
+    # that intercepts all "pytnl.*" imports and redirects them to the
+    # installed .so files. After a nanobind version bump, those installed
+    # .so files have a stale ABI, which breaks nanobind's cross-module type
+    # lookup and causes stubgen to emit raw C++ RTTI names (e.g.
+    # "TNL::Containers::Vector<...>") instead of Python-qualified names
+    # (e.g. pytnl._containers.Vector_float) in the .pyi stubs.
+    #
+    # Passing -S disables site.py, so the .pth file is never processed and
+    # the meta path finder is not installed. PYTHONPATH then resolves all
+    # imports to the freshly built .so files. stubgen.py uses only stdlib
+    # modules, so it runs fine without site-packages.
     #
     # We also set OpenMPI environment variables to suppress GPU accelerator
     # detection, which can fail at build time and cause MPI_Init to abort.
@@ -136,7 +146,7 @@ foreach(target IN ITEMS ${modules})
         OUTPUT ${module_stubs_${target}}
         COMMAND
             ${CMAKE_COMMAND} -E env PYTHONPATH=$<TARGET_FILE_DIR:${target}>/..:$<TARGET_FILE_DIR:${target}>
-            OMPI_MCA_accelerator=null ${Python_EXECUTABLE} ${NB_STUBGEN} ${_stubgen_args}
+            OMPI_MCA_accelerator=null ${Python_EXECUTABLE} -S ${NB_STUBGEN} ${_stubgen_args}
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         DEPENDS ${target} ${module_depends_${target}} "${NB_STUBGEN}"
     )
