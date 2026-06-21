@@ -123,7 +123,18 @@ FetchContent_Declare(TNL GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git G
 set(TNL_EXPORT_INTERFACE_TARGETS ON) # needed for adding to the interface target
 FetchContent_MakeAvailable(TNL)
 
-FetchContent_Declare(nanobind GIT_REPOSITORY https://github.com/wjakob/nanobind.git GIT_TAG v2.12.0 SYSTEM FIND_PACKAGE_ARGS)
+FetchContent_Declare(
+    nanobind
+    GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+    GIT_TAG v2.12.0
+    SYSTEM
+    # FIND_PACKAGE_ARGS disabled: system package is on version 2.13.0, whose
+    # stubgen wraps read-only static properties in Final[...] (PR #1303). That
+    # annotation makes basedpyright flag runtime type-dispatch patterns like
+    # `Array.ValueType is int` and `Grid.PointType(...)` as errors.
+    # https://github.com/wjakob/nanobind/pull/1303#issuecomment-4761284799
+    # FIND_PACKAGE_ARGS
+)
 FetchContent_MakeAvailable(nanobind)
 
 FetchContent_Declare(
