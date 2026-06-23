@@ -15,6 +15,20 @@ check_array_index( Index size, Index i )
 
 template< typename Index >
 void
+check_matrix_index( Index rows, Index cols, Index row, Index col )
+{
+   if( row < 0 || row >= rows )
+      throw nb::index_error(
+         ( "row index " + std::to_string( row ) + " is out-of-bounds for matrix with " + std::to_string( rows ) + " rows" )
+            .c_str() );
+   if( col < 0 || col >= cols )
+      throw nb::index_error( ( "column index " + std::to_string( col ) + " is out-of-bounds for matrix with "
+                               + std::to_string( cols ) + " columns" )
+                                .c_str() );
+}
+
+template< typename Index >
+void
 check_array_range( Index size, Index begin, Index end )
 {
    if( begin < 0 || begin > size )
