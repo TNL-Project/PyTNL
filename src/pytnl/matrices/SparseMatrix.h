@@ -5,6 +5,8 @@
 #include <TNL/Containers/Vector.h>
 #include <TNL/TypeTraits.h>
 
+#include <pytnl/containers/indexing.h>
+
 template< typename RowView, typename Scope >
 void
 export_RowView( Scope& s, const char* name )
@@ -19,6 +21,7 @@ export_RowView( Scope& s, const char* name )
                         "getColumnIndex",
                         []( const RowView& row, IndexType localIdx ) -> const IndexType&
                         {
+                           check_array_index( row.getSize(), localIdx );
                            return row.getColumnIndex( localIdx );
                         },
                         nb::rv_policy::reference_internal )
@@ -26,17 +29,35 @@ export_RowView( Scope& s, const char* name )
                         "getValue",
                         []( const RowView& row, IndexType localIdx ) -> const RealType&
                         {
+                           check_array_index( row.getSize(), localIdx );
                            return row.getValue( localIdx );
                         },
                         nb::rv_policy::reference_internal )
-                     .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
-      //      .def(nb::self_ns::str(nb::self_ns::self))
-      ;
+                     .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) );
 
    if constexpr( ! std::is_const_v< typename RowView::RealType > ) {
-      rowView.def( "setValue", &RowView::setValue )
-         .def( "setColumnIndex", &RowView::setColumnIndex )
-         .def( "setElement", &RowView::setElement );
+      rowView
+         .def(
+            "setValue",
+            []( RowView& row, IndexType localIdx, RealType value )
+            {
+               check_array_index( row.getSize(), localIdx );
+               row.setValue( localIdx, value );
+            } )
+         .def(
+            "setColumnIndex",
+            []( RowView& row, IndexType localIdx, IndexType colIdx )
+            {
+               check_array_index( row.getSize(), localIdx );
+               row.setColumnIndex( localIdx, colIdx );
+            } )
+         .def(
+            "setElement",
+            []( RowView& row, IndexType localIdx, IndexType colIdx, RealType value )
+            {
+               check_array_index( row.getSize(), localIdx );
+               row.setElement( localIdx, colIdx, value );
+            } );
    }
 }
 
@@ -70,25 +91,30 @@ template< typename Segments, typename Scope >
 void
 export_Segments( Scope& s, const char* name )
 {
-   auto segments = nb::class_< Segments >( s, name )
-                      .def( "getSegmentCount", &Segments::getSegmentCount )
-                      // Ellpack has a getSegmentSize overload without arguments
-                      .def(
-                         "getSegmentSize",
-                         []( const Segments& segments, typename Segments::IndexType segmentIdx ) -> typename Segments::IndexType
-                         {
-                            return segments.getSegmentSize( segmentIdx );
-                         } )
-                      .def( "getElementCount", &Segments::getElementCount )
-                      .def( "getStorageSize", &Segments::getStorageSize )
-                      .def( "getGlobalIndex", &Segments::getGlobalIndex )
+   // getSegments() returns a reference to SegmentsViewType, not SegmentsType,
+   // so we must register the ViewType to make the return value convertible
+   using SegmentsView = typename Segments::ViewType;
+
+   auto segments =
+      nb::class_< SegmentsView >( s, name )
+         .def( "getSegmentCount", &SegmentsView::getSegmentCount )
+         // Ellpack has a getSegmentSize overload without arguments
+         .def(
+            "getSegmentSize",
+            []( const SegmentsView& segments, typename SegmentsView::IndexType segmentIdx ) -> typename SegmentsView::IndexType
+            {
+               return segments.getSegmentSize( segmentIdx );
+            } )
+         .def( "getElementCount", &SegmentsView::getElementCount )
+         .def( "getStorageSize", &SegmentsView::getStorageSize )
+         .def( "getGlobalIndex", &SegmentsView::getGlobalIndex )
       // FIXME: this does not compile
       //      .def(nb::self == nb::self)
       // TODO: forElements, forAllElements, forSegments, forAllSegments,
       // segmentsReduction, allReduction
       ;
 
-   export_CSR< Segments >::e( segments );
+   export_CSR< SegmentsView >::e( segments );
 }
 
 template< typename Matrix >
@@ -144,19 +170,46 @@ export_Matrix( nb::module_& m, const char* name )
          .def( "getRowCapacities", &Matrix::template getRowCapacities< IndexVectorType > )
          .def( "getCompressedRowLengths", &Matrix::template getCompressedRowLengths< IndexVectorType > )
          .def( "getRowCapacity", &Matrix::getRowCapacity )
-         // TODO: implement bounds checking
          .def(
             "getRow",
             []( Matrix& matrix, IndexType rowIdx ) -> typename Matrix::RowView
             {
+               if( rowIdx < 0 || rowIdx >= matrix.getRows() )
+                  throw nb::index_error( ( "row index " + std::to_string( rowIdx ) + " is out-of-bounds for matrix with "
+                                           + std::to_string( matrix.getRows() ) + " rows" )
+                                            .c_str() );
                return matrix.getRow( rowIdx );
             } )
-         // TODO: implement bounds checking
-         .def( "setElement", &Matrix::setElement )
-         // TODO: implement bounds checking
-         .def( "addElement", &Matrix::addElement )
-         // TODO: implement bounds checking
-         .def( "getElement", &Matrix::getElement )
+         .def(
+            "setElement",
+            []( Matrix& matrix, IndexType row, IndexType col, RealType value )
+            {
+               check_matrix_index( matrix.getRows(), matrix.getColumns(), row, col );
+               matrix.setElement( row, col, value );
+            },
+            nb::arg( "row" ),
+            nb::arg( "col" ),
+            nb::arg( "value" ) )
+         .def(
+            "addElement",
+            []( Matrix& matrix, IndexType row, IndexType col, RealType value, ComputeRealType thisElementMultiplicator )
+            {
+               check_matrix_index( matrix.getRows(), matrix.getColumns(), row, col );
+               matrix.addElement( row, col, value, thisElementMultiplicator );
+            },
+            nb::arg( "row" ),
+            nb::arg( "col" ),
+            nb::arg( "value" ),
+            nb::arg( "thisElementMultiplicator" ) = 1.0 )
+         .def(
+            "getElement",
+            []( const Matrix& matrix, IndexType row, IndexType col ) -> RealType
+            {
+               check_matrix_index( matrix.getRows(), matrix.getColumns(), row, col );
+               return matrix.getElement( row, col );
+            },
+            nb::arg( "row" ),
+            nb::arg( "col" ) )
          // TODO: reduceRows, reduceAllRows, forElements, forAllElements,
          // forRows, forAllRows
          // TODO: export for more types
