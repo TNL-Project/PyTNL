@@ -34,7 +34,21 @@ export_DenseRowView( Scope& s, const char* name )
                            check_array_index( row.getSize(), column );
                            return row.getValue( column );
                         },
-                        nb::rv_policy::reference_internal );
+                        nb::rv_policy::reference_internal )
+                     .def(
+                        "__str__",
+                        []( RowView& row )
+                        {
+                           std::stringstream ss;
+                           ss << "Row " << row.getRowIndex() << ": [ ";
+                           for( IndexType i = 0; i < row.getSize(); ++i ) {
+                              if( i > 0 )
+                                 ss << ", ";
+                              ss << row.getValue( i );
+                           }
+                           ss << " ]";
+                           return ss.str();
+                        } );
 
    if constexpr( ! std::is_const_v< typename RowView::RealType > ) {
       rowView
