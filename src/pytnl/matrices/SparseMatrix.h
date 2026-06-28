@@ -19,6 +19,7 @@ export_RowView( Scope& s, const char* name )
    auto rowView = nb::class_< RowView >( s, name )
                      .def( "getSize", &RowView::getSize )
                      .def( "getRowIndex", &RowView::getRowIndex )
+                     .def_static( "isBinary", &RowView::isBinary )
                      .def(
                         "getColumnIndex",
                         []( const RowView& row, IndexType localIdx ) -> const IndexType&
@@ -35,6 +36,21 @@ export_RowView( Scope& s, const char* name )
                            return row.getValue( localIdx );
                         },
                         nb::rv_policy::reference_internal )
+                     .def(
+                        "getGlobalIndex",
+                        []( const RowView& row, IndexType localIdx ) -> IndexType
+                        {
+                           check_array_index( row.getSize(), localIdx );
+                           return row.getGlobalIndex( localIdx );
+                        } )
+                     .def(
+                        "__str__",
+                        []( RowView& row )
+                        {
+                           std::stringstream ss;
+                           ss << row;
+                           return ss.str();
+                        } )
                      .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) );
 
    if constexpr( ! std::is_const_v< typename RowView::RealType > ) {
@@ -59,7 +75,8 @@ export_RowView( Scope& s, const char* name )
             {
                check_array_index( row.getSize(), localIdx );
                row.setElement( localIdx, colIdx, value );
-            } );
+            } )
+         .def( "sortColumnIndexes", &RowView::sortColumnIndexes );
    }
 }
 
