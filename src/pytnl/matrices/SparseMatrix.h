@@ -3,9 +3,11 @@
 #include <pytnl/pytnl.h>
 
 #include <TNL/Containers/Vector.h>
+#include <TNL/Matrices/SparseMatrixView.h>
 #include <TNL/TypeTraits.h>
 
 #include <pytnl/containers/indexing.h>
+#include "MatrixBase.h"
 
 template< typename RowView, typename Scope >
 void
@@ -117,105 +119,91 @@ export_Segments( Scope& s, const char* name )
    export_CSR< SegmentsView >::e( segments );
 }
 
-template< typename Matrix >
+// Adds sparse-specific methods to an already-created nb::class_ for
+// SparseMatrixBase. Called by export_SparseMatrixBaseClass.
+// MatrixBase-level methods (getRows, getColumns, getAllocatedElementsCount,
+// isBinary, isSymmetric) are added via def_MatrixBaseMethods.
+template< typename Matrix, typename MatrixClass >
 void
-export_Matrix( nb::module_& m, const char* name )
+def_SparseMatrixBaseMethods( MatrixClass& matrix )
 {
    using RealType = typename Matrix::RealType;
    using DeviceType = typename Matrix::DeviceType;
    using IndexType = typename Matrix::IndexType;
    using ComputeRealType = typename Matrix::ComputeRealType;
 
-   using VectorType = TNL::Containers::Vector< RealType, DeviceType, IndexType >;
+   // RealType has const stripped (MatrixBase uses std::remove_const_t),
+   // so we check the ValuesViewType for the actual const-ness
+   using ValueType = typename Matrix::ValuesViewType::ValueType;
+
    using IndexVectorType = TNL::Containers::Vector< IndexType, DeviceType, IndexType >;
 
-   auto matrix =
-      nb::class_< Matrix >( m, name )
-         .def( nb::init<>() )
-         // File I/O
-         .def_static( "getSerializationType", &Matrix::getSerializationType )
-         .def( "save", &Matrix::save )
-         .def( "load", &Matrix::load )
+   matrix.def( "print", &Matrix::print )
+      .def(
+         "__str__",
+         []( Matrix& m )
+         {
+            std::stringstream ss;
+            ss << m;
+            return ss.str();
+         } )
+      .def( "getNonzeroElementsCount", &Matrix::getNonzeroElementsCount )
+      .def( "getRowCapacities", &Matrix::template getRowCapacities< IndexVectorType > )
+      .def( "getCompressedRowLengths", &Matrix::template getCompressedRowLengths< IndexVectorType > )
+      .def( "getRowCapacity", &Matrix::getRowCapacity )
+      .def(
+         "getElement",
+         []( const Matrix& m, IndexType row, IndexType col ) -> RealType
+         {
+            check_matrix_index( m.getRows(), m.getColumns(), row, col );
+            return m.getElement( row, col );
+         },
+         nb::arg( "row" ),
+         nb::arg( "col" ) )
+      .def( "getValues", nb::overload_cast<>( &Matrix::getValues ), nb::rv_policy::reference_internal )
+      .def( "getColumnIndexes", nb::overload_cast<>( &Matrix::getColumnIndexes ), nb::rv_policy::reference_internal )
+      .def( "getSegments", nb::overload_cast<>( &Matrix::getSegments ), nb::rv_policy::reference_internal );
 
-         .def( "print", &Matrix::print )
-         .def(
-            "__str__",
-            []( Matrix& m )
-            {
-               std::stringstream ss;
-               ss << m;
-               return ss.str();
-            } )
-
-         // Matrix
-         .def( "setDimensions", nb::overload_cast< IndexType, IndexType >( &Matrix::setDimensions ) )
-         // TODO: export for more types
-         .def(
-            "setLike",
-            []( Matrix& matrix, const Matrix& other ) -> void
-            {
-               matrix.setLike( other );
-            } )
-         .def( "getAllocatedElementsCount", &Matrix::getAllocatedElementsCount )
-         .def( "getNonzeroElementsCount", &Matrix::getNonzeroElementsCount )
-         .def( "reset", &Matrix::reset )
-         .def( "getRows", &Matrix::getRows )
-         .def( "getColumns", &Matrix::getColumns )
-         // TODO: export for more types
-         .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
-         .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) )
-
-         // SparseMatrix
-         .def( "setRowCapacities", &Matrix::template setRowCapacities< IndexVectorType > )
-         .def( "getRowCapacities", &Matrix::template getRowCapacities< IndexVectorType > )
-         .def( "getCompressedRowLengths", &Matrix::template getCompressedRowLengths< IndexVectorType > )
-         .def( "getRowCapacity", &Matrix::getRowCapacity )
+   if constexpr( ! std::is_const_v< ValueType > ) {
+      using VectorType = TNL::Containers::Vector< RealType, DeviceType, IndexType >;
+      matrix
          .def(
             "getRow",
-            []( Matrix& matrix, IndexType rowIdx ) -> typename Matrix::RowView
+            []( Matrix& m, IndexType rowIdx ) -> typename Matrix::RowView
             {
-               if( rowIdx < 0 || rowIdx >= matrix.getRows() )
+               if( rowIdx < 0 || rowIdx >= m.getRows() )
                   throw nb::index_error( ( "row index " + std::to_string( rowIdx ) + " is out-of-bounds for matrix with "
-                                           + std::to_string( matrix.getRows() ) + " rows" )
+                                           + std::to_string( m.getRows() ) + " rows" )
                                             .c_str() );
-               return matrix.getRow( rowIdx );
+               return m.getRow( rowIdx );
             } )
          .def(
             "setElement",
-            []( Matrix& matrix, IndexType row, IndexType col, RealType value )
+            []( Matrix& m, IndexType row, IndexType col, RealType value )
             {
-               check_matrix_index( matrix.getRows(), matrix.getColumns(), row, col );
-               matrix.setElement( row, col, value );
+               check_matrix_index( m.getRows(), m.getColumns(), row, col );
+               m.setElement( row, col, value );
             },
             nb::arg( "row" ),
             nb::arg( "col" ),
             nb::arg( "value" ) )
          .def(
             "addElement",
-            []( Matrix& matrix, IndexType row, IndexType col, RealType value, ComputeRealType thisElementMultiplicator )
+            []( Matrix& m, IndexType row, IndexType col, RealType value, ComputeRealType thisElementMultiplicator )
             {
-               check_matrix_index( matrix.getRows(), matrix.getColumns(), row, col );
-               matrix.addElement( row, col, value, thisElementMultiplicator );
+               check_matrix_index( m.getRows(), m.getColumns(), row, col );
+               m.addElement( row, col, value, thisElementMultiplicator );
             },
             nb::arg( "row" ),
             nb::arg( "col" ),
             nb::arg( "value" ),
             nb::arg( "thisElementMultiplicator" ) = 1.0 )
-         .def(
-            "getElement",
-            []( const Matrix& matrix, IndexType row, IndexType col ) -> RealType
-            {
-               check_matrix_index( matrix.getRows(), matrix.getColumns(), row, col );
-               return matrix.getElement( row, col );
-            },
-            nb::arg( "row" ),
-            nb::arg( "col" ) )
          // TODO: reduceRows, reduceAllRows, forElements, forAllElements,
          // forRows, forAllRows
          // TODO: export for more types
          .def(
             "vectorProduct",
-            []( Matrix& matrix,
+            []( Matrix& m,
                 const VectorType& inVector,
                 VectorType& outVector,
                 ComputeRealType matrixMultiplicator = 1.0,
@@ -223,23 +211,96 @@ export_Matrix( nb::module_& m, const char* name )
                 IndexType begin = 0,
                 IndexType end = 0 ) -> void
             {
-               matrix.vectorProduct( inVector, outVector, matrixMultiplicator, outVectorMultiplicator, begin, end );
-            } )
-         // TODO: these two don't work
-         //.def("addMatrix",           &Matrix::addMatrix)
-         //.def("getTransposition",    &Matrix::getTransposition)
-         // TODO: export for more types
-         .def(
-            "assign",
-            []( Matrix& matrix, const Matrix& other ) -> Matrix&
-            {
-               return matrix = other;
-            } )
+               m.vectorProduct( inVector, outVector, matrixMultiplicator, outVectorMultiplicator, begin, end );
+            } );
+   }
+}
 
-         // accessors for internal vectors
-         .def( "getValues", nb::overload_cast<>( &Matrix::getValues ), nb::rv_policy::reference_internal )
-         .def( "getColumnIndexes", nb::overload_cast<>( &Matrix::getColumnIndexes ), nb::rv_policy::reference_internal )
-         .def( "getSegments", nb::overload_cast<>( &Matrix::getSegments ), nb::rv_policy::reference_internal );
+// MatrixBase-level methods are added via def_MatrixBaseMethods since
+// MatrixBase cannot be a nanobind base class (Organization differs per format).
+template< typename SparseMatrixBaseType >
+void
+export_SparseMatrixBaseClass( nb::module_& m, const char* name )
+{
+   auto base = nb::class_< SparseMatrixBaseType >( m, name );
+   def_MatrixBaseMethods< SparseMatrixBaseType >( base );
+   def_SparseMatrixBaseMethods< SparseMatrixBaseType >( base );
+}
+
+template< typename Matrix, typename BaseType >
+void
+export_Matrix( nb::module_& m, const char* name )
+{
+   using DeviceType = typename Matrix::DeviceType;
+   using IndexType = typename Matrix::IndexType;
+
+   using IndexVectorType = TNL::Containers::Vector< IndexType, DeviceType, IndexType >;
+
+   auto matrix = nb::class_< Matrix, BaseType >( m, name )
+                    .def( nb::init<>() )
+                    // File I/O
+                    .def_static( "getSerializationType", &Matrix::getSerializationType )
+                    .def( "save", &Matrix::save )
+                    .def( "load", &Matrix::load )
+
+                    // Matrix
+                    .def( "setDimensions", nb::overload_cast< IndexType, IndexType >( &Matrix::setDimensions ) )
+                    .def( "reset", &Matrix::reset )
+                    // TODO: export for more types
+                    .def(
+                       "setLike",
+                       []( Matrix& m, const Matrix& other ) -> void
+                       {
+                          m.setLike( other );
+                       } )
+
+                    // SparseMatrix
+                    .def( "setRowCapacities", &Matrix::template setRowCapacities< IndexVectorType > )
+                    // TODO: these two don't work
+                    //.def("addMatrix",           &Matrix::addMatrix)
+                    //.def("getTransposition",    &Matrix::getTransposition)
+                    // TODO: export for more types
+                    .def(
+                       "assign",
+                       []( Matrix& m, const Matrix& other ) -> Matrix&
+                       {
+                          return m = other;
+                       } )
+
+                    // Views
+                    .def( "getView", &Matrix::getView, nb::rv_policy::reference_internal )
+                    .def( "getConstView", &Matrix::getConstView, nb::rv_policy::reference_internal )
+
+                    // operator== calls getConstView() which exists only on owning matrices
+                    .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
+                    .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) );
 
    export_Segments< typename Matrix::SegmentsType >( matrix, "Segments" );
+}
+
+template< typename ViewType, typename BaseType >
+void
+export_SparseMatrixView( nb::module_& m, const char* name )
+{
+   auto view = nb::class_< ViewType, BaseType >( m, name );
+
+   // Copy constructor
+   view.def( nb::init< const ViewType& >() );
+
+   view.def(
+      "bind",
+      []( ViewType& self, ViewType& other )
+      {
+         self.bind( other );
+      },
+      nb::keep_alive< 1, 2 >(),
+      "Bind this view to another view.\n\n"
+      "Warning: TNL views are non-owning. The source view's parent matrix\n"
+      "must outlive this view — if the parent is garbage-collected,\n"
+      "accessing this view results in undefined behavior." );
+
+   // operator== is on SparseMatrixBase but calls getConstView() which exists
+   // on ViewType, so it must be registered here (not on the base class)
+   view.def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) );
+   view.def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) );
 }

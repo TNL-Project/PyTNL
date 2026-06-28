@@ -133,18 +133,40 @@ def test_setElement_getElement(matrix_type: type[M]) -> None:
     """setElement / getElement round-trip for all formats."""
     m = create_matrix(matrix_type, 2, 3, [(0, 0, 1.0), (0, 2, 2.5), (1, 1, -3.0)])  # type: ignore[arg-type]
 
+    view = m.getView()
+    cview = m.getConstView()
+
+    # Test on owning matrix
     assert m.getElement(0, 0) == 1.0
     assert m.getElement(0, 2) == 2.5
     assert m.getElement(1, 1) == -3.0
+
+    # Test on mutable view
+    assert view.getElement(0, 0) == 1.0
+    assert view.getElement(0, 2) == 2.5
+    assert view.getElement(1, 1) == -3.0
+
+    # Test on const view
+    assert cview.getElement(0, 0) == 1.0
+    assert cview.getElement(0, 2) == 2.5
+    assert cview.getElement(1, 1) == -3.0
 
 
 @pytest.mark.parametrize("matrix_type", matrix_types)
 def test_addElement(matrix_type: type[M]) -> None:
     """addElement accumulates values at the same position."""
     m = create_matrix(matrix_type, 1, 2, [(0, 0, 1.0), (0, 1, 2.0)])  # type: ignore[arg-type]
+
+    # addElement on matrix
     m.addElement(0, 0, 10.0, 1.0)
     m.addElement(0, 0, 20.0, 1.0)
     assert m.getElement(0, 0) == 31.0  # 1.0 + 10.0 + 20.0
+
+    # addElement on view modifies matrix
+    view = m.getView()
+    view.addElement(0, 0, 10.0, 1.0)  # type: ignore[call-arg]
+    assert m.getElement(0, 0) == 41.0  # 31.0 + 10.0
+    assert view.getElement(0, 0) == 41.0
 
 
 @pytest.mark.parametrize("matrix_type", matrix_types)
@@ -178,6 +200,14 @@ def test_vectorProduct(matrix_type: type[M]) -> None:
     for i in range(n):
         assert out_vec[i] == pytest.approx(float(i + 1))
 
+    # Test through view
+    out_vec_view = Vector[float, Cuda](n)
+    view = m.getView()
+    view.vectorProduct(in_vec, out_vec_view, 1.0, 0.0, 0, 0)  # type: ignore[call-arg]
+
+    for i in range(n):
+        assert out_vec_view[i] == pytest.approx(float(i + 1))
+
 
 @pytest.mark.parametrize("matrix_type", matrix_types)
 def test_vectorProduct_with_factors(matrix_type: type[M]) -> None:
@@ -197,8 +227,8 @@ def test_vectorProduct_with_factors(matrix_type: type[M]) -> None:
     m.vectorProduct(in_vec, out_vec, 2.0, 3.0, 0, 0)
 
     for i in range(n):
-        expected = 2.0 * float(i + 1) + 3.0 * 10.0
-        assert out_vec[i] == pytest.approx(expected)
+        expected_val = 2.0 * float(i + 1) + 3.0 * 10.0
+        assert out_vec[i] == pytest.approx(expected_val)
 
 
 # ---------------------------------------------------------------------------
@@ -302,6 +332,24 @@ def test_row_capacities(matrix_type: type[M]) -> None:
     assert cl[1] == 1
     assert cl[2] == 3
 
+    # Same accessors through view
+    view = m.getView()
+    view_result = _containers_cuda.Vector_int(3)
+    view.getRowCapacities(view_result)
+    assert view_result.getSize() == 3
+    assert view_result[0] >= 2
+    assert view_result[1] >= 1
+    assert view_result[2] >= 3
+
+    assert view.getRowCapacity(0) >= 2
+
+    view_cl = _containers_cuda.Vector_int(3)
+    view.getCompressedRowLengths(view_cl)
+    assert view_cl.getSize() == 3
+    assert view_cl[0] == 2
+    assert view_cl[1] == 1
+    assert view_cl[2] == 3
+
 
 # ---------------------------------------------------------------------------
 # Nonzero and allocation counts
@@ -316,6 +364,11 @@ def test_nonzero_counts(matrix_type: type[M]) -> None:
 
     assert m.getNonzeroElementsCount() == 5
     assert m.getAllocatedElementsCount() >= m.getNonzeroElementsCount()
+
+    # View reports same counts
+    view = m.getView()
+    assert view.getNonzeroElementsCount() == 5
+    assert view.getAllocatedElementsCount() >= 5
 
 
 # ---------------------------------------------------------------------------
@@ -454,6 +507,11 @@ def test_str_output(matrix_type: type[M]) -> None:
     # Should contain row indicators
     assert "0:" in s or "Row" in s or "[" in s
 
+    view = m.getView()
+    s_view = str(view)
+    assert isinstance(s_view, str)
+    assert len(s_view) > 0
+
 
 # ---------------------------------------------------------------------------
 # assign
@@ -559,3 +617,191 @@ def test_property_vectorProduct(
     expected = dense @ np.array(in_values)
     for i in range(n):
         assert out_vec[i] == pytest.approx(expected[i], rel=1e-10)
+
+
+# ---------------------------------------------------------------------------
+# getView / getConstView
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_getView_returns_view(matrix_type: type[M]) -> None:
+    """getView returns a view with matching dimensions."""
+    m = create_matrix(matrix_type, 2, 3, [(0, 0, 1.0), (1, 1, 2.0)])  # type: ignore[arg-type]
+    view = m.getView()
+    assert view.getRows() == 2
+    assert view.getColumns() == 3
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_getConstView_returns_view(matrix_type: type[M]) -> None:
+    """getConstView returns a const view with matching dimensions."""
+    m = create_matrix(matrix_type, 2, 3, [(0, 0, 1.0), (1, 1, 2.0)])  # type: ignore[arg-type]
+    view = m.getConstView()
+    assert view.getRows() == 2
+    assert view.getColumns() == 3
+
+
+# ---------------------------------------------------------------------------
+# Dimensions
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_view_dimensions(matrix_type: type[M]) -> None:
+    """View dimensions match the source matrix."""
+    m = create_matrix(matrix_type, 3, 4, [(0, 0, 1.0)])  # type: ignore[arg-type]
+    view = m.getView()
+    assert view.getRows() == 3
+    assert view.getColumns() == 4
+    assert view.getAllocatedElementsCount() >= 1
+    assert view.getNonzeroElementsCount() == 1
+
+
+# ---------------------------------------------------------------------------
+# Reference semantics
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_reference_semantics(matrix_type: type[M]) -> None:
+    """View and parent share the same underlying data."""
+    m = create_matrix(matrix_type, 1, 2, [(0, 0, 1.0), (0, 1, 2.0)])  # type: ignore[arg-type]
+    view = m.getView()
+
+    # setElement on view modifies matrix
+    view.setElement(0, 0, 99.0)  # type: ignore[call-arg]
+    assert m.getElement(0, 0) == 99.0
+
+    # setElement on matrix is visible through view
+    m.setElement(0, 0, 88.0)
+    assert view.getElement(0, 0) == 88.0
+
+
+# ---------------------------------------------------------------------------
+# Bounds checking
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_bounds(matrix_type: type[M]) -> None:
+    """Out-of-bounds access raises IndexError on both matrix and view."""
+    m = create_matrix(matrix_type, 2, 3, [(0, 0, 1.0)])  # type: ignore[arg-type]
+    view = m.getView()
+
+    for target in (m, view):
+        with pytest.raises(IndexError):
+            target.getElement(5, 0)
+        with pytest.raises(IndexError):
+            target.getElement(0, 5)
+        with pytest.raises(IndexError):
+            target.setElement(5, 0, 1.0)  # type: ignore[call-arg]
+        with pytest.raises(IndexError):
+            target.setElement(0, 5, 1.0)  # type: ignore[call-arg]
+
+
+# ---------------------------------------------------------------------------
+# View comparison
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_view_equality(matrix_type: type[M]) -> None:
+    """Two views of identical matrices are equal."""
+    entries = [(0, 0, 1.0), (0, 2, 2.5), (1, 1, -3.0)]
+    m1 = create_matrix(matrix_type, 2, 3, entries)  # type: ignore[arg-type]
+    m2 = create_matrix(matrix_type, 2, 3, entries)  # type: ignore[arg-type]
+    assert m1.getView() == m2.getView()  # type: ignore[operator]
+
+
+# ---------------------------------------------------------------------------
+# Base class inheritance and memory management
+# ---------------------------------------------------------------------------
+
+
+def test_isinstance_sparse_matrix_base_cuda() -> None:
+    """SparseMatrix and SparseMatrixView inherit from SparseMatrixBase (CUDA)."""
+    from pytnl._matrices_cuda import SparseMatrixBase_float_CSR  # type: ignore[import-not-found]  # noqa: PLC0415
+
+    m = SparseMatrix[float, Cuda]()
+    m.setDimensions(2, 2)
+    caps = Vector[int, Cuda](2)
+    caps[0] = 1
+    caps[1] = 1
+    m.setRowCapacities(caps)
+    m.setElement(0, 0, 1.0)
+    m.setElement(1, 1, 2.0)
+    assert isinstance(m, SparseMatrixBase_float_CSR)
+    view = m.getView()
+    assert isinstance(view, SparseMatrixBase_float_CSR)
+
+
+def test_inherited_get_values_reference_internal_cuda() -> None:
+    """getValues() on a view keeps the view alive via reference_internal (CUDA)."""
+    import gc  # noqa: PLC0415
+
+    m = SparseMatrix[float, Cuda]()
+    m.setDimensions(2, 2)
+    caps = Vector[int, Cuda](2)
+    caps[0] = 1
+    caps[1] = 1
+    m.setRowCapacities(caps)
+    m.setElement(0, 0, 1.0)
+    m.setElement(1, 1, 2.0)
+    view = m.getView()
+    vals = view.getValues()
+    del view
+    gc.collect()
+    # vals should still be accessible because reference_internal keeps the view alive
+    assert vals.getSize() == 2
+
+
+def test_bind_keep_alive_temporary_view_cuda() -> None:
+    """bind() keeps a temporary source view alive via keep_alive (CUDA)."""
+    import gc  # noqa: PLC0415
+
+    m = SparseMatrix[float, Cuda]()
+    m.setDimensions(2, 2)
+    caps = Vector[int, Cuda](2)
+    caps[0] = 1
+    caps[1] = 1
+    m.setRowCapacities(caps)
+    m.setElement(0, 0, 42.0)
+
+    target = SparseMatrix[float, Cuda]()
+    target.setDimensions(2, 2)
+    target_view = target.getView()
+
+    target_view.bind(m.getView())
+    gc.collect()
+
+    assert target_view.getElement(0, 0) == 42.0
+
+
+# ---------------------------------------------------------------------------
+# isBinary / isSymmetric (def_static on MatrixBase, inherited by owners & views)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_is_binary_is_symmetric_cuda(matrix_type: type[M]) -> None:
+    """isBinary/isSymmetric return False for GeneralMatrix on owner and view (CUDA)."""
+    m = create_matrix(matrix_type, 2, 2, [(0, 0, 1.0), (1, 1, 2.0)])  # type: ignore[arg-type]
+
+    # Instance-level calls on the owning matrix
+    assert m.isBinary() is False
+    assert m.isSymmetric() is False
+
+    # Static calls on the class itself
+    assert matrix_type.isBinary() is False  # type: ignore[attr-defined]
+    assert matrix_type.isSymmetric() is False  # type: ignore[attr-defined]
+
+    # Instance-level calls on a mutable view
+    view = m.getView()
+    assert view.isBinary() is False  # type: ignore[attr-defined]
+    assert view.isSymmetric() is False  # type: ignore[attr-defined]
+
+    # Instance-level calls on a const view
+    cview = m.getConstView()
+    assert cview.isBinary() is False  # type: ignore[attr-defined]
+    assert cview.isSymmetric() is False  # type: ignore[attr-defined]

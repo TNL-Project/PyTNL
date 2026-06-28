@@ -11,7 +11,7 @@ import pytnl._matrices
 from pytnl._containers import Vector_int
 from pytnl.containers import Vector
 from pytnl.devices import Host
-from pytnl.matrices import SparseMatrix, SparseMatrixRowView, copySparseMatrix, formats
+from pytnl.matrices import SparseMatrix, SparseMatrixRowView, SparseMatrixView, copySparseMatrix, formats
 
 # ---------------------------------------------------------------------------
 # Type variable constraining the three host matrix formats
@@ -29,6 +29,16 @@ matrix_types: tuple[type, ...] = M.__constraints__
 CSR = pytnl._matrices.SparseMatrix_float_CSR
 Ellpack = pytnl._matrices.SparseMatrix_float_Ellpack
 SlicedEllpack = pytnl._matrices.SparseMatrix_float_SlicedEllpack
+
+# Mapping from format name to mutable view class
+SV_CSR = pytnl._matrices.SparseMatrixView_float_CSR
+SV_Ellpack = pytnl._matrices.SparseMatrixView_float_Ellpack
+SV_SlicedEllpack = pytnl._matrices.SparseMatrixView_float_SlicedEllpack
+
+# Mapping from format name to const view class
+SV_CSR_const = pytnl._matrices.SparseMatrixView_float_CSR_const
+SV_Ellpack_const = pytnl._matrices.SparseMatrixView_float_Ellpack_const
+SV_SlicedEllpack_const = pytnl._matrices.SparseMatrixView_float_SlicedEllpack_const
 
 
 # ---------------------------------------------------------------------------
@@ -142,18 +152,40 @@ def test_setElement_getElement(matrix_type: type[M]) -> None:
     """setElement / getElement round-trip for all formats."""
     m = create_matrix(matrix_type, 2, 3, [(0, 0, 1.0), (0, 2, 2.5), (1, 1, -3.0)])  # type: ignore[arg-type]
 
+    view = m.getView()
+    cview = m.getConstView()
+
+    # Test on owning matrix
     assert m.getElement(0, 0) == 1.0
     assert m.getElement(0, 2) == 2.5
     assert m.getElement(1, 1) == -3.0
+
+    # Test on mutable view
+    assert view.getElement(0, 0) == 1.0
+    assert view.getElement(0, 2) == 2.5
+    assert view.getElement(1, 1) == -3.0
+
+    # Test on const view
+    assert cview.getElement(0, 0) == 1.0
+    assert cview.getElement(0, 2) == 2.5
+    assert cview.getElement(1, 1) == -3.0
 
 
 @pytest.mark.parametrize("matrix_type", matrix_types)
 def test_addElement(matrix_type: type[M]) -> None:
     """addElement accumulates values at the same position."""
     m = create_matrix(matrix_type, 1, 2, [(0, 0, 1.0), (0, 1, 2.0)])  # type: ignore[arg-type]
+
+    # addElement on matrix
     m.addElement(0, 0, 10.0, 1.0)
     m.addElement(0, 0, 20.0, 1.0)
     assert m.getElement(0, 0) == 31.0  # 1.0 + 10.0 + 20.0
+
+    # addElement on view modifies matrix
+    view = m.getView()
+    view.addElement(0, 0, 10.0, 1.0)
+    assert m.getElement(0, 0) == 41.0  # 31.0 + 10.0
+    assert view.getElement(0, 0) == 41.0
 
 
 @pytest.mark.parametrize("matrix_type", matrix_types)
@@ -241,6 +273,14 @@ def test_vectorProduct(matrix_type: type[M]) -> None:
     for i in range(n):
         assert out_vec[i] == pytest.approx(float(i + 1))
 
+    # Test through view
+    out_vec_view = Vector[float](n)
+    view = m.getView()
+    view.vectorProduct(in_vec, out_vec_view, 1.0, 0.0, 0, 0)
+
+    for i in range(n):
+        assert out_vec_view[i] == pytest.approx(float(i + 1))
+
 
 @pytest.mark.parametrize("matrix_type", matrix_types)
 def test_vectorProduct_with_factors(matrix_type: type[M]) -> None:
@@ -260,8 +300,20 @@ def test_vectorProduct_with_factors(matrix_type: type[M]) -> None:
     m.vectorProduct(in_vec, out_vec, 2.0, 3.0, 0, 0)
 
     for i in range(n):
-        expected = 2.0 * float(i + 1) + 3.0 * 10.0
-        assert out_vec[i] == pytest.approx(expected)
+        expected_val = 2.0 * float(i + 1) + 3.0 * 10.0
+        assert out_vec[i] == pytest.approx(expected_val)
+
+    # Test through view
+    out_vec_view = Vector[float](n)
+    for i in range(n):
+        out_vec_view[i] = 10.0
+
+    view = m.getView()
+    view.vectorProduct(in_vec, out_vec_view, 2.0, 3.0, 0, 0)
+
+    for i in range(n):
+        expected_val = 2.0 * float(i + 1) + 3.0 * 10.0
+        assert out_vec_view[i] == pytest.approx(expected_val)
 
 
 # ---------------------------------------------------------------------------
@@ -365,6 +417,24 @@ def test_row_capacities(matrix_type: type[M]) -> None:
     assert cl[1] == 1
     assert cl[2] == 3
 
+    # Same accessors through view
+    view = m.getView()
+    view_result = Vector_int(3)
+    view.getRowCapacities(view_result)
+    assert view_result.getSize() == 3
+    assert view_result[0] >= 2
+    assert view_result[1] >= 1
+    assert view_result[2] >= 3
+
+    assert view.getRowCapacity(0) >= 2
+
+    view_cl = Vector_int(3)
+    view.getCompressedRowLengths(view_cl)
+    assert view_cl.getSize() == 3
+    assert view_cl[0] == 2
+    assert view_cl[1] == 1
+    assert view_cl[2] == 3
+
 
 # ---------------------------------------------------------------------------
 # Nonzero and allocation counts
@@ -379,6 +449,11 @@ def test_nonzero_counts(matrix_type: type[M]) -> None:
 
     assert m.getNonzeroElementsCount() == 5
     assert m.getAllocatedElementsCount() >= m.getNonzeroElementsCount()
+
+    # View reports same counts
+    view = m.getView()
+    assert view.getNonzeroElementsCount() == 5
+    assert view.getAllocatedElementsCount() >= 5
 
 
 # ---------------------------------------------------------------------------
@@ -400,17 +475,18 @@ def test_getValues_getColumnIndexes(matrix_type: type[M]) -> None:
     assert col_idx is not None
     assert col_idx.getSize() > 0
 
+    # Same accessors through view
+    view = m.getView()
+    view_values = view.getValues()
+    assert view_values is not None
+    assert view_values.getSize() > 0
 
-@pytest.mark.parametrize("matrix_type", matrix_types)
-def test_segments_methods(matrix_type: type[M]) -> None:
-    """getAllocatedElementsCount and getNonzeroElementsCount return sensible values."""
-    entries = [(0, 0, 1.0), (0, 1, 2.0), (1, 0, 3.0)]
-    m = create_matrix(matrix_type, 2, 2, entries)  # type: ignore[arg-type]
+    view_col_idx = view.getColumnIndexes()
+    assert view_col_idx is not None
+    assert view_col_idx.getSize() > 0
 
-    assert m.getRows() == 2
-    assert m.getColumns() == 2
-    assert m.getNonzeroElementsCount() == 3
-    assert m.getAllocatedElementsCount() >= 3
+    view_segments = view.getSegments()
+    assert view_segments is not None
 
 
 # ---------------------------------------------------------------------------
@@ -516,6 +592,16 @@ def test_str_output(matrix_type: type[M]) -> None:
     assert len(s) > 0
     # Should contain row indicators
     assert "0:" in s or "Row" in s or "[" in s
+
+    view = m.getView()
+    s_view = str(view)
+    assert isinstance(s_view, str)
+    assert len(s_view) > 0
+
+    cview = m.getConstView()
+    s_cview = str(cview)
+    assert isinstance(s_cview, str)
+    assert len(s_cview) > 0
 
 
 # ---------------------------------------------------------------------------
@@ -635,3 +721,323 @@ def test_property_vectorProduct(
     expected = dense @ np.array(in_values)
     for i in range(n):
         assert out_vec[i] == pytest.approx(expected[i], rel=1e-10)
+
+
+# ---------------------------------------------------------------------------
+# Subscript: SparseMatrixView resolution
+# ---------------------------------------------------------------------------
+
+
+def test_view_subscript_returns_correct_class() -> None:
+    """Verify subscript syntax resolves to the correct view classes."""
+    assert SparseMatrixView[float] is SV_CSR
+    assert SparseMatrixView[float, Host, formats.CSR] is SV_CSR
+    assert SparseMatrixView[float, Host, formats.Ellpack] is SV_Ellpack
+    assert SparseMatrixView[float, Host, formats.SlicedEllpack] is SV_SlicedEllpack
+
+
+def test_view_subscript_invalid_value_type() -> None:
+    """Non-float value types must raise TypeError."""
+    for bad_type in (int, complex, bool):
+        with pytest.raises(TypeError):
+            SparseMatrixView[bad_type]  # type: ignore[index, unused-ignore]
+
+
+# ---------------------------------------------------------------------------
+# getView / getConstView: correct types
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_getView_returns_correct_type(matrix_type: type[M]) -> None:
+    """getView returns the correct mutable view type for each format."""
+    m = create_matrix(matrix_type, 2, 3, [(0, 0, 1.0)])  # type: ignore[arg-type]
+    view = m.getView()
+    if matrix_type is CSR:
+        assert isinstance(view, SV_CSR)
+    elif matrix_type is Ellpack:
+        assert isinstance(view, SV_Ellpack)
+    else:
+        assert isinstance(view, SV_SlicedEllpack)
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_getConstView_returns_correct_type(matrix_type: type[M]) -> None:
+    """getConstView returns the correct const view type for each format."""
+    m = create_matrix(matrix_type, 2, 3, [(0, 0, 1.0)])  # type: ignore[arg-type]
+    view = m.getConstView()
+    if matrix_type is CSR:
+        assert isinstance(view, SV_CSR_const)
+    elif matrix_type is Ellpack:
+        assert isinstance(view, SV_Ellpack_const)
+    else:
+        assert isinstance(view, SV_SlicedEllpack_const)
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_view_dimensions_match_parent(matrix_type: type[M]) -> None:
+    """View dimensions match the parent matrix dimensions."""
+    m = create_matrix(matrix_type, 3, 4, [(0, 0, 1.0), (2, 3, 2.0)])  # type: ignore[arg-type]
+    view = m.getView()
+    assert view.getRows() == 3
+    assert view.getColumns() == 4
+
+    cview = m.getConstView()
+    assert cview.getRows() == 3
+    assert cview.getColumns() == 4
+
+
+# ---------------------------------------------------------------------------
+# Reference semantics
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_reference_semantics(matrix_type: type[M]) -> None:
+    """View and parent share the same underlying data."""
+    m = create_matrix(matrix_type, 2, 3, [(0, 0, 1.0), (1, 1, 2.0)])  # type: ignore[arg-type]
+    view = m.getView()
+
+    # setElement through view modifies parent
+    view.setElement(0, 0, 99.0)
+    assert m.getElement(0, 0) == 99.0
+
+    # setElement through parent is visible through view
+    m.setElement(0, 0, 88.0)
+    assert view.getElement(0, 0) == 88.0
+
+
+# ---------------------------------------------------------------------------
+# Const view: mutation methods raise AttributeError
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_const_view_setElement_raises(matrix_type: type[M]) -> None:
+    """const view has no setElement method."""
+    m = create_matrix(matrix_type, 2, 2, [(0, 0, 1.0)])  # type: ignore[arg-type]
+    cview = m.getConstView()
+    with pytest.raises(AttributeError):
+        cview.setElement(0, 0, 99.0)  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_const_view_addElement_raises(matrix_type: type[M]) -> None:
+    """const view has no addElement method."""
+    m = create_matrix(matrix_type, 2, 2, [(0, 0, 1.0)])  # type: ignore[arg-type]
+    cview = m.getConstView()
+    with pytest.raises(AttributeError):
+        cview.addElement(0, 0, 1.0)  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_const_view_getRow_raises(matrix_type: type[M]) -> None:
+    """const view has no getRow method."""
+    m = create_matrix(matrix_type, 2, 2, [(0, 0, 1.0)])  # type: ignore[arg-type]
+    cview = m.getConstView()
+    with pytest.raises(AttributeError):
+        cview.getRow(0)  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_const_view_vectorProduct_raises(matrix_type: type[M]) -> None:
+    """const view has no vectorProduct method."""
+    m = identity_matrix(matrix_type, 3)  # type: ignore[arg-type]
+    cview = m.getConstView()
+    in_vec = Vector[float](3)
+    out_vec = Vector[float](3)
+    with pytest.raises(AttributeError):
+        cview.vectorProduct(in_vec, out_vec)  # type: ignore[attr-defined]
+
+
+# ---------------------------------------------------------------------------
+# Bounds checking
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_bounds(matrix_type: type[M]) -> None:
+    """Out-of-bounds access raises IndexError on matrix, view, and const view."""
+    m = create_matrix(matrix_type, 2, 3, [(0, 0, 1.0)])  # type: ignore[arg-type]
+    view = m.getView()
+    cview = m.getConstView()
+
+    for target in (m, view, cview):
+        with pytest.raises(IndexError):
+            target.getElement(5, 0)
+        with pytest.raises(IndexError):
+            target.getElement(0, 5)
+
+    for target in (m, view):
+        with pytest.raises(IndexError):
+            target.setElement(5, 0, 1.0)
+        with pytest.raises(IndexError):
+            target.setElement(0, 5, 1.0)
+        with pytest.raises(IndexError):
+            target.getRow(5)
+
+    # addElement bounds on matrix and view
+    with pytest.raises(IndexError):
+        m.addElement(5, 0, 1.0)
+    with pytest.raises(IndexError):
+        m.addElement(0, 5, 1.0)
+    with pytest.raises(IndexError):
+        view.addElement(5, 0, 1.0)
+    with pytest.raises(IndexError):
+        view.addElement(0, 5, 1.0)
+
+
+# ---------------------------------------------------------------------------
+# getRow through view
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_view_getRow_returns_rowview(matrix_type: type[M]) -> None:
+    """getRow through view returns a RowView bound to the view's data."""
+    m = create_matrix(matrix_type, 2, 3, [(0, 1, 4.0), (0, 2, 5.0), (1, 0, 6.0)])  # type: ignore[arg-type]
+    view = m.getView()
+    row = view.getRow(0)
+
+    assert isinstance(row, SparseMatrixRowView)
+    assert row.getRowIndex() == 0
+
+    # Verify entries are reachable
+    found_01 = False
+    found_02 = False
+    for i in range(row.getSize()):
+        if row.getColumnIndex(i) == 1 and row.getValue(i) == 4.0:
+            found_01 = True
+        if row.getColumnIndex(i) == 2 and row.getValue(i) == 5.0:
+            found_02 = True
+    assert found_01
+    assert found_02
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_view_getRow_mutations_propagate(matrix_type: type[M]) -> None:
+    """Mutating via view.getRow modifies the parent matrix."""
+    m = create_matrix(matrix_type, 1, 2, [(0, 0, 1.0), (0, 1, 2.0)])  # type: ignore[arg-type]
+    view = m.getView()
+    row = view.getRow(0)
+    row.setValue(0, 10.0)
+    assert m.getElement(0, 0) == 10.0
+
+
+# ---------------------------------------------------------------------------
+# bind: rebind view to another view
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_view_bind_rebinds_to_other_view(matrix_type: type[M]) -> None:
+    """bind(view) makes the view refer to another view's data."""
+    entries1 = [(0, 0, 1.0), (0, 1, 2.0)]
+    entries2 = [(0, 0, 99.0), (0, 1, 100.0)]
+    m1 = create_matrix(matrix_type, 2, 3, entries1)  # type: ignore[arg-type]
+    m2 = create_matrix(matrix_type, 2, 3, entries2)  # type: ignore[arg-type]
+
+    view1 = m1.getView()
+    view2 = m2.getView()
+
+    # Initially, view1 sees m1's data
+    assert view1.getElement(0, 0) == 1.0
+
+    # Rebind view1 to view2's data
+    view1.bind(view2)
+    assert view1.getElement(0, 0) == 99.0
+    assert view1.getElement(0, 1) == 100.0
+
+
+# ---------------------------------------------------------------------------
+# Base class inheritance and memory management
+# ---------------------------------------------------------------------------
+
+
+def test_isinstance_sparse_matrix_base() -> None:
+    """SparseMatrix and SparseMatrixView inherit from SparseMatrixBase."""
+    from pytnl._matrices import SparseMatrixBase_float_CSR  # type: ignore[attr-defined, unused-ignore]  # noqa: PLC0415
+
+    m = SparseMatrix[float, Host]()
+    m.setDimensions(2, 2)
+    caps = Vector_int(2)
+    caps[0] = 1
+    caps[1] = 1
+    m.setRowCapacities(caps)
+    m.setElement(0, 0, 1.0)
+    m.setElement(1, 1, 2.0)
+    assert isinstance(m, SparseMatrixBase_float_CSR)
+    view = m.getView()
+    assert isinstance(view, SparseMatrixBase_float_CSR)
+
+
+def test_inherited_get_values_reference_internal() -> None:
+    """getValues() on a view keeps the view alive via reference_internal."""
+    import gc  # noqa: PLC0415
+
+    m = SparseMatrix[float, Host]()
+    m.setDimensions(2, 2)
+    caps = Vector_int(2)
+    caps[0] = 1
+    caps[1] = 1
+    m.setRowCapacities(caps)
+    m.setElement(0, 0, 1.0)
+    m.setElement(1, 1, 2.0)
+    view = m.getView()
+    vals = view.getValues()
+    del view
+    gc.collect()
+    # vals should still be accessible because reference_internal keeps the view alive
+    assert vals.getSize() == 2
+
+
+def test_bind_keep_alive_temporary_view() -> None:
+    """bind() keeps a temporary source view alive via keep_alive."""
+    import gc  # noqa: PLC0415
+
+    m = SparseMatrix[float, Host]()
+    m.setDimensions(2, 2)
+    caps = Vector_int(2)
+    caps[0] = 1
+    caps[1] = 1
+    m.setRowCapacities(caps)
+    m.setElement(0, 0, 42.0)
+
+    target = SparseMatrix[float, Host]()
+    target.setDimensions(2, 2)
+    target_view = target.getView()
+
+    # bind to a temporary view — without keep_alive, this temporary would be GC'd
+    target_view.bind(m.getView())
+    gc.collect()
+
+    assert target_view.getElement(0, 0) == 42.0
+
+
+# ---------------------------------------------------------------------------
+# isBinary / isSymmetric (def_static on MatrixBase, inherited by owners & views)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("matrix_type", matrix_types)
+def test_is_binary_is_symmetric(matrix_type: type[M]) -> None:
+    """isBinary/isSymmetric return False for GeneralMatrix on owner and view."""
+    m = create_matrix(matrix_type, 2, 2, [(0, 0, 1.0), (1, 1, 2.0)])  # type: ignore[arg-type]
+
+    # Instance-level calls on the owning matrix
+    assert m.isBinary() is False
+    assert m.isSymmetric() is False
+
+    # Static calls on the class itself
+    assert matrix_type.isBinary() is False
+    assert matrix_type.isSymmetric() is False
+
+    # Instance-level calls on a mutable view
+    view = m.getView()
+    assert view.isBinary() is False
+    assert view.isSymmetric() is False
+
+    # Instance-level calls on a const view
+    cview = m.getConstView()
+    assert cview.isBinary() is False
+    assert cview.isSymmetric() is False

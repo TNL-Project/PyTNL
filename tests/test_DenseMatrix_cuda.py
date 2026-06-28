@@ -108,8 +108,11 @@ def test_setDimensions() -> None:
 
 
 def test_setElement_getElement() -> None:
-    """setElement / getElement round-trip; unset elements are 0.0."""
+    """setElement / getElement round-trip on matrix, view, and const view."""
     m = create_matrix(2, 3, [(0, 0, 1.0), (0, 2, 2.5), (1, 1, -3.0)])
+
+    view = m.getView()
+    cview = m.getConstView()
 
     assert m.getElement(0, 0) == 1.0
     assert m.getElement(0, 2) == 2.5
@@ -119,13 +122,43 @@ def test_setElement_getElement() -> None:
     assert m.getElement(1, 0) == 0.0
     assert m.getElement(1, 2) == 0.0
 
+    assert view.getElement(0, 0) == 1.0
+    assert view.getElement(0, 2) == 2.5
+    assert view.getElement(1, 1) == -3.0
+    assert view.getElement(0, 1) == 0.0
+    assert view.getElement(1, 0) == 0.0
+
+    assert cview.getElement(0, 0) == 1.0
+    assert cview.getElement(0, 2) == 2.5
+    assert cview.getElement(1, 1) == -3.0
+    assert cview.getElement(0, 1) == 0.0
+    assert cview.getElement(1, 0) == 0.0
+
+    # setElement on view modifies the parent matrix
+    view.setElement(1, 0, 8.0)  # type: ignore[call-arg]
+    assert view.getElement(1, 0) == 8.0
+    assert m.getElement(1, 0) == 8.0
+    assert cview.getElement(1, 0) == 8.0
+
 
 def test_addElement() -> None:
-    """addElement accumulates values at the same position."""
+    """addElement accumulates values on matrix and view."""
     m = create_matrix(1, 2, [(0, 0, 1.0), (0, 1, 2.0)])
+
+    # addElement on the owning matrix
     m.addElement(0, 0, 10.0, 1.0)
     m.addElement(0, 0, 20.0, 1.0)
     assert m.getElement(0, 0) == 31.0  # 1.0 + 10.0 + 20.0
+
+    # addElement on view modifies the parent matrix
+    view = m.getView()
+    view.addElement(0, 0, 10.0, 1.0)  # type: ignore[call-arg]
+    assert m.getElement(0, 0) == 41.0  # 31.0 + 10.0
+    assert view.getElement(0, 0) == 41.0
+
+    view.addElement(0, 0, 20.0, 1.0)  # type: ignore[call-arg]
+    assert m.getElement(0, 0) == 61.0
+    assert view.getElement(0, 0) == 61.0
 
 
 def test_setValue_all_elements() -> None:
@@ -135,6 +168,14 @@ def test_setValue_all_elements() -> None:
     for r in range(2):
         for c in range(3):
             assert m.getElement(r, c) == 5.0
+
+    # setValue through view sets all elements in the parent matrix
+    view = m.getView()
+    view.setValue(7.0)  # type: ignore[call-arg]
+    for r in range(2):
+        for c in range(3):
+            assert m.getElement(r, c) == 7.0
+            assert view.getElement(r, c) == 7.0
 
 
 def test_reset() -> None:
@@ -170,6 +211,13 @@ def test_vectorProduct() -> None:
 
     for i in range(n):
         assert out_vec[i] == pytest.approx(float(i + 1))
+
+    # vectorProduct through view
+    out_vec2 = Vector[float, Cuda](n)
+    view = m.getView()
+    view.vectorProduct(in_vec, out_vec2, 1.0, 0.0, 0, 0)  # type: ignore[call-arg]
+    for i in range(n):
+        assert out_vec2[i] == pytest.approx(float(i + 1))
 
 
 def test_vectorProduct_with_factors() -> None:
@@ -255,11 +303,11 @@ def test_save_load_roundtrip() -> None:
 
 
 def test_row_capacities() -> None:
-    """getRowCapacities / getRowCapacity / getCompressedRowLengths for dense."""
+    """getRowCapacities / getRowCapacity / getCompressedRowLengths for dense (matrix and view)."""
     entries = [(0, 0, 1.0), (0, 1, 2.0), (1, 0, 3.0), (2, 0, 4.0), (2, 1, 5.0), (2, 2, 6.0)]
     m = create_matrix(3, 4, entries)
 
-    # getRowCapacities writes into a pre-allocated vector
+    # Matrix
     result = _containers_cuda.Vector_int(3)
     m.getRowCapacities(result)
     assert result.getSize() == 3
@@ -268,18 +316,36 @@ def test_row_capacities() -> None:
     assert result[1] == 4
     assert result[2] == 4
 
-    # getRowCapacity for individual rows
     assert m.getRowCapacity(0) == 4
     assert m.getRowCapacity(1) == 4
     assert m.getRowCapacity(2) == 4
 
-    # getCompressedRowLengths returns actual non-zero counts per row
     cl = _containers_cuda.Vector_int(3)
     m.getCompressedRowLengths(cl)
     assert cl.getSize() == 3
     assert cl[0] == 2
     assert cl[1] == 1
     assert cl[2] == 3
+
+    # View
+    view = m.getView()
+    result2 = _containers_cuda.Vector_int(3)
+    view.getRowCapacities(result2)
+    assert result2.getSize() == 3
+    assert result2[0] == 4
+    assert result2[1] == 4
+    assert result2[2] == 4
+
+    assert view.getRowCapacity(0) == 4
+    assert view.getRowCapacity(1) == 4
+    assert view.getRowCapacity(2) == 4
+
+    cl2 = _containers_cuda.Vector_int(3)
+    view.getCompressedRowLengths(cl2)
+    assert cl2.getSize() == 3
+    assert cl2[0] == 2
+    assert cl2[1] == 1
+    assert cl2[2] == 3
 
 
 # ---------------------------------------------------------------------------
@@ -288,7 +354,7 @@ def test_row_capacities() -> None:
 
 
 def test_nonzero_counts() -> None:
-    """getNonzeroElementsCount matches entry count; allocated = rows * cols."""
+    """getNonzeroElementsCount and getAllocatedElementsCount for matrix and view."""
     entries = [(0, 0, 1.0), (0, 2, 2.0), (1, 1, 3.0), (2, 0, 4.0), (2, 1, 5.0)]
     m = create_matrix(3, 3, entries)
 
@@ -296,11 +362,16 @@ def test_nonzero_counts() -> None:
     # For dense, allocated = rows * cols (all elements are allocated)
     assert m.getAllocatedElementsCount() == 9
 
+    view = m.getView()
+    assert view.getNonzeroElementsCount() == 5
+    assert view.getAllocatedElementsCount() == 9
 
-def test_allocated_elements_count() -> None:
-    """getAllocatedElementsCount returns rows * cols for dense matrices."""
-    m = DM(3, 4)
-    assert m.getAllocatedElementsCount() == 12
+    # Standalone: allocated = rows * cols for any empty dense matrix
+    m2 = DM(3, 4)
+    assert m2.getAllocatedElementsCount() == 12
+    view2 = m2.getView()
+    assert view2.getAllocatedElementsCount() == 12
+    assert view2.getNonzeroElementsCount() == 0
 
 
 # ---------------------------------------------------------------------------
@@ -317,6 +388,12 @@ def test_getValues() -> None:
     # Dense matrix stores rows * cols elements
     assert values.getSize() == 4
 
+    # getValues through view
+    view = m.getView()
+    view_values = view.getValues()
+    assert view_values is not None
+    assert view_values.getSize() == 4
+
 
 # ---------------------------------------------------------------------------
 # String representation
@@ -324,13 +401,17 @@ def test_getValues() -> None:
 
 
 def test_str_output() -> None:
-    """str(matrix) returns non-empty string containing row indicators."""
+    """str(matrix) and str(view) return non-empty strings."""
     m = create_matrix(2, 3, [(0, 0, 1.0), (1, 2, 3.0)])
     s = str(m)
     assert isinstance(s, str)
     assert len(s) > 0
     # Should contain row indicators
     assert "0:" in s or "Row" in s or "[" in s
+
+    s_view = str(m.getView())
+    assert isinstance(s_view, str)
+    assert len(s_view) > 0
 
 
 # ---------------------------------------------------------------------------
@@ -450,10 +531,14 @@ def test_property_vectorProduct(data: st.DataObject) -> None:
 
 
 def test_dlpack_device_cuda() -> None:
-    """__dlpack_device__ returns CUDA device for Cuda matrices."""
+    """__dlpack_device__ returns CUDA device for matrices and views."""
     m = DM(2, 3)
     device, _ = m.__dlpack_device__()
     assert device == 2
+
+    view = m.getView()
+    view_device, _ = view.__dlpack_device__()
+    assert view_device == 2
 
 
 def test_dlpack_to_cupy_shape_dtype() -> None:
@@ -462,6 +547,13 @@ def test_dlpack_to_cupy_shape_dtype() -> None:
     arr = cp.from_dlpack(m)
     assert arr.shape == (3, 4)
     assert arr.dtype == cp.float64
+
+    view = m.getView()
+    view_arr = cp.from_dlpack(view)
+    assert view_arr.shape == (3, 4)
+    assert view_arr.dtype == cp.float64
+    # Verify the array is on the GPU device
+    assert view_arr.device == cp.cuda.Device()
 
 
 def test_dlpack_to_cupy_values() -> None:
@@ -474,17 +566,205 @@ def test_dlpack_to_cupy_values() -> None:
         assert float(arr[r, c]) == v
     assert float(arr[0, 1]) == 0.0
 
+    view = m.getView()
+    view_arr = cp.from_dlpack(view)
+    for r, c, v in entries:
+        assert float(view_arr[r, c]) == v
+    assert float(view_arr[0, 1]) == 0.0
+
 
 def test_dlpack_zero_copy_cuda() -> None:
     """DLPack export is zero-copy — modifying the cupy array modifies the matrix."""
     m = create_matrix(2, 2, [(0, 0, 1.0), (1, 1, 2.0)])
+
+    # Matrix DLPack
     arr = cp.from_dlpack(m)
     arr[0, 1] = 99.0
     assert m.getElement(0, 1) == 99.0
 
+    # View DLPack is also zero-copy — modifies the parent
+    view = m.getView()
+    view_arr = cp.from_dlpack(view)
+    view_arr[1, 0] = 42.0
+    assert m.getElement(1, 0) == 42.0
+    assert view.getElement(1, 0) == 42.0
+
 
 def test_dlpack_strides_columnmajor() -> None:
-    """CUDA DenseMatrix (ColumnMajor) has Fortran-contiguous strides."""
+    """CUDA DenseMatrix and view (ColumnMajor) have Fortran-contiguous strides."""
     m = DM(3, 4)
     arr = cp.from_dlpack(m)
     assert arr.flags["F_CONTIGUOUS"]
+
+    view = m.getView()
+    view_arr = cp.from_dlpack(view)
+    assert view_arr.flags["F_CONTIGUOUS"]
+
+
+# ---------------------------------------------------------------------------
+# getView / getConstView
+# ---------------------------------------------------------------------------
+
+
+def test_getView_returns_view() -> None:
+    """getView returns a view with matching dimensions."""
+    m = create_matrix(2, 3, [(0, 0, 1.0), (1, 1, 2.0)])
+    view = m.getView()
+    assert view.getRows() == 2
+    assert view.getColumns() == 3
+
+
+def test_getConstView_returns_view() -> None:
+    """getConstView returns a const view with matching dimensions."""
+    m = create_matrix(2, 3, [(0, 0, 1.0), (1, 1, 2.0)])
+    view = m.getConstView()
+    assert view.getRows() == 2
+    assert view.getColumns() == 3
+
+
+# ---------------------------------------------------------------------------
+# Reference semantics: view and parent share data
+# ---------------------------------------------------------------------------
+
+
+def test_reference_semantics() -> None:
+    """View and parent share data — modifications in either are visible in the other."""
+    m = create_matrix(1, 2, [(0, 0, 1.0), (0, 1, 2.0)])
+    view = m.getView()
+
+    # setElement on view modifies the underlying matrix
+    view.setElement(0, 0, 99.0)  # type: ignore[call-arg]
+    assert m.getElement(0, 0) == 99.0
+
+    # Changes to the matrix are visible in the view
+    m.setElement(0, 0, 88.0)
+    assert view.getElement(0, 0) == 88.0
+
+
+# ---------------------------------------------------------------------------
+# Bounds checking
+# ---------------------------------------------------------------------------
+
+
+def test_bounds_checking() -> None:
+    """Bounds checking on matrix and view raises IndexError."""
+    m = create_matrix(2, 3, [(0, 0, 1.0)])
+
+    # Matrix bounds — getElement and setElement
+    with pytest.raises(IndexError):
+        m.getElement(5, 0)
+    with pytest.raises(IndexError):
+        m.getElement(0, 5)
+    with pytest.raises(IndexError):
+        m.setElement(5, 0, 1.0)
+    with pytest.raises(IndexError):
+        m.setElement(0, 5, 1.0)
+
+    # View bounds — getElement and setElement
+    view = m.getView()
+    with pytest.raises(IndexError):
+        view.getElement(5, 0)
+    with pytest.raises(IndexError):
+        view.getElement(0, 5)
+    with pytest.raises(IndexError):
+        view.setElement(5, 0, 1.0)  # type: ignore[call-arg]
+    with pytest.raises(IndexError):
+        view.setElement(0, 5, 1.0)  # type: ignore[call-arg]
+
+
+# ---------------------------------------------------------------------------
+# View comparison
+# ---------------------------------------------------------------------------
+
+
+def test_view_equality() -> None:
+    """Two views of identical matrices are equal."""
+    entries = [(0, 0, 1.0), (0, 2, 2.5), (1, 1, -3.0)]
+    m1 = create_matrix(2, 3, entries)
+    m2 = create_matrix(2, 3, entries)
+    assert m1.getView() == m2.getView()  # type: ignore[operator]
+
+
+def test_view_inequality() -> None:
+    """Views of different matrices are not equal."""
+    m1 = create_matrix(2, 3, [(0, 0, 1.0), (0, 2, 2.5)])
+    m2 = create_matrix(2, 3, [(0, 0, 1.0), (0, 2, 9.9)])
+    assert m1.getView() != m2.getView()  # type: ignore[operator]
+
+
+# ---------------------------------------------------------------------------
+# Base class inheritance and memory management
+# ---------------------------------------------------------------------------
+
+
+def test_isinstance_dense_matrix_base_cuda() -> None:
+    """DenseMatrix and DenseMatrixView inherit from DenseMatrixBase (CUDA)."""
+    from pytnl._matrices_cuda import DenseMatrixBase_float  # type: ignore[import-not-found]  # noqa: PLC0415
+
+    m = DenseMatrix[float, Cuda]()
+    m.setDimensions(2, 2)
+    m.setValue(5.0)
+    assert isinstance(m, DenseMatrixBase_float)
+    view = m.getView()
+    assert isinstance(view, DenseMatrixBase_float)
+
+
+def test_inherited_get_values_reference_internal_cuda() -> None:
+    """getValues() on a view keeps the view alive via reference_internal (CUDA)."""
+    import gc  # noqa: PLC0415
+
+    m = DenseMatrix[float, Cuda]()
+    m.setDimensions(2, 2)
+    m.setValue(5.0)
+    view = m.getView()
+    vals = view.getValues()
+    del view
+    gc.collect()
+    # vals should still be accessible because reference_internal keeps the view alive
+    assert vals.getSize() == 4
+
+
+def test_bind_keep_alive_temporary_view_cuda() -> None:
+    """bind() keeps a temporary source view alive via keep_alive (CUDA)."""
+    import gc  # noqa: PLC0415
+
+    m = DenseMatrix[float, Cuda]()
+    m.setDimensions(2, 2)
+    m.setValue(42.0)
+
+    target = DenseMatrix[float, Cuda]()
+    target.setDimensions(2, 2)
+    target_view = target.getView()
+
+    target_view.bind(m.getView())
+    gc.collect()
+
+    assert target_view.getElement(0, 0) == 42.0
+
+
+# ---------------------------------------------------------------------------
+# isBinary / isSymmetric (def_static on MatrixBase, inherited by owners & views)
+# ---------------------------------------------------------------------------
+
+
+def test_is_binary_is_symmetric_cuda() -> None:
+    """isBinary/isSymmetric return False for GeneralMatrix on owner and view (CUDA)."""
+    m = create_matrix(2, 2, [(0, 0, 1.0), (1, 1, 2.0)])
+
+    # Instance-level calls on the owning matrix
+    assert m.isBinary() is False
+    assert m.isSymmetric() is False
+
+    # Static calls on the class itself
+    assert DM.isBinary() is False
+    assert DM.isSymmetric() is False
+
+    # Instance-level calls on a mutable view
+    view = m.getView()
+    assert view.isBinary() is False  # type: ignore[attr-defined]
+    assert view.isSymmetric() is False  # type: ignore[attr-defined]
+
+    # Instance-level calls on a const view
+    cview = m.getConstView()
+    assert cview.isBinary() is False  # type: ignore[attr-defined]
+    assert cview.isSymmetric() is False  # type: ignore[attr-defined]
