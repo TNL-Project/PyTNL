@@ -134,7 +134,7 @@ FetchContent_MakeAvailable(TNL)
 FetchContent_Declare(
     nanobind
     GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-    GIT_TAG v2.12.0
+    GIT_TAG v2.13.0
     SYSTEM
     # FIND_PACKAGE_ARGS disabled: system package is on version 2.13.0, whose
     # stubgen wraps read-only static properties in Final[...] (PR #1303). That
