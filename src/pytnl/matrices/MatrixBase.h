@@ -2,6 +2,7 @@
 
 #include <pytnl/pytnl.h>
 
+#include <TNL/Algorithms/Segments/ElementsOrganization.h>
 #include <TNL/Matrices/MatrixBase.h>
 
 // Registering MatrixBase as a nanobind base class would not be useful/effective:
@@ -16,5 +17,6 @@ def_MatrixBaseMethods( MatrixClass& matrix )
       .def( "getColumns", &Matrix::getColumns )
       .def( "getAllocatedElementsCount", &Matrix::getAllocatedElementsCount )
       .def_static( "isBinary", &Matrix::isBinary )
-      .def_static( "isSymmetric", &Matrix::isSymmetric );
+      .def_static( "isSymmetric", &Matrix::isSymmetric )
+      .def_static( "getOrganization", &Matrix::getOrganization );
 }

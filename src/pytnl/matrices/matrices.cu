@@ -2,6 +2,7 @@
 #include <pytnl/pytnl.h>
 
 #include <TNL/Algorithms/Segments/CSR.h>
+#include <TNL/Algorithms/Segments/ElementsOrganization.h>
 #include <TNL/Algorithms/Segments/Ellpack.h>
 #include <TNL/Algorithms/Segments/SlicedEllpack.h>
 #include <TNL/Matrices/DenseMatrix.h>
@@ -23,7 +24,11 @@ using E_cuda = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Cuda, IndexT
 using SE_cuda =
    TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Cuda, IndexType, TNL::Matrices::GeneralMatrix, SlicedEllpack >;
 
-using Dense_cuda = TNL::Matrices::DenseMatrix< RealType, TNL::Devices::Cuda, IndexType >;
+using Dense_cuda_ColumnMajor =
+   TNL::Matrices::DenseMatrix< RealType, TNL::Devices::Cuda, IndexType, TNL::Algorithms::Segments::ColumnMajorOrder >;
+
+using Dense_cuda_RowMajor =
+   TNL::Matrices::DenseMatrix< RealType, TNL::Devices::Cuda, IndexType, TNL::Algorithms::Segments::RowMajorOrder >;
 
 // Base class types (mutable) — SparseMatrix::Base is private in TNL, so we
 // construct the type from public typedefs.
@@ -48,8 +53,11 @@ using SparseMatrixBase_SE_cuda = TNL::Matrices::SparseMatrixBase<
    TNL::Matrices::GeneralMatrix,
    typename SE_cuda::SegmentsType::ViewType,
    RealType >;
-using DenseMatrixBase_cuda =
-   TNL::Matrices::DenseMatrixBase< RealType, TNL::Devices::Cuda, IndexType, Dense_cuda::getOrganization() >;
+using DenseMatrixBase_cuda_ColumnMajor =
+   TNL::Matrices::DenseMatrixBase< RealType, TNL::Devices::Cuda, IndexType, TNL::Algorithms::Segments::ColumnMajorOrder >;
+
+using DenseMatrixBase_cuda_RowMajor =
+   TNL::Matrices::DenseMatrixBase< RealType, TNL::Devices::Cuda, IndexType, TNL::Algorithms::Segments::RowMajorOrder >;
 
 // Base class types (const — for const views, Real is const-qualified and
 // SegmentsView uses ConstViewType per SparseMatrixView's inheritance)
@@ -74,8 +82,11 @@ using SparseMatrixBase_SE_cuda_const = TNL::Matrices::SparseMatrixBase<
    TNL::Matrices::GeneralMatrix,
    typename SE_cuda::SegmentsType::ViewType::ConstViewType,
    RealType >;
-using DenseMatrixBase_cuda_const =
-   TNL::Matrices::DenseMatrixBase< const RealType, TNL::Devices::Cuda, IndexType, Dense_cuda::getOrganization() >;
+using DenseMatrixBase_cuda_ColumnMajor_const =
+   TNL::Matrices::DenseMatrixBase< const RealType, TNL::Devices::Cuda, IndexType, TNL::Algorithms::Segments::ColumnMajorOrder >;
+
+using DenseMatrixBase_cuda_RowMajor_const =
+   TNL::Matrices::DenseMatrixBase< const RealType, TNL::Devices::Cuda, IndexType, TNL::Algorithms::Segments::RowMajorOrder >;
 
 void
 export_base_classes( nb::module_& m )
@@ -88,8 +99,11 @@ export_base_classes( nb::module_& m )
    export_SparseMatrixBaseClass< SparseMatrixBase_E_cuda_const >( m, "SparseMatrixBase_float_Ellpack_const" );
    export_SparseMatrixBaseClass< SparseMatrixBase_SE_cuda_const >( m, "SparseMatrixBase_float_SlicedEllpack_const" );
 
-   export_DenseMatrixBaseClass< DenseMatrixBase_cuda >( m, "DenseMatrixBase_float" );
-   export_DenseMatrixBaseClass< DenseMatrixBase_cuda_const >( m, "DenseMatrixBase_float_const" );
+   export_DenseMatrixBaseClass< DenseMatrixBase_cuda_ColumnMajor >( m, "DenseMatrixBase_float_ColumnMajor" );
+   export_DenseMatrixBaseClass< DenseMatrixBase_cuda_ColumnMajor_const >( m, "DenseMatrixBase_float_ColumnMajor_const" );
+
+   export_DenseMatrixBaseClass< DenseMatrixBase_cuda_RowMajor >( m, "DenseMatrixBase_float_RowMajor" );
+   export_DenseMatrixBaseClass< DenseMatrixBase_cuda_RowMajor_const >( m, "DenseMatrixBase_float_RowMajor_const" );
 }
 
 void
@@ -126,13 +140,24 @@ export_SparseMatrices( nb::module_& m )
 void
 export_DenseMatrices( nb::module_& m )
 {
-   export_DenseMatrix< Dense_cuda, DenseMatrixBase_cuda >( m, "DenseMatrix_float" );
+   export_DenseMatrix< Dense_cuda_ColumnMajor, DenseMatrixBase_cuda_ColumnMajor >( m, "DenseMatrix_float_ColumnMajor" );
 
-   export_DenseRowView< typename Dense_cuda::RowView >( m, "DenseMatrixRowView" );
-   export_DenseRowView< typename Dense_cuda::ConstRowView >( m, "DenseMatrixConstRowView" );
+   export_DenseRowView< typename Dense_cuda_ColumnMajor::RowView >( m, "DenseMatrixRowView_float_ColumnMajor" );
+   export_DenseRowView< typename Dense_cuda_ColumnMajor::ConstRowView >( m, "DenseMatrixConstRowView_float_ColumnMajor" );
 
-   export_DenseMatrixView< typename Dense_cuda::ViewType, DenseMatrixBase_cuda >( m, "DenseMatrixView_float" );
-   export_DenseMatrixView< typename Dense_cuda::ConstViewType, DenseMatrixBase_cuda_const >( m, "DenseMatrixView_float_const" );
+   export_DenseMatrixView< typename Dense_cuda_ColumnMajor::ViewType, DenseMatrixBase_cuda_ColumnMajor >(
+      m, "DenseMatrixView_float_ColumnMajor" );
+   export_DenseMatrixView< typename Dense_cuda_ColumnMajor::ConstViewType, DenseMatrixBase_cuda_ColumnMajor_const >(
+      m, "DenseMatrixView_float_ColumnMajor_const" );
+
+   export_DenseMatrix< Dense_cuda_RowMajor, DenseMatrixBase_cuda_RowMajor >( m, "DenseMatrix_float_RowMajor" );
+   export_DenseMatrixView< typename Dense_cuda_RowMajor::ViewType, DenseMatrixBase_cuda_RowMajor >(
+      m, "DenseMatrixView_float_RowMajor" );
+   export_DenseMatrixView< typename Dense_cuda_RowMajor::ConstViewType, DenseMatrixBase_cuda_RowMajor_const >(
+      m, "DenseMatrixView_float_RowMajor_const" );
+
+   export_DenseRowView< typename Dense_cuda_RowMajor::RowView >( m, "DenseMatrixRowView_float_RowMajor" );
+   export_DenseRowView< typename Dense_cuda_RowMajor::ConstRowView >( m, "DenseMatrixConstRowView_float_RowMajor" );
 }
 
 // Python module definition
@@ -142,10 +167,12 @@ NB_MODULE( _matrices_cuda, m )
 
    // import depending modules
    nb::module_::import_( "pytnl._containers_cuda" );
+   // Import the Host module so the ElementsOrganization enum type caster
+   // is available for getOrganization() on CUDA matrices.
+   nb::module_::import_( "pytnl._matrices" );
 
-   // format tags are not exported here — they are device-independent and
-   // defined only in the Host module (_matrices), which __init__.py always
-   // imports before any CUDA usage
+   // Format tags and ElementsOrganization are not exported here — they are
+   // device-independent and defined only in the Host module.
    export_base_classes( m );
    export_SparseMatrices( m );
    export_DenseMatrices( m );
