@@ -162,12 +162,12 @@ export_SparseMatrices( nb::module_& m )
    export_SparseMatrixView< typename SE_host::ConstViewType, SparseMatrixBase_SE_host_const >(
       m, "SparseMatrixView_float_SlicedEllpack_const" );
 
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_host, E_host > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_host, CSR_host > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_host, SE_host > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, CSR_host > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_host, SE_host > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_host, E_host > );
+   def_copySparseMatrix< CSR_host, E_host >( m );
+   def_copySparseMatrix< E_host, CSR_host >( m );
+   def_copySparseMatrix< CSR_host, SE_host >( m );
+   def_copySparseMatrix< SE_host, CSR_host >( m );
+   def_copySparseMatrix< E_host, SE_host >( m );
+   def_copySparseMatrix< SE_host, E_host >( m );
 }
 
 void

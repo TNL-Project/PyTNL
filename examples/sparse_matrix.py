@@ -2,12 +2,13 @@
 
 import random
 import tempfile
+from importlib.util import find_spec
 from pathlib import Path
 
 from pytnl._containers import Vector_int
 from pytnl.containers import Vector
-from pytnl.devices import Host
-from pytnl.matrices import SparseMatrix, formats
+from pytnl.devices import Cuda, Host
+from pytnl.matrices import SparseMatrix, copySparseMatrix, formats
 
 SIZE = 100
 
@@ -29,6 +30,18 @@ def fill_random(matrix: SparseMatrixType, p: float = 0.1) -> None:
         for j in range(matrix.getColumns()):
             if random.random() < p:
                 matrix.addElement(i, j, random.random(), 1)
+
+
+def set_elements(matrix: SparseMatrixType, rows: int, cols: int, entries: list[tuple[int, int, float]]) -> None:
+    matrix.setDimensions(rows, cols)
+    capacities = Vector[int](rows)
+    for i in range(rows):
+        capacities[i] = 0
+    for r, _c, _v in entries:
+        capacities[r] += 1
+    matrix.setRowCapacities(capacities)
+    for r, c, v in entries:
+        matrix.setElement(r, c, v)
 
 
 def print_matrix(name: str, matrix: SparseMatrixType) -> None:
@@ -123,9 +136,66 @@ def demo_save_load_equality() -> None:
     print(f"equal: {equal}, not equal: {nequal}")
 
 
+def demo_copy_sparse_matrix() -> None:
+    """Convert a CSR matrix to Ellpack and back via copySparseMatrix."""
+    entries = [
+        (0, 0, 1.0),
+        (0, 2, 2.5),
+        (1, 1, -3.0),
+        (2, 0, 4.0),
+        (2, 4, 7.0),
+        (3, 3, 0.5),
+        (4, 1, 9.0),
+    ]
+    rows = 5
+    cols = 5
+
+    print("--- copySparseMatrix on Host ---\n")
+
+    csr = CSR()
+    set_elements(csr, rows, cols, entries)
+
+    ell = Ellpack()
+    ell.setDimensions(rows, cols)
+    copySparseMatrix(ell, csr)
+    print(f"CSR -> Ellpack: nnz={ell.getNonzeroElementsCount()}")
+    for r, c, v in entries:
+        assert ell.getElement(r, c) == v
+
+    csr2 = CSR()
+    csr2.setDimensions(rows, cols)
+    copySparseMatrix(csr2, ell)
+    print(f"Ellpack -> CSR: nnz={csr2.getNonzeroElementsCount()}")
+    for r, c, v in entries:
+        assert csr2.getElement(r, c) == v
+
+    if find_spec("pytnl._matrices_cuda") is None:
+        print("\n(CUDA module not available — skipping Cuda)")
+        return
+
+    print("\n--- copySparseMatrix cross-device ---\n")
+
+    cuda_ell = SparseMatrix[float, Cuda, formats.Ellpack]()
+    cuda_ell.setDimensions(rows, cols)
+    copySparseMatrix(cuda_ell, csr)
+    print(f"Host CSR -> Cuda Ellpack: nnz={cuda_ell.getNonzeroElementsCount()}")
+    for r, c, v in entries:
+        assert cuda_ell.getElement(r, c) == v
+
+    host_csr = CSR()
+    host_csr.setDimensions(rows, cols)
+    copySparseMatrix(host_csr, cuda_ell)
+    print(f"Cuda Ellpack -> Host CSR: nnz={host_csr.getNonzeroElementsCount()}")
+    for r, c, v in entries:
+        assert host_csr.getElement(r, c) == v
+
+    print()
+
+
 def main() -> None:
     demo_coordinate_construction()
     demo_save_load_equality()
+    demo_copy_sparse_matrix()
 
 
 if __name__ == "__main__":

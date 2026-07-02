@@ -469,4 +469,21 @@ DenseMatrixConstRowView = pytnl._matrices.DenseMatrixConstRowView_float_RowMajor
 SparseMatrixRowView = pytnl._matrices.SparseMatrixRowView
 SparseMatrixConstRowView = pytnl._matrices.SparseMatrixConstRowView
 
-copySparseMatrix = pytnl._matrices.copySparseMatrix
+
+def copySparseMatrix(destination: Any, source: Any) -> None:  # noqa: ANN401
+    """
+    Copy a sparse matrix to another, possibly different, format or device.
+
+    Dispatches to the Host or CUDA backend based on the source and
+    destination matrix modules. Cross-device copies (Host ↔ Cuda) are
+    dispatched to the CUDA module, which has both Host and Cuda overloads.
+    """
+    src_is_cuda = type(source).__module__.startswith("pytnl._matrices_cuda")
+    dst_is_cuda = type(destination).__module__.startswith("pytnl._matrices_cuda")
+
+    if src_is_cuda or dst_is_cuda:
+        import pytnl._matrices_cuda as _matrices_cuda  # type: ignore[import-not-found, unused-ignore]  # noqa: PLC0415
+
+        _matrices_cuda.copySparseMatrix(destination, source)  # pyright: ignore[reportUnknownMemberType]
+    else:
+        pytnl._matrices.copySparseMatrix(destination, source)
