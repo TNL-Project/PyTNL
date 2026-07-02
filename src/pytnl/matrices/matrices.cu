@@ -24,6 +24,11 @@ using E_cuda = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Cuda, IndexT
 using SE_cuda =
    TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Cuda, IndexType, TNL::Matrices::GeneralMatrix, SlicedEllpack >;
 
+using CSR_host = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, CSR >;
+using E_host = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, Ellpack >;
+using SE_host =
+   TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, SlicedEllpack >;
+
 using Dense_cuda_ColumnMajor =
    TNL::Matrices::DenseMatrix< RealType, TNL::Devices::Cuda, IndexType, TNL::Algorithms::Segments::ColumnMajorOrder >;
 
@@ -129,12 +134,34 @@ export_SparseMatrices( nb::module_& m )
    export_SparseMatrixView< typename SE_cuda::ConstViewType, SparseMatrixBase_SE_cuda_const >(
       m, "SparseMatrixView_float_SlicedEllpack_const" );
 
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_cuda, E_cuda > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_cuda, CSR_cuda > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< CSR_cuda, SE_cuda > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_cuda, CSR_cuda > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< E_cuda, SE_cuda > );
-   m.def( "copySparseMatrix", &TNL::Matrices::copySparseMatrix< SE_cuda, E_cuda > );
+   def_copySparseMatrix< CSR_cuda, E_cuda >( m );
+   def_copySparseMatrix< E_cuda, CSR_cuda >( m );
+   def_copySparseMatrix< CSR_cuda, SE_cuda >( m );
+   def_copySparseMatrix< SE_cuda, CSR_cuda >( m );
+   def_copySparseMatrix< E_cuda, SE_cuda >( m );
+   def_copySparseMatrix< SE_cuda, E_cuda >( m );
+
+   // cross-device (destination=Host, source=Cuda)
+   def_copySparseMatrix< CSR_host, CSR_cuda >( m );
+   def_copySparseMatrix< CSR_host, E_cuda >( m );
+   def_copySparseMatrix< CSR_host, SE_cuda >( m );
+   def_copySparseMatrix< E_host, CSR_cuda >( m );
+   def_copySparseMatrix< E_host, E_cuda >( m );
+   def_copySparseMatrix< E_host, SE_cuda >( m );
+   def_copySparseMatrix< SE_host, CSR_cuda >( m );
+   def_copySparseMatrix< SE_host, E_cuda >( m );
+   def_copySparseMatrix< SE_host, SE_cuda >( m );
+
+   // cross-device (destination=Cuda, source=Host)
+   def_copySparseMatrix< CSR_cuda, CSR_host >( m );
+   def_copySparseMatrix< CSR_cuda, E_host >( m );
+   def_copySparseMatrix< CSR_cuda, SE_host >( m );
+   def_copySparseMatrix< E_cuda, CSR_host >( m );
+   def_copySparseMatrix< E_cuda, E_host >( m );
+   def_copySparseMatrix< E_cuda, SE_host >( m );
+   def_copySparseMatrix< SE_cuda, CSR_host >( m );
+   def_copySparseMatrix< SE_cuda, E_host >( m );
+   def_copySparseMatrix< SE_cuda, SE_host >( m );
 }
 
 void

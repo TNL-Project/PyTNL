@@ -4,6 +4,7 @@
 
 #include <TNL/Containers/Vector.h>
 #include <TNL/Matrices/SparseMatrixView.h>
+#include <TNL/Matrices/SparseOperations.h>
 #include <TNL/TypeTraits.h>
 
 #include <pytnl/containers/indexing.h>
@@ -320,4 +321,15 @@ export_SparseMatrixView( nb::module_& m, const char* name )
    // on ViewType, so it must be registered here (not on the base class)
    view.def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) );
    view.def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) );
+}
+
+template< typename DestinationMatrix, typename SourceMatrix >
+void
+def_copySparseMatrix( nb::module_& m )
+{
+   m.def(
+      "copySparseMatrix",
+      &TNL::Matrices::copySparseMatrix< DestinationMatrix, SourceMatrix >,
+      nb::arg( "destination" ),
+      nb::arg( "source" ) );
 }

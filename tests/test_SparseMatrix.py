@@ -501,12 +501,19 @@ def test_copySparseMatrix_csr_to_ellpack_and_back() -> None:
 
     dest_ell = Ellpack()
     dest_ell.setDimensions(3, 3)
-    copySparseMatrix(source, dest_ell)
+    copySparseMatrix(dest_ell, source)
+    for r, c, v in entries:
+        assert dest_ell.getElement(r, c) == v
 
     dest_csr = CSR()
     dest_csr.setDimensions(3, 3)
-    copySparseMatrix(dest_ell, dest_csr)
-    assert dest_csr == source
+    copySparseMatrix(dest_csr, dest_ell)
+    for r, c, v in entries:
+        assert dest_csr.getElement(r, c) == v
+    assert dest_csr.getElement(1, 0) == 0.0
+    assert dest_csr.getElement(2, 2) == 0.0
+    assert dest_csr.getRows() == 3
+    assert dest_csr.getColumns() == 3
 
 
 def test_copySparseMatrix_csr_to_sliced_ellpack_and_back() -> None:
@@ -516,12 +523,19 @@ def test_copySparseMatrix_csr_to_sliced_ellpack_and_back() -> None:
 
     dest_se = SlicedEllpack()
     dest_se.setDimensions(3, 3)
-    copySparseMatrix(source, dest_se)
+    copySparseMatrix(dest_se, source)
+    for r, c, v in entries:
+        assert dest_se.getElement(r, c) == v
 
     dest_csr = CSR()
     dest_csr.setDimensions(3, 3)
-    copySparseMatrix(dest_se, dest_csr)
-    assert dest_csr == source
+    copySparseMatrix(dest_csr, dest_se)
+    for r, c, v in entries:
+        assert dest_csr.getElement(r, c) == v
+    assert dest_csr.getElement(1, 0) == 0.0
+    assert dest_csr.getElement(2, 2) == 0.0
+    assert dest_csr.getRows() == 3
+    assert dest_csr.getColumns() == 3
 
 
 def test_copySparseMatrix_ellpack_to_sliced_ellpack_and_back() -> None:
@@ -531,20 +545,23 @@ def test_copySparseMatrix_ellpack_to_sliced_ellpack_and_back() -> None:
 
     dest_se = SlicedEllpack()
     dest_se.setDimensions(3, 3)
-    copySparseMatrix(source, dest_se)
+    copySparseMatrix(dest_se, source)
+    for r, c, v in entries:
+        assert dest_se.getElement(r, c) == v
 
     dest_ell = Ellpack()
     dest_ell.setDimensions(3, 3)
-    copySparseMatrix(dest_se, dest_ell)
-    assert dest_ell == source
+    copySparseMatrix(dest_ell, dest_se)
+    for r, c, v in entries:
+        assert dest_ell.getElement(r, c) == v
+    assert dest_ell.getElement(1, 0) == 0.0
+    assert dest_ell.getElement(2, 2) == 0.0
+    assert dest_ell.getRows() == 3
+    assert dest_ell.getColumns() == 3
 
 
 def test_copySparseMatrix_all_pairs() -> None:
-    """All six conversion pairs must not raise and produce equal content.
-
-    Cross-format comparison (e.g. CSR == Ellpack) returns NotImplemented
-    in nanobind, so we verify by converting back to the original format.
-    """
+    """All six conversion pairs preserve content (verified via getElement)."""
     entries = [(0, 0, 1.0), (1, 1, 2.0)]
     source_csr = create_matrix(CSR, 2, 2, entries)
     source_ell = create_matrix(Ellpack, 2, 2, entries)  # type: ignore[arg-type]
@@ -569,13 +586,19 @@ def test_copySparseMatrix_all_pairs() -> None:
 
         dst = dst_type()
         dst.setDimensions(2, 2)
-        copySparseMatrix(src, dst)
+        copySparseMatrix(dst, src)
+        for r, c, v in entries:
+            assert dst.getElement(r, c) == v
 
-        # Round-trip back to original format to verify content equality
         roundtrip = roundtrip_type()
         roundtrip.setDimensions(2, 2)
-        copySparseMatrix(dst, roundtrip)
-        assert roundtrip == src
+        copySparseMatrix(roundtrip, dst)
+        for r, c, v in entries:
+            assert roundtrip.getElement(r, c) == v
+        assert roundtrip.getElement(0, 1) == 0.0
+        assert roundtrip.getElement(1, 0) == 0.0
+        assert roundtrip.getRows() == 2
+        assert roundtrip.getColumns() == 2
 
 
 # ---------------------------------------------------------------------------
