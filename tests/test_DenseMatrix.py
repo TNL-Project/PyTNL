@@ -10,15 +10,15 @@ import pytnl._matrices
 from pytnl._containers import Vector_int
 from pytnl.containers import Vector
 from pytnl.devices import Host
-from pytnl.matrices import DenseMatrix, DenseMatrixRowView, DenseMatrixView
+from pytnl.matrices import DenseMatrix, DenseMatrixRowView, DenseMatrixView, ElementsOrganization
 
 # ---------------------------------------------------------------------------
 # Single host matrix type (no format parameter — only value_type + device_type)
 # ---------------------------------------------------------------------------
 
-DM = pytnl._matrices.DenseMatrix_float
-DV = pytnl._matrices.DenseMatrixView_float
-DV_const = pytnl._matrices.DenseMatrixView_float_const
+DM = pytnl._matrices.DenseMatrix_float_RowMajor
+DV = pytnl._matrices.DenseMatrixView_float_RowMajor
+DV_const = pytnl._matrices.DenseMatrixView_float_RowMajor_const
 
 
 # ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ def create_matrix(
     rows: int,
     cols: int,
     entries: list[tuple[int, int, float]],
-) -> pytnl._matrices.DenseMatrix_float:
+) -> pytnl._matrices.DenseMatrix_float_RowMajor:
     """Create a dense matrix filled with the given entries.
 
     ``entries`` is a list of ``(row, col, value)`` tuples.
@@ -45,7 +45,7 @@ def create_matrix(
     return m
 
 
-def identity_matrix(size: int) -> pytnl._matrices.DenseMatrix_float:
+def identity_matrix(size: int) -> pytnl._matrices.DenseMatrix_float_RowMajor:
     """Create a size x size identity matrix."""
     entries = [(i, i, 1.0) for i in range(size)]
     return create_matrix(size, size, entries)
@@ -907,14 +907,14 @@ def test_const_view_dlpack_read_only() -> None:
 
 def test_isinstance_dense_matrix_base() -> None:
     """DenseMatrix and DenseMatrixView inherit from DenseMatrixBase."""
-    from pytnl._matrices import DenseMatrixBase_float  # type: ignore[attr-defined, unused-ignore]  # noqa: PLC0415
+    from pytnl._matrices import DenseMatrixBase_float_RowMajor  # type: ignore[attr-defined, unused-ignore]  # noqa: PLC0415
 
     m = DenseMatrix[float]()
     m.setDimensions(2, 2)
     m.setValue(5.0)
-    assert isinstance(m, DenseMatrixBase_float)
+    assert isinstance(m, DenseMatrixBase_float_RowMajor)
     view = m.getView()
-    assert isinstance(view, DenseMatrixBase_float)
+    assert isinstance(view, DenseMatrixBase_float_RowMajor)
 
 
 def test_inherited_get_values_reference_internal() -> None:
@@ -977,3 +977,58 @@ def test_is_binary_is_symmetric() -> None:
     cview = m.getConstView()
     assert cview.isBinary() is False
     assert cview.isSymmetric() is False
+
+
+# ---------------------------------------------------------------------------
+# Organization parameter
+# ---------------------------------------------------------------------------
+
+
+def test_organization_subscript_returns_correct_class() -> None:
+    """DenseMatrix subscript with organization resolves to correct C++ class."""
+    assert DenseMatrix[float, Host, ElementsOrganization.RowMajorOrder] is DM
+    assert DenseMatrix[float, Host, ElementsOrganization.ColumnMajorOrder] is pytnl._matrices.DenseMatrix_float_ColumnMajor
+
+
+def test_organization_default() -> None:
+    """DenseMatrix[float] defaults to RowMajor on Host."""
+    assert DenseMatrix[float] is DenseMatrix[float, Host, ElementsOrganization.RowMajorOrder]
+
+
+def test_getOrganization_returns_correct_enum() -> None:
+    """getOrganization() returns the correct ElementsOrganization enum value."""
+    m_row = DenseMatrix[float, Host, ElementsOrganization.RowMajorOrder]()
+    assert m_row.getOrganization() == ElementsOrganization.RowMajorOrder
+
+    m_col = DenseMatrix[float, Host, ElementsOrganization.ColumnMajorOrder]()
+    assert m_col.getOrganization() == ElementsOrganization.ColumnMajorOrder
+
+
+def test_organization_dlpack_strides() -> None:
+    """DLPack strides match the matrix organization."""
+    rows, cols = 3, 4
+    m_row = DenseMatrix[float, Host, ElementsOrganization.RowMajorOrder](rows, cols)
+    arr_row = np.from_dlpack(m_row)
+    assert arr_row.flags["C_CONTIGUOUS"]
+    assert not arr_row.flags["F_CONTIGUOUS"]
+
+    m_col = DenseMatrix[float, Host, ElementsOrganization.ColumnMajorOrder](rows, cols)
+    arr_col = np.from_dlpack(m_col)
+    assert arr_col.flags["F_CONTIGUOUS"]
+    assert not arr_col.flags["C_CONTIGUOUS"]
+
+
+def test_organization_invalid_org_raises() -> None:
+    """Invalid organization raises TypeError."""
+
+    class BadOrg:
+        pass
+
+    with pytest.raises(TypeError):
+        DenseMatrix[float, Host, BadOrg]  # type: ignore[index]
+
+
+def test_view_organization_subscript_returns_correct_class() -> None:
+    """DenseMatrixView subscript with organization resolves to correct C++ class."""
+    assert DenseMatrixView[float, Host, ElementsOrganization.RowMajorOrder] is DV
+    assert DenseMatrixView[float, Host, ElementsOrganization.ColumnMajorOrder] is pytnl._matrices.DenseMatrixView_float_ColumnMajor

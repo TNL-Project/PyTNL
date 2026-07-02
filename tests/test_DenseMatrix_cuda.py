@@ -14,7 +14,7 @@ from hypothesis import strategies as st
 
 from pytnl.containers import Vector
 from pytnl.devices import Cuda
-from pytnl.matrices import DenseMatrix
+from pytnl.matrices import DenseMatrix, DenseMatrixView, ElementsOrganization
 
 if TYPE_CHECKING:
     import pytnl._containers_cuda as _containers_cuda  # type: ignore[import-not-found]
@@ -32,7 +32,7 @@ pytestmark = pytest.mark.cuda
 # Single CUDA matrix type (no format parameter — only value_type + device_type)
 # ---------------------------------------------------------------------------
 
-DM = _matrices_cuda.DenseMatrix_float
+DM = _matrices_cuda.DenseMatrix_float_ColumnMajor
 
 
 # ---------------------------------------------------------------------------
@@ -699,14 +699,14 @@ def test_view_inequality() -> None:
 
 def test_isinstance_dense_matrix_base_cuda() -> None:
     """DenseMatrix and DenseMatrixView inherit from DenseMatrixBase (CUDA)."""
-    from pytnl._matrices_cuda import DenseMatrixBase_float  # type: ignore[import-not-found]  # noqa: PLC0415
+    from pytnl._matrices_cuda import DenseMatrixBase_float_ColumnMajor  # type: ignore[import-not-found]  # noqa: PLC0415
 
     m = DenseMatrix[float, Cuda]()
     m.setDimensions(2, 2)
     m.setValue(5.0)
-    assert isinstance(m, DenseMatrixBase_float)
+    assert isinstance(m, DenseMatrixBase_float_ColumnMajor)
     view = m.getView()
-    assert isinstance(view, DenseMatrixBase_float)
+    assert isinstance(view, DenseMatrixBase_float_ColumnMajor)
 
 
 def test_inherited_get_values_reference_internal_cuda() -> None:
@@ -768,3 +768,50 @@ def test_is_binary_is_symmetric_cuda() -> None:
     cview = m.getConstView()
     assert cview.isBinary() is False  # type: ignore[attr-defined]
     assert cview.isSymmetric() is False  # type: ignore[attr-defined]
+
+
+# ---------------------------------------------------------------------------
+# Organization parameter
+# ---------------------------------------------------------------------------
+
+
+def test_organization_subscript_cuda() -> None:
+    """DenseMatrix subscript with organization resolves to correct CUDA C++ class."""
+    assert DenseMatrix[float, Cuda] is _matrices_cuda.DenseMatrix_float_ColumnMajor
+    assert DenseMatrix[float, Cuda, ElementsOrganization.RowMajorOrder] is _matrices_cuda.DenseMatrix_float_RowMajor
+
+
+def test_organization_default_cuda() -> None:
+    """DenseMatrix[float, Cuda] defaults to ColumnMajor on CUDA."""
+    assert DenseMatrix[float, Cuda] is DenseMatrix[float, Cuda, ElementsOrganization.ColumnMajorOrder]
+
+
+def test_getOrganization_cuda() -> None:
+    """getOrganization() returns correct ElementsOrganization enum on CUDA."""
+    m_default = DenseMatrix[float, Cuda]()
+    assert m_default.getOrganization() == ElementsOrganization.ColumnMajorOrder
+
+    m_row = DenseMatrix[float, Cuda, ElementsOrganization.RowMajorOrder]()  # type: ignore[call-arg]
+    assert m_row.getOrganization() == ElementsOrganization.RowMajorOrder
+
+
+def test_organization_dlpack_strides_cuda() -> None:
+    """DLPack strides match matrix organization on CUDA."""
+    rows, cols = 3, 4
+    m_col = DenseMatrix[float, Cuda](rows, cols)
+    arr_col = cp.from_dlpack(m_col)
+    assert arr_col.flags["F_CONTIGUOUS"]
+    assert not arr_col.flags["C_CONTIGUOUS"]
+
+    m_row = DenseMatrix[float, Cuda, ElementsOrganization.RowMajorOrder](rows, cols)  # type: ignore[call-arg]
+    arr_row = cp.from_dlpack(m_row)
+    assert arr_row.flags["C_CONTIGUOUS"]
+    assert not arr_row.flags["F_CONTIGUOUS"]
+
+
+def test_view_organization_subscript_cuda() -> None:
+    """DenseMatrixView subscript with organization resolves to correct CUDA C++ class."""
+    assert (
+        DenseMatrixView[float, Cuda, ElementsOrganization.RowMajorOrder]  # type: ignore[index]
+        is _matrices_cuda.DenseMatrixView_float_RowMajor
+    )
