@@ -3,16 +3,16 @@
 #include <pytnl/pytnl.h>
 
 #include <TNL/Containers/Vector.h>
-#include <TNL/Matrices/SparseMatrixView.h>
-#include <TNL/Matrices/SparseOperations.h>
+#include <TNL/Matrices/DenseMatrixView.h>
 #include <TNL/TypeTraits.h>
 
+#include <pytnl/containers/dlpack.h>
 #include <pytnl/containers/indexing.h>
 #include "MatrixBase.h"
 
 template< typename RowView, typename Scope >
 void
-export_RowView( Scope& s, const char* name )
+export_DenseRowView( Scope& s, const char* name )
 {
    using RealType = typename RowView::RealType;
    using IndexType = typename RowView::IndexType;
@@ -20,135 +20,68 @@ export_RowView( Scope& s, const char* name )
    auto rowView = nb::class_< RowView >( s, name )
                      .def( "getSize", &RowView::getSize )
                      .def( "getRowIndex", &RowView::getRowIndex )
-                     .def_static( "isBinary", &RowView::isBinary )
                      .def(
                         "getColumnIndex",
-                        []( const RowView& row, IndexType localIdx ) -> const IndexType&
-                        {
-                           check_array_index( row.getSize(), localIdx );
-                           return row.getColumnIndex( localIdx );
-                        },
-                        nb::rv_policy::reference_internal )
-                     .def(
-                        "getValue",
-                        []( const RowView& row, IndexType localIdx ) -> const RealType&
-                        {
-                           check_array_index( row.getSize(), localIdx );
-                           return row.getValue( localIdx );
-                        },
-                        nb::rv_policy::reference_internal )
-                     .def(
-                        "getGlobalIndex",
                         []( const RowView& row, IndexType localIdx ) -> IndexType
                         {
                            check_array_index( row.getSize(), localIdx );
-                           return row.getGlobalIndex( localIdx );
+                           return row.getColumnIndex( localIdx );
                         } )
+                     .def(
+                        "getValue",
+                        []( const RowView& row, IndexType column ) -> const RealType&
+                        {
+                           check_array_index( row.getSize(), column );
+                           return row.getValue( column );
+                        },
+                        nb::rv_policy::reference_internal )
                      .def(
                         "__str__",
                         []( RowView& row )
                         {
                            std::stringstream ss;
-                           ss << row;
+                           ss << "Row " << row.getRowIndex() << ": [ ";
+                           for( IndexType i = 0; i < row.getSize(); ++i ) {
+                              if( i > 0 )
+                                 ss << ", ";
+                              ss << row.getValue( i );
+                           }
+                           ss << " ]";
                            return ss.str();
-                        } )
-                     .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) );
+                        } );
 
    if constexpr( ! std::is_const_v< typename RowView::RealType > ) {
       rowView
          .def(
             "setValue",
-            []( RowView& row, IndexType localIdx, RealType value )
+            []( RowView& row, IndexType column, RealType value ) -> void
             {
-               check_array_index( row.getSize(), localIdx );
-               row.setValue( localIdx, value );
-            } )
-         .def(
-            "setColumnIndex",
-            []( RowView& row, IndexType localIdx, IndexType colIdx )
-            {
-               check_array_index( row.getSize(), localIdx );
-               row.setColumnIndex( localIdx, colIdx );
+               check_array_index( row.getSize(), column );
+               row.setValue( column, value );
             } )
          .def(
             "setElement",
-            []( RowView& row, IndexType localIdx, IndexType colIdx, RealType value )
+            []( RowView& row, IndexType localIdx, IndexType column, RealType value ) -> void
             {
-               check_array_index( row.getSize(), localIdx );
-               row.setElement( localIdx, colIdx, value );
-            } )
-         .def( "sortColumnIndexes", &RowView::sortColumnIndexes );
+               // For DenseRowView, localIdx is unused (only for API compatibility with sparse);
+               // column is the actual memory-accessing index — validated by TNL's getGlobalIndex(column)
+               check_array_index( row.getSize(), column );
+               row.setElement( localIdx, column, value );
+            } );
    }
 }
 
-template< typename Segments, typename Enable = void >
-struct export_CSR
-{
-   template< typename Scope >
-   static void
-   e( Scope& s )
-   {}
-};
-
-template< typename Segments >
-struct export_CSR< Segments, typename TNL::enable_if_type< decltype( Segments{}.getOffsets() ) >::type >
-{
-   template< typename Scope >
-   static void
-   e( Scope& s )
-   {
-      s.def(
-         "getOffsets",
-         []( const Segments& segments ) -> typename Segments::ConstOffsetsView
-         {
-            return segments.getOffsets();
-         },
-         nb::rv_policy::reference_internal );
-   }
-};
-
-template< typename Segments, typename Scope >
-void
-export_Segments( Scope& s, const char* name )
-{
-   // getSegments() returns a reference to SegmentsViewType, not SegmentsType,
-   // so we must register the ViewType to make the return value convertible
-   using SegmentsView = typename Segments::ViewType;
-
-   auto segments =
-      nb::class_< SegmentsView >( s, name )
-         .def( "getSegmentCount", &SegmentsView::getSegmentCount )
-         // Ellpack has a getSegmentSize overload without arguments
-         .def(
-            "getSegmentSize",
-            []( const SegmentsView& segments, typename SegmentsView::IndexType segmentIdx ) -> typename SegmentsView::IndexType
-            {
-               return segments.getSegmentSize( segmentIdx );
-            } )
-         .def( "getElementCount", &SegmentsView::getElementCount )
-         .def( "getStorageSize", &SegmentsView::getStorageSize )
-         .def( "getGlobalIndex", &SegmentsView::getGlobalIndex )
-      // FIXME: this does not compile
-      //      .def(nb::self == nb::self)
-      // TODO: forElements, forAllElements, forSegments, forAllSegments,
-      // segmentsReduction, allReduction
-      ;
-
-   export_CSR< SegmentsView >::e( segments );
-}
-
-// Adds sparse-specific methods to an already-created nb::class_ for
-// SparseMatrixBase. Called by export_SparseMatrixBaseClass.
+// Adds dense-specific methods to an already-created nb::class_ for
+// DenseMatrixBase. Called by export_DenseMatrixBaseClass.
 // MatrixBase-level methods (getRows, getColumns, getAllocatedElementsCount,
 // isBinary, isSymmetric) are added via def_MatrixBaseMethods.
 template< typename Matrix, typename MatrixClass >
 void
-def_SparseMatrixBaseMethods( MatrixClass& matrix )
+def_DenseMatrixBaseMethods( MatrixClass& matrix )
 {
    using RealType = typename Matrix::RealType;
    using DeviceType = typename Matrix::DeviceType;
    using IndexType = typename Matrix::IndexType;
-   using ComputeRealType = typename Matrix::ComputeRealType;
 
    // RealType has const stripped (MatrixBase uses std::remove_const_t),
    // so we check the ValuesViewType for the actual const-ness
@@ -178,13 +111,55 @@ def_SparseMatrixBaseMethods( MatrixClass& matrix )
          },
          nb::arg( "row" ),
          nb::arg( "col" ) )
-      .def( "getValues", nb::overload_cast<>( &Matrix::getValues ), nb::rv_policy::reference_internal )
-      .def( "getColumnIndexes", nb::overload_cast<>( &Matrix::getColumnIndexes ), nb::rv_policy::reference_internal )
-      .def( "getSegments", nb::overload_cast<>( &Matrix::getSegments ), nb::rv_policy::reference_internal );
+      .def( "getValues", nb::overload_cast<>( &Matrix::getValues ), nb::rv_policy::reference_internal );
+
+   if constexpr( nb::dtype< ValueType >().bits != 0 ) {
+      using ValuesViewType = typename Matrix::ValuesViewType;
+      matrix
+         .def(
+            "__dlpack__",
+            []( nb::pointer_and_handle< Matrix > self, nb::kwargs kwargs )
+            {
+               const IndexType rows = self.p->getRows();
+               const IndexType cols = self.p->getColumns();
+
+               std::array< std::size_t, 2 > shape{ static_cast< std::size_t >( rows ), static_cast< std::size_t >( cols ) };
+
+               std::int64_t row_stride;
+               std::int64_t col_stride;
+               if constexpr( Matrix::getOrganization() == TNL::Algorithms::Segments::RowMajorOrder ) {
+                  row_stride = static_cast< std::int64_t >( cols );
+                  col_stride = 1;
+               }
+               else {
+                  row_stride = 1;
+                  col_stride = static_cast< std::int64_t >( rows );
+               }
+               std::array< std::int64_t, 2 > strides{ row_stride, col_stride };
+
+               auto [ dl_device, device_id ] = dlpack_device< ValuesViewType >();
+
+               using array_api_t = nb::ndarray< nb::array_api, ValueType >;
+               array_api_t array_api(
+                  self.p->getValues().getData(),
+                  2,
+                  shape.data(),
+                  self.h,
+                  strides.data(),
+                  nb::dtype< ValueType >(),
+                  dl_device,
+                  device_id );
+
+               nb::object aa = nb::cast( array_api, nb::rv_policy::reference_internal, self.h );
+               return aa.attr( "__dlpack__" )( **kwargs );
+            },
+            nb::sig( "def __dlpack__(self, **kwargs: typing.Any) -> typing_extensions.CapsuleType" ) )
+         .def_static( "__dlpack_device__", dlpack_device< ValuesViewType > );
+   }
 
    if constexpr( ! std::is_const_v< ValueType > ) {
       using VectorType = TNL::Containers::Vector< RealType, DeviceType, IndexType >;
-      matrix
+      matrix.def( "setValue", &Matrix::setValue )
          .def(
             "getRow",
             []( Matrix& m, IndexType rowIdx ) -> typename Matrix::RowView
@@ -207,7 +182,7 @@ def_SparseMatrixBaseMethods( MatrixClass& matrix )
             nb::arg( "value" ) )
          .def(
             "addElement",
-            []( Matrix& m, IndexType row, IndexType col, RealType value, ComputeRealType thisElementMultiplicator )
+            []( Matrix& m, IndexType row, IndexType col, RealType value, RealType thisElementMultiplicator )
             {
                check_matrix_index( m.getRows(), m.getColumns(), row, col );
                m.addElement( row, col, value, thisElementMultiplicator );
@@ -216,16 +191,13 @@ def_SparseMatrixBaseMethods( MatrixClass& matrix )
             nb::arg( "col" ),
             nb::arg( "value" ),
             nb::arg( "thisElementMultiplicator" ) = 1.0 )
-         // TODO: reduceRows, reduceAllRows, forElements, forAllElements,
-         // forRows, forAllRows
-         // TODO: export for more types
          .def(
             "vectorProduct",
             []( Matrix& m,
                 const VectorType& inVector,
                 VectorType& outVector,
-                ComputeRealType matrixMultiplicator = 1.0,
-                ComputeRealType outVectorMultiplicator = 0.0,
+                RealType matrixMultiplicator = 1.0,
+                RealType outVectorMultiplicator = 0.0,
                 IndexType begin = 0,
                 IndexType end = 0 ) -> void
             {
@@ -236,26 +208,24 @@ def_SparseMatrixBaseMethods( MatrixClass& matrix )
 
 // MatrixBase-level methods are added via def_MatrixBaseMethods since
 // MatrixBase cannot be a nanobind base class (Organization differs per format).
-template< typename SparseMatrixBaseType >
+template< typename DenseMatrixBaseType >
 void
-export_SparseMatrixBaseClass( nb::module_& m, const char* name )
+export_DenseMatrixBaseClass( nb::module_& m, const char* name )
 {
-   auto base = nb::class_< SparseMatrixBaseType >( m, name );
-   def_MatrixBaseMethods< SparseMatrixBaseType >( base );
-   def_SparseMatrixBaseMethods< SparseMatrixBaseType >( base );
+   auto base = nb::class_< DenseMatrixBaseType >( m, name );
+   def_MatrixBaseMethods< DenseMatrixBaseType >( base );
+   def_DenseMatrixBaseMethods< DenseMatrixBaseType >( base );
 }
 
 template< typename Matrix, typename BaseType >
 void
-export_Matrix( nb::module_& m, const char* name )
+export_DenseMatrix( nb::module_& m, const char* name )
 {
-   using DeviceType = typename Matrix::DeviceType;
    using IndexType = typename Matrix::IndexType;
-
-   using IndexVectorType = TNL::Containers::Vector< IndexType, DeviceType, IndexType >;
 
    auto matrix = nb::class_< Matrix, BaseType >( m, name )
                     .def( nb::init<>() )
+                    .def( nb::init< IndexType, IndexType >() )
                     // File I/O
                     .def_static( "getSerializationType", &Matrix::getSerializationType )
                     .def( "save", &Matrix::save )
@@ -264,7 +234,6 @@ export_Matrix( nb::module_& m, const char* name )
                     // Matrix
                     .def( "setDimensions", nb::overload_cast< IndexType, IndexType >( &Matrix::setDimensions ) )
                     .def( "reset", &Matrix::reset )
-                    // TODO: export for more types
                     .def(
                        "setLike",
                        []( Matrix& m, const Matrix& other ) -> void
@@ -272,12 +241,7 @@ export_Matrix( nb::module_& m, const char* name )
                           m.setLike( other );
                        } )
 
-                    // SparseMatrix
-                    .def( "setRowCapacities", &Matrix::template setRowCapacities< IndexVectorType > )
-                    // TODO: these two don't work
-                    //.def("addMatrix",           &Matrix::addMatrix)
-                    //.def("getTransposition",    &Matrix::getTransposition)
-                    // TODO: export for more types
+                    // DenseMatrix
                     .def(
                        "assign",
                        []( Matrix& m, const Matrix& other ) -> Matrix&
@@ -296,7 +260,7 @@ export_Matrix( nb::module_& m, const char* name )
 
 template< typename ViewType, typename BaseType >
 void
-export_SparseMatrixView( nb::module_& m, const char* name )
+export_DenseMatrixView( nb::module_& m, const char* name )
 {
    auto view = nb::class_< ViewType, BaseType >( m, name );
 
@@ -315,19 +279,8 @@ export_SparseMatrixView( nb::module_& m, const char* name )
       "must outlive this view — if the parent is garbage-collected,\n"
       "accessing this view results in undefined behavior." );
 
-   // operator== is on SparseMatrixBase but calls getConstView() which exists
+   // operator== is on DenseMatrixBase but calls getConstView() which exists
    // on ViewType, so it must be registered here (not on the base class)
    view.def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) );
    view.def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) );
-}
-
-template< typename DestinationMatrix, typename SourceMatrix >
-void
-def_copySparseMatrix( nb::module_& m )
-{
-   m.def(
-      "copySparseMatrix",
-      &TNL::Matrices::copySparseMatrix< DestinationMatrix, SourceMatrix >,
-      nb::arg( "destination" ),
-      nb::arg( "source" ) );
 }

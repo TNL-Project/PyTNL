@@ -5,10 +5,10 @@ if(PyTNL_BUILD_CUDA)
     nanobind_add_module(_containers_cuda ${src_containers_cuda})
 endif()
 set(src_matrices matrices/matrices.cpp)
-nanobind_add_module(matrices ${src_matrices})
+nanobind_add_module(_matrices ${src_matrices})
 set(src_matrices_cuda matrices/matrices.cu)
 if(PyTNL_BUILD_CUDA)
-    nanobind_add_module(matrices_cuda ${src_matrices_cuda})
+    nanobind_add_module(_matrices_cuda ${src_matrices_cuda})
 endif()
 set(src_meshes
     meshes/topologies.cpp
@@ -62,15 +62,15 @@ if(PyTNL_BUILD_CUDA)
 endif()
 
 # define a list of modules
-set(modules _containers matrices _meshes _solvers)
+set(modules _containers _matrices _meshes _solvers)
 
 # define a mapping for stub files
 # (needed because the stubgen in recursive mode may generate multiple files
 # when `.def_submodule` is used and cmake cannot automatically detect them)
 set(module_stubs__containers _containers.pyi)
 set(module_stubs__containers_cuda _containers_cuda.pyi)
-set(module_stubs_matrices matrices.pyi)
-set(module_stubs_matrices_cuda matrices_cuda.pyi)
+set(module_stubs__matrices _matrices/__init__.pyi _matrices/formats.pyi)
+set(module_stubs__matrices_cuda _matrices_cuda.pyi)
 set(module_stubs__meshes _meshes/__init__.pyi _meshes/topologies.pyi)
 set(module_stubs__meshes_cuda _meshes_cuda.pyi)
 set(module_stubs__solvers _solvers/__init__.pyi _solvers/ode_methods.pyi)
@@ -78,16 +78,16 @@ set(module_stubs__solvers_cuda _solvers_cuda.pyi)
 
 # define a mapping for dependencies between the modules
 set(module_depends__containers)
-set(module_depends_matrices _containers)
+set(module_depends__matrices _containers)
 set(module_depends__meshes _containers)
 set(module_depends__solvers _containers)
 set(module_depends__solvers_cuda _containers_cuda _solvers _containers)
 
 # add CUDA modules
 if(PyTNL_BUILD_CUDA)
-    list(APPEND modules _containers_cuda matrices_cuda _meshes_cuda _solvers_cuda)
+    list(APPEND modules _containers_cuda _matrices_cuda _meshes_cuda _solvers_cuda)
     set(module_depends__containers_cuda _containers)
-    set(module_depends_matrices_cuda _containers_cuda _containers)
+    set(module_depends__matrices_cuda _containers_cuda _containers)
     set(module_depends__meshes_cuda _containers_cuda _meshes _containers)
 endif()
 
