@@ -104,7 +104,7 @@ Arch_cmake_cuda:
     OMPI_MCA_accelerator: "cuda"
   before_script:
     - pacman -Suy --needed --noconfirm git cmake ninja python openmpi
-    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py python-numba python-cupy python-numba-cuda
+    - pacman -Suy --needed --noconfirm python-numpy python-mpi4py python-numba python-cupy python-numba-cuda-mlir
     - pacman -Suy --needed --noconfirm python-pytest python-pytest-xdist python-psutil python-hypothesis
   script:
     - *env_setup

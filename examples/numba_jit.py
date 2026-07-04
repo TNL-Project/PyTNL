@@ -1,10 +1,11 @@
 # ruff: noqa: ANN001, ANN201
-# mypy: disable-error-code="import-untyped,misc,no-untyped-def,no-untyped-usage,no-any-return,import-not-found"
-# pyright: reportMissingTypeStubs=false, reportUnknownVariableType=false, reportUnknownParameterType=false, reportMissingParameterType=false, reportUnknownArgumentType=false, reportUntypedFunctionDecorator=false, reportUnknownMemberType=false, reportAssignmentType=false, reportCallIssue=false, reportIndexIssue=false, reportMissingImports=false
-# needs additional dependencies: numba, numba-cuda, with uv you can run the example like this:
-# uv run --with numba --with numba-cuda[cu13] examples/numba_jit.py
+# mypy: disable-error-code="import-untyped,misc,no-untyped-def,no-untyped-usage,no-any-return,import-not-found,attr-defined"
+# pyright: reportMissingTypeStubs=false, reportUnknownVariableType=false, reportUnknownParameterType=false, reportMissingParameterType=false, reportUnknownArgumentType=false, reportUntypedFunctionDecorator=false, reportUnknownMemberType=false, reportAssignmentType=false, reportCallIssue=false, reportIndexIssue=false, reportMissingImports=false, reportAttributeAccessIssue=false
+# needs additional dependencies: numba, numba-cuda-mlir, with uv you can run the example like this:
+# uv run --with numba --with 'numba-cuda-mlir[cu13]' examples/numba_jit.py
 import numpy as np
-from numba import cuda, jit, vectorize
+from numba import jit, vectorize
+from numba_cuda_mlir import cuda
 
 from pytnl import devices
 from pytnl.containers import Array, NDArray
@@ -55,7 +56,7 @@ def main() -> None:
             (nz + threads[2] - 1) // threads[2],
         )
 
-        # uses DLPack from numba-cuda versions >= 0.29
+        # uses DLPack from numba-cuda-mlir
         numba_scale_kernel_3d[blocks, threads](nd_cuda, 0.5, nx, ny, nz)
 
         print("CUDA NDArray sample [0, 0, 0] after kernel:", nd_cuda[0, 0, 0])

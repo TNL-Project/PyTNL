@@ -1,13 +1,13 @@
-"""CUDA ODE solver example: numba @cuda.jit GPU kernel vs numba @jit CPU kernel.
+"""CUDA ODE solver example: numba_cuda_mlir @cuda.jit GPU kernel vs numba @jit CPU kernel.
 
 Solves the 2D heat equation du/dt = d^2u/dx^2 + d^2u/dy^2 on a 1000x1000 grid
 with ODESolver[Fehlberg2, devices.Cuda] on GPU and ODESolver[Fehlberg2] on
 CPU. Fehlberg2 is an adaptive Runge-Kutta method that automatically adjusts
 the step size based on local error estimates. Both RHS functions are
-JIT-compiled by numba — the GPU kernel uses @cuda.jit with DLPack zero-copy
-VectorView, the CPU kernel uses @jit(nopython=True, parallel=True) with prange
-for multi-threaded parallelism (equivalent to OpenMP's #pragma omp parallel
-for). Timing compares the two approaches.
+JIT-compiled — the GPU kernel uses @cuda.jit from numba-cuda-mlir with DLPack
+zero-copy VectorView, the CPU kernel uses numba's @jit(nopython=True,
+parallel=True) with prange for multi-threaded parallelism (equivalent to
+OpenMP's #pragma omp parallel for). Timing compares the two approaches.
 
 The CPU kernel uses np.asarray() to create a zero-copy numpy array view of
 VectorView's memory via the PEP 3118 buffer protocol. This enables numba to
@@ -16,8 +16,8 @@ parallel=True and prange for multi-threaded execution without conversion
 overhead.
 """
 
-# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnnecessaryComparison=false, reportOperatorIssue=false, reportIndexIssue=false, reportUntypedFunctionDecorator=false, reportUnknownArgumentType=false, reportMissingImports=false
-# mypy: disable-error-code="import-untyped, misc, import-not-found"
+# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnnecessaryComparison=false, reportOperatorIssue=false, reportIndexIssue=false, reportUntypedFunctionDecorator=false, reportUnknownArgumentType=false, reportMissingImports=false, reportAttributeAccessIssue=false
+# mypy: disable-error-code="import-untyped, misc, import-not-found, attr-defined"
 
 import time
 from collections.abc import Callable
@@ -25,7 +25,8 @@ from functools import partial
 from typing import Any
 
 import numpy as np
-from numba import cuda, jit, prange
+from numba import jit, prange
+from numba_cuda_mlir import cuda
 
 from pytnl import devices
 from pytnl.containers import Vector

@@ -26,7 +26,7 @@ Repository = "https://gitlab.com/tnl-project/pytnl"
 Issues = "https://gitlab.com/tnl-project/pytnl/-/issues"
 
 [project.optional-dependencies]
-cuda = ["cupy-cuda13x", "numba-cuda[cu13]", "numba<0.66"]
+cuda = ["cupy-cuda13x", "numba-cuda-mlir[cu13]", "numba<0.66"]
 dev = [
     "hypothesis",
     "pytest",

@@ -136,14 +136,14 @@ def test_module_dispatch() -> None:
 
 
 def test_numba_cuda_jit_rhs() -> None:
-    """ODESolver[ode_methods.Euler, devices.Cuda] with numba @cuda.jit RHS kernel via DLPack.
+    """ODESolver[ode_methods.Euler, devices.Cuda] with numba_cuda_mlir @cuda.jit RHS kernel via DLPack.
 
     This test exercises the actual GPU-accelerated RHS path: the solver passes
-    CUDA VectorView objects to the Python callback, which launches a numba
+    CUDA VectorView objects to the Python callback, which launches a numba_cuda_mlir
     @cuda.jit kernel operating on the VectorView's GPU memory directly through
     the DLPack protocol — zero-copy.
     """
-    nb_cuda = pytest.importorskip("numba.cuda")
+    nb_cuda = pytest.importorskip("numba_cuda_mlir.cuda")
 
     @nb_cuda.jit  # type: ignore[misc]
     def heat_rhs_kernel(
@@ -218,7 +218,7 @@ def test_numba_cuda_jit_rhs() -> None:
     assert cpu_result, "CPU solver did not converge"
 
     max_diff = max(abs(u_cpu[i] - u_cuda[i]) for i in range(n))
-    assert max_diff < 1e-10, f"CPU vs numba-cuda GPU max diff = {max_diff}"
+    assert max_diff < 1e-10, f"CPU vs numba-cuda-mlir GPU max diff = {max_diff}"
 
     assert u_cuda[0] == 0.0, "left boundary violated"
     assert u_cuda[n - 1] == 0.0, "right boundary violated"
