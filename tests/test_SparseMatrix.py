@@ -9,9 +9,10 @@ from hypothesis import strategies as st
 
 import pytnl._matrices
 from pytnl._containers import Vector_int
+from pytnl._matrices import SparseMatrixRowView_float
 from pytnl.containers import Vector
 from pytnl.devices import Host
-from pytnl.matrices import SparseMatrix, SparseMatrixRowView, SparseMatrixView, copySparseMatrix, formats
+from pytnl.matrices import SparseMatrix, SparseMatrixView, copySparseMatrix, formats
 
 # ---------------------------------------------------------------------------
 # Type variable constraining the three host matrix formats
@@ -104,8 +105,8 @@ def test_subscript_default_format() -> None:
 
 
 def test_subscript_invalid_value_type() -> None:
-    """Non-float value types must raise TypeError."""
-    for bad_type in (int, complex, bool):
+    """Unsupported value types must raise TypeError."""
+    for bad_type in (int, bool):
         with pytest.raises(TypeError):
             SparseMatrix[bad_type]  # type: ignore[index, unused-ignore]
 
@@ -209,7 +210,7 @@ def test_rowview_basics(matrix_type: type[M]) -> None:
     m = create_matrix(matrix_type, 2, 3, [(0, 1, 4.0), (0, 2, 5.0), (1, 0, 6.0)])  # type: ignore[arg-type]
 
     row0 = m.getRow(0)
-    assert isinstance(row0, SparseMatrixRowView)
+    assert isinstance(row0, SparseMatrixRowView_float)
     assert row0.getRowIndex() == 0
     # For CSR, getSize() == number of stored elements.
     # For Ellpack/SlicedEllpack, getSize() may be larger (uniform allocation).
@@ -760,8 +761,8 @@ def test_view_subscript_returns_correct_class() -> None:
 
 
 def test_view_subscript_invalid_value_type() -> None:
-    """Non-float value types must raise TypeError."""
-    for bad_type in (int, complex, bool):
+    """Unsupported value types must raise TypeError."""
+    for bad_type in (int, bool):
         with pytest.raises(TypeError):
             SparseMatrixView[bad_type]  # type: ignore[index, unused-ignore]
 
@@ -922,7 +923,7 @@ def test_view_getRow_returns_rowview(matrix_type: type[M]) -> None:
     view = m.getView()
     row = view.getRow(0)
 
-    assert isinstance(row, SparseMatrixRowView)
+    assert isinstance(row, SparseMatrixRowView_float)
     assert row.getRowIndex() == 0
 
     # Verify entries are reachable
@@ -1064,3 +1065,93 @@ def test_is_binary_is_symmetric(matrix_type: type[M]) -> None:
     cview = m.getConstView()
     assert cview.isBinary() is False
     assert cview.isSymmetric() is False
+
+
+# ---------------------------------------------------------------------------
+# Complex value type
+# ---------------------------------------------------------------------------
+
+SM_c = pytnl._matrices.SparseMatrix_complex_CSR
+SV_c = pytnl._matrices.SparseMatrixView_complex_CSR
+SV_c_const = pytnl._matrices.SparseMatrixView_complex_CSR_const
+
+
+def create_complex_matrix(
+    matrix_type: type[pytnl._matrices.SparseMatrix_complex_CSR],
+    rows: int,
+    cols: int,
+    entries: list[tuple[int, int, complex]],
+) -> pytnl._matrices.SparseMatrix_complex_CSR:
+    m = matrix_type()
+    m.setDimensions(rows, cols)
+    caps = Vector_int(rows)
+    for i in range(rows):
+        caps[i] = 0
+    for r, _c, _v in entries:
+        caps[r] += 1
+    m.setRowCapacities(caps)
+    for r, c, v in entries:
+        m.setElement(r, c, v)
+    return m
+
+
+def test_complex_subscript_returns_correct_class() -> None:
+    """Complex value type resolves to the correct C++ class."""
+    assert SparseMatrix[complex] is SM_c
+    assert SparseMatrix[complex, Host] is SM_c
+    assert SparseMatrix[complex, Host, formats.CSR] is SM_c
+    assert SparseMatrix[complex, Host, formats.Ellpack] is pytnl._matrices.SparseMatrix_complex_Ellpack
+    assert SparseMatrix[complex, Host, formats.SlicedEllpack] is pytnl._matrices.SparseMatrix_complex_SlicedEllpack
+
+
+def test_complex_construction_and_get_set() -> None:
+    """Complex SparseMatrix supports setElement/getElement with complex values."""
+    m = create_complex_matrix(SparseMatrix[complex], 3, 3, [(0, 0, 1 + 2j), (1, 1, 3 - 1j), (2, 2, -2 + 0.5j)])
+    assert m.getElement(0, 0) == 1 + 2j
+    assert m.getElement(1, 1) == 3 - 1j
+    assert m.getElement(2, 2) == -2 + 0.5j
+    assert m.getElement(0, 1) == 0j
+
+
+def test_complex_same_device_copy() -> None:
+    """copySparseMatrix works for complex matrices on the same device."""
+    m = create_complex_matrix(SparseMatrix[complex], 3, 3, [(0, 0, 1 + 2j), (1, 1, 3 - 1j)])
+    m_e = SparseMatrix[complex, Host, formats.Ellpack]()
+    copySparseMatrix(m_e, m)
+    assert m_e.getElement(0, 0) == 1 + 2j
+    assert m_e.getElement(1, 1) == 3 - 1j
+    assert m_e.getElement(0, 1) == 0j
+    assert m_e.getRows() == 3
+    assert m_e.getColumns() == 3
+
+
+def test_complex_view_get_set() -> None:
+    """Complex SparseMatrixView supports setElement/getElement."""
+    m = create_complex_matrix(SparseMatrix[complex], 2, 2, [(0, 0, 1 + 2j), (1, 1, 3 - 1j)])
+    view = m.getView()
+    assert view.getElement(0, 0) == 1 + 2j
+    view.setElement(1, 1, 5 + 0j)
+    assert m.getElement(1, 1) == 5 + 0j
+
+
+def test_complex_const_view() -> None:
+    """Complex const view returns correct values."""
+    m = create_complex_matrix(SparseMatrix[complex], 2, 2, [(0, 0, 1 + 2j)])
+    cview = m.getConstView()
+    assert cview.getElement(0, 0) == 1 + 2j
+
+
+def test_complex_row_view() -> None:
+    """Complex SparseMatrixRowView returns correct values."""
+    m = SparseMatrix[complex]()
+    m.setDimensions(2, 2)
+    caps = Vector_int(2)
+    caps[0] = 2
+    caps[1] = 1
+    m.setRowCapacities(caps)
+    m.setElement(0, 0, 1 + 2j)
+    m.setElement(0, 1, 3 - 1j)
+    row = m.getRow(0)
+    assert row.getValue(0) == 1 + 2j
+    assert row.getValue(1) == 3 - 1j
+    assert row.getSize() == 2

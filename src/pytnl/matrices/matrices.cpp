@@ -19,72 +19,81 @@ using Ellpack = TNL::Algorithms::Segments::Ellpack< Device, Index, IndexAllocato
 template< typename Device, typename Index, typename IndexAllocator >
 using SlicedEllpack = TNL::Algorithms::Segments::SlicedEllpack< Device, Index, IndexAllocator >;
 
-using CSR_host = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, CSR >;
-using E_host = TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, Ellpack >;
-using SE_host =
-   TNL::Matrices::SparseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, SlicedEllpack >;
+// Sparse matrix types
+template< typename T >
+using Sparse_CSR = TNL::Matrices::SparseMatrix< T, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, CSR >;
+template< typename T >
+using Sparse_Ell = TNL::Matrices::SparseMatrix< T, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, Ellpack >;
+template< typename T >
+using Sparse_SE = TNL::Matrices::SparseMatrix< T, TNL::Devices::Host, IndexType, TNL::Matrices::GeneralMatrix, SlicedEllpack >;
 
-using Dense_host_RowMajor =
-   TNL::Matrices::DenseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::RowMajorOrder >;
+// Sparse base types
+template< typename T >
+using SparseBase_CSR = TNL::Matrices::SparseMatrixBase<
+   T,
+   TNL::Devices::Host,
+   IndexType,
+   TNL::Matrices::GeneralMatrix,
+   typename Sparse_CSR< T >::SegmentsType::ViewType,
+   T >;
+template< typename T >
+using SparseBase_Ell = TNL::Matrices::SparseMatrixBase<
+   T,
+   TNL::Devices::Host,
+   IndexType,
+   TNL::Matrices::GeneralMatrix,
+   typename Sparse_Ell< T >::SegmentsType::ViewType,
+   T >;
+template< typename T >
+using SparseBase_SE = TNL::Matrices::SparseMatrixBase<
+   T,
+   TNL::Devices::Host,
+   IndexType,
+   TNL::Matrices::GeneralMatrix,
+   typename Sparse_SE< T >::SegmentsType::ViewType,
+   T >;
 
-// Base class types (mutable) — SparseMatrix::Base is private in TNL, so we
-// construct the type from public typedefs.
-using SparseMatrixBase_CSR_host = TNL::Matrices::SparseMatrixBase<
-   RealType,
+// Sparse const base types - cannot use std::add_const_t<T> here because the
+// segments parameter must also change from ViewType to ConstViewType.
+template< typename T >
+using SparseBase_CSR_const = TNL::Matrices::SparseMatrixBase<
+   const T,
    TNL::Devices::Host,
    IndexType,
    TNL::Matrices::GeneralMatrix,
-   typename CSR_host::SegmentsType::ViewType,
-   RealType >;
-using SparseMatrixBase_E_host = TNL::Matrices::SparseMatrixBase<
-   RealType,
+   typename Sparse_CSR< T >::SegmentsType::ViewType::ConstViewType,
+   T >;
+template< typename T >
+using SparseBase_Ell_const = TNL::Matrices::SparseMatrixBase<
+   const T,
    TNL::Devices::Host,
    IndexType,
    TNL::Matrices::GeneralMatrix,
-   typename E_host::SegmentsType::ViewType,
-   RealType >;
-using SparseMatrixBase_SE_host = TNL::Matrices::SparseMatrixBase<
-   RealType,
+   typename Sparse_Ell< T >::SegmentsType::ViewType::ConstViewType,
+   T >;
+template< typename T >
+using SparseBase_SE_const = TNL::Matrices::SparseMatrixBase<
+   const T,
    TNL::Devices::Host,
    IndexType,
    TNL::Matrices::GeneralMatrix,
-   typename SE_host::SegmentsType::ViewType,
-   RealType >;
-using DenseMatrixBase_host_RowMajor =
-   TNL::Matrices::DenseMatrixBase< RealType, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::RowMajorOrder >;
+   typename Sparse_SE< T >::SegmentsType::ViewType::ConstViewType,
+   T >;
 
-// Base class types (const — for const views, Real is const-qualified and
-// SegmentsView uses ConstViewType per SparseMatrixView's inheritance)
-using SparseMatrixBase_CSR_host_const = TNL::Matrices::SparseMatrixBase<
-   const RealType,
-   TNL::Devices::Host,
-   IndexType,
-   TNL::Matrices::GeneralMatrix,
-   typename CSR_host::SegmentsType::ViewType::ConstViewType,
-   RealType >;
-using SparseMatrixBase_E_host_const = TNL::Matrices::SparseMatrixBase<
-   const RealType,
-   TNL::Devices::Host,
-   IndexType,
-   TNL::Matrices::GeneralMatrix,
-   typename E_host::SegmentsType::ViewType::ConstViewType,
-   RealType >;
-using SparseMatrixBase_SE_host_const = TNL::Matrices::SparseMatrixBase<
-   const RealType,
-   TNL::Devices::Host,
-   IndexType,
-   TNL::Matrices::GeneralMatrix,
-   typename SE_host::SegmentsType::ViewType::ConstViewType,
-   RealType >;
-using DenseMatrixBase_host_RowMajor_const =
-   TNL::Matrices::DenseMatrixBase< const RealType, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::RowMajorOrder >;
+// Dense matrix types
+template< typename T >
+using Dense_RowMajor = TNL::Matrices::DenseMatrix< T, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::RowMajorOrder >;
+template< typename T >
+using Dense_ColumnMajor =
+   TNL::Matrices::DenseMatrix< T, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::ColumnMajorOrder >;
 
-using Dense_host_ColumnMajor =
-   TNL::Matrices::DenseMatrix< RealType, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::ColumnMajorOrder >;
-using DenseMatrixBase_host_ColumnMajor =
-   TNL::Matrices::DenseMatrixBase< RealType, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::ColumnMajorOrder >;
-using DenseMatrixBase_host_ColumnMajor_const =
-   TNL::Matrices::DenseMatrixBase< const RealType, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::ColumnMajorOrder >;
+// Dense base types
+template< typename T >
+using DenseBase_RowMajor =
+   TNL::Matrices::DenseMatrixBase< T, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::RowMajorOrder >;
+template< typename T >
+using DenseBase_ColumnMajor =
+   TNL::Matrices::DenseMatrixBase< T, TNL::Devices::Host, IndexType, TNL::Algorithms::Segments::ColumnMajorOrder >;
 
 void
 export_format_tags( nb::module_& m )
@@ -121,76 +130,97 @@ export_organizations( nb::module_& m )
       .value( "RowMajorOrder", TNL::Algorithms::Segments::RowMajorOrder );
 }
 
+// Segments types don't depend on value type, only on format.
+// Export them once at the module level with format-specific names.
 void
-export_base_classes( nb::module_& m )
+export_segments_types( nb::module_& m )
 {
-   export_SparseMatrixBaseClass< SparseMatrixBase_CSR_host >( m, "SparseMatrixBase_float_CSR" );
-   export_SparseMatrixBaseClass< SparseMatrixBase_E_host >( m, "SparseMatrixBase_float_Ellpack" );
-   export_SparseMatrixBaseClass< SparseMatrixBase_SE_host >( m, "SparseMatrixBase_float_SlicedEllpack" );
-
-   export_SparseMatrixBaseClass< SparseMatrixBase_CSR_host_const >( m, "SparseMatrixBase_float_CSR_const" );
-   export_SparseMatrixBaseClass< SparseMatrixBase_E_host_const >( m, "SparseMatrixBase_float_Ellpack_const" );
-   export_SparseMatrixBaseClass< SparseMatrixBase_SE_host_const >( m, "SparseMatrixBase_float_SlicedEllpack_const" );
-
-   export_DenseMatrixBaseClass< DenseMatrixBase_host_RowMajor >( m, "DenseMatrixBase_float_RowMajor" );
-   export_DenseMatrixBaseClass< DenseMatrixBase_host_RowMajor_const >( m, "DenseMatrixBase_float_RowMajor_const" );
-
-   export_DenseMatrixBaseClass< DenseMatrixBase_host_ColumnMajor >( m, "DenseMatrixBase_float_ColumnMajor" );
-   export_DenseMatrixBaseClass< DenseMatrixBase_host_ColumnMajor_const >( m, "DenseMatrixBase_float_ColumnMajor_const" );
+   export_Segments< typename Sparse_CSR< RealType >::SegmentsType >( m, "Segments_CSR" );
+   export_Segments< typename Sparse_Ell< RealType >::SegmentsType >( m, "Segments_Ellpack" );
+   export_Segments< typename Sparse_SE< RealType >::SegmentsType >( m, "Segments_SlicedEllpack" );
 }
 
+// Exports all matrix bindings (base classes, matrices, views, row views, and same-device copy functions)
+// for a single value type T.
+// The value name (e.g. "float", "complex") is used to construct the Python-visible class names.
+template< typename T >
 void
-export_SparseMatrices( nb::module_& m )
+export_value_type( nb::module_& m, const char* vn )
 {
-   export_Matrix< CSR_host, SparseMatrixBase_CSR_host >( m, "SparseMatrix_float_CSR" );
-   export_Matrix< E_host, SparseMatrixBase_E_host >( m, "SparseMatrix_float_Ellpack" );
-   export_Matrix< SE_host, SparseMatrixBase_SE_host >( m, "SparseMatrix_float_SlicedEllpack" );
+   const std::string valuename = vn;
+   const std::string csr = valuename + "_CSR";
+   const std::string ellpack = valuename + "_Ellpack";
+   const std::string slicedellpack = valuename + "_SlicedEllpack";
+   const std::string rowmajor = valuename + "_RowMajor";
+   const std::string columnmajor = valuename + "_ColumnMajor";
+
+   // Base classes
+   export_SparseMatrixBaseClass< SparseBase_CSR< T > >( m, ( "SparseMatrixBase_" + csr ).c_str() );
+   export_SparseMatrixBaseClass< SparseBase_Ell< T > >( m, ( "SparseMatrixBase_" + ellpack ).c_str() );
+   export_SparseMatrixBaseClass< SparseBase_SE< T > >( m, ( "SparseMatrixBase_" + slicedellpack ).c_str() );
+
+   export_SparseMatrixBaseClass< SparseBase_CSR_const< T > >( m, ( "SparseMatrixBase_" + csr + "_const" ).c_str() );
+   export_SparseMatrixBaseClass< SparseBase_Ell_const< T > >( m, ( "SparseMatrixBase_" + ellpack + "_const" ).c_str() );
+   export_SparseMatrixBaseClass< SparseBase_SE_const< T > >( m, ( "SparseMatrixBase_" + slicedellpack + "_const" ).c_str() );
+
+   export_DenseMatrixBaseClass< DenseBase_RowMajor< T > >( m, ( "DenseMatrixBase_" + rowmajor ).c_str() );
+   export_DenseMatrixBaseClass< DenseBase_RowMajor< std::add_const_t< T > > >(
+      m, ( "DenseMatrixBase_" + rowmajor + "_const" ).c_str() );
+   export_DenseMatrixBaseClass< DenseBase_ColumnMajor< T > >( m, ( "DenseMatrixBase_" + columnmajor ).c_str() );
+   export_DenseMatrixBaseClass< DenseBase_ColumnMajor< std::add_const_t< T > > >(
+      m, ( "DenseMatrixBase_" + columnmajor + "_const" ).c_str() );
+
+   // Sparse matrices
+   export_Matrix< Sparse_CSR< T >, SparseBase_CSR< T > >( m, ( "SparseMatrix_" + csr ).c_str() );
+   export_Matrix< Sparse_Ell< T >, SparseBase_Ell< T > >( m, ( "SparseMatrix_" + ellpack ).c_str() );
+   export_Matrix< Sparse_SE< T >, SparseBase_SE< T > >( m, ( "SparseMatrix_" + slicedellpack ).c_str() );
 
    // NOTE: all exported formats (CSR, Ellpack, SlicedEllpack) use the same
-   // SegmentView, so the RowView and ConstRowView are also the same types in all
-   // three formats
-   export_RowView< typename CSR_host::RowView >( m, "SparseMatrixRowView" );
-   export_RowView< typename CSR_host::ConstRowView >( m, "SparseMatrixConstRowView" );
+   // SegmentView, so the RowView and ConstRowView are also the same types in
+   // all three formats - but they differ per value type.
+   export_RowView< typename Sparse_CSR< T >::RowView >( m, ( "SparseMatrixRowView_" + valuename ).c_str() );
+   export_RowView< typename Sparse_CSR< T >::ConstRowView >( m, ( "SparseMatrixConstRowView_" + valuename ).c_str() );
 
-   export_SparseMatrixView< typename CSR_host::ViewType, SparseMatrixBase_CSR_host >( m, "SparseMatrixView_float_CSR" );
-   export_SparseMatrixView< typename E_host::ViewType, SparseMatrixBase_E_host >( m, "SparseMatrixView_float_Ellpack" );
-   export_SparseMatrixView< typename SE_host::ViewType, SparseMatrixBase_SE_host >( m, "SparseMatrixView_float_SlicedEllpack" );
-   export_SparseMatrixView< typename CSR_host::ConstViewType, SparseMatrixBase_CSR_host_const >(
-      m, "SparseMatrixView_float_CSR_const" );
-   export_SparseMatrixView< typename E_host::ConstViewType, SparseMatrixBase_E_host_const >(
-      m, "SparseMatrixView_float_Ellpack_const" );
-   export_SparseMatrixView< typename SE_host::ConstViewType, SparseMatrixBase_SE_host_const >(
-      m, "SparseMatrixView_float_SlicedEllpack_const" );
+   // Sparse matrix views
+   export_SparseMatrixView< typename Sparse_CSR< T >::ViewType, SparseBase_CSR< T > >(
+      m, ( "SparseMatrixView_" + csr ).c_str() );
+   export_SparseMatrixView< typename Sparse_Ell< T >::ViewType, SparseBase_Ell< T > >(
+      m, ( "SparseMatrixView_" + ellpack ).c_str() );
+   export_SparseMatrixView< typename Sparse_SE< T >::ViewType, SparseBase_SE< T > >(
+      m, ( "SparseMatrixView_" + slicedellpack ).c_str() );
+   export_SparseMatrixView< typename Sparse_CSR< T >::ConstViewType, SparseBase_CSR_const< T > >(
+      m, ( "SparseMatrixView_" + csr + "_const" ).c_str() );
+   export_SparseMatrixView< typename Sparse_Ell< T >::ConstViewType, SparseBase_Ell_const< T > >(
+      m, ( "SparseMatrixView_" + ellpack + "_const" ).c_str() );
+   export_SparseMatrixView< typename Sparse_SE< T >::ConstViewType, SparseBase_SE_const< T > >(
+      m, ( "SparseMatrixView_" + slicedellpack + "_const" ).c_str() );
 
-   def_copySparseMatrix< CSR_host, E_host >( m );
-   def_copySparseMatrix< E_host, CSR_host >( m );
-   def_copySparseMatrix< CSR_host, SE_host >( m );
-   def_copySparseMatrix< SE_host, CSR_host >( m );
-   def_copySparseMatrix< E_host, SE_host >( m );
-   def_copySparseMatrix< SE_host, E_host >( m );
-}
+   // Same-device copy functions
+   def_copySparseMatrix< Sparse_CSR< T >, Sparse_Ell< T > >( m );
+   def_copySparseMatrix< Sparse_Ell< T >, Sparse_CSR< T > >( m );
+   def_copySparseMatrix< Sparse_CSR< T >, Sparse_SE< T > >( m );
+   def_copySparseMatrix< Sparse_SE< T >, Sparse_CSR< T > >( m );
+   def_copySparseMatrix< Sparse_Ell< T >, Sparse_SE< T > >( m );
+   def_copySparseMatrix< Sparse_SE< T >, Sparse_Ell< T > >( m );
 
-void
-export_DenseMatrices( nb::module_& m )
-{
-   export_DenseMatrix< Dense_host_RowMajor, DenseMatrixBase_host_RowMajor >( m, "DenseMatrix_float_RowMajor" );
+   // Dense matrices
+   export_DenseMatrix< Dense_RowMajor< T >, DenseBase_RowMajor< T > >( m, ( "DenseMatrix_" + rowmajor ).c_str() );
+   export_DenseMatrix< Dense_ColumnMajor< T >, DenseBase_ColumnMajor< T > >( m, ( "DenseMatrix_" + columnmajor ).c_str() );
 
-   export_DenseRowView< typename Dense_host_RowMajor::RowView >( m, "DenseMatrixRowView_float_RowMajor" );
-   export_DenseRowView< typename Dense_host_RowMajor::ConstRowView >( m, "DenseMatrixConstRowView_float_RowMajor" );
+   export_DenseRowView< typename Dense_RowMajor< T >::RowView >( m, ( "DenseMatrixRowView_" + rowmajor ).c_str() );
+   export_DenseRowView< typename Dense_RowMajor< T >::ConstRowView >( m, ( "DenseMatrixConstRowView_" + rowmajor ).c_str() );
+   export_DenseRowView< typename Dense_ColumnMajor< T >::RowView >( m, ( "DenseMatrixRowView_" + columnmajor ).c_str() );
+   export_DenseRowView< typename Dense_ColumnMajor< T >::ConstRowView >(
+      m, ( "DenseMatrixConstRowView_" + columnmajor ).c_str() );
 
-   export_DenseMatrixView< typename Dense_host_RowMajor::ViewType, DenseMatrixBase_host_RowMajor >(
-      m, "DenseMatrixView_float_RowMajor" );
-   export_DenseMatrixView< typename Dense_host_RowMajor::ConstViewType, DenseMatrixBase_host_RowMajor_const >(
-      m, "DenseMatrixView_float_RowMajor_const" );
-
-   export_DenseMatrix< Dense_host_ColumnMajor, DenseMatrixBase_host_ColumnMajor >( m, "DenseMatrix_float_ColumnMajor" );
-   export_DenseMatrixView< typename Dense_host_ColumnMajor::ViewType, DenseMatrixBase_host_ColumnMajor >(
-      m, "DenseMatrixView_float_ColumnMajor" );
-   export_DenseMatrixView< typename Dense_host_ColumnMajor::ConstViewType, DenseMatrixBase_host_ColumnMajor_const >(
-      m, "DenseMatrixView_float_ColumnMajor_const" );
-
-   export_DenseRowView< typename Dense_host_ColumnMajor::RowView >( m, "DenseMatrixRowView_float_ColumnMajor" );
-   export_DenseRowView< typename Dense_host_ColumnMajor::ConstRowView >( m, "DenseMatrixConstRowView_float_ColumnMajor" );
+   export_DenseMatrixView< typename Dense_RowMajor< T >::ViewType, DenseBase_RowMajor< T > >(
+      m, ( "DenseMatrixView_" + rowmajor ).c_str() );
+   export_DenseMatrixView< typename Dense_RowMajor< T >::ConstViewType, DenseBase_RowMajor< std::add_const_t< T > > >(
+      m, ( "DenseMatrixView_" + rowmajor + "_const" ).c_str() );
+   export_DenseMatrixView< typename Dense_ColumnMajor< T >::ViewType, DenseBase_ColumnMajor< T > >(
+      m, ( "DenseMatrixView_" + columnmajor ).c_str() );
+   export_DenseMatrixView< typename Dense_ColumnMajor< T >::ConstViewType, DenseBase_ColumnMajor< std::add_const_t< T > > >(
+      m, ( "DenseMatrixView_" + columnmajor + "_const" ).c_str() );
 }
 
 // Python module definition
@@ -203,7 +233,8 @@ NB_MODULE( _matrices, m )
 
    export_format_tags( m );
    export_organizations( m );
-   export_base_classes( m );
-   export_SparseMatrices( m );
-   export_DenseMatrices( m );
+   export_segments_types( m );
+
+   export_value_type< RealType >( m, "float" );
+   export_value_type< ComplexType >( m, "complex" );
 }

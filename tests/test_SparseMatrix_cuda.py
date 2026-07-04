@@ -13,7 +13,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from pytnl.containers import Vector
-from pytnl.devices import Cuda
+from pytnl.devices import Cuda, Host
 from pytnl.matrices import SparseMatrix, copySparseMatrix, formats
 
 if TYPE_CHECKING:
@@ -830,3 +830,83 @@ def test_is_binary_is_symmetric_cuda(matrix_type: type[M]) -> None:
     cview = m.getConstView()
     assert cview.isBinary() is False  # type: ignore[attr-defined]
     assert cview.isSymmetric() is False  # type: ignore[attr-defined]
+
+
+# Complex value type
+
+
+def create_complex_matrix_cuda(
+    matrix_type: type,
+    rows: int,
+    cols: int,
+    entries: list[tuple[int, int, complex]],
+) -> type:
+    m = matrix_type()  # type: ignore[call-arg]
+    m.setDimensions(rows, cols)
+    caps = _containers_cuda.Vector_int(rows)
+    for i in range(rows):
+        caps[i] = 0
+    for r, _c, _v in entries:
+        caps[r] += 1
+    m.setRowCapacities(caps)
+    for r, c, v in entries:
+        m.setElement(r, c, v)
+    return m  # type: ignore[no-any-return]
+
+
+def test_complex_subscript_cuda() -> None:
+    assert SparseMatrix[complex, Cuda] is _matrices_cuda.SparseMatrix_complex_CSR  # type: ignore[attr-defined]
+    assert SparseMatrix[complex, Cuda, formats.CSR] is _matrices_cuda.SparseMatrix_complex_CSR  # type: ignore[attr-defined]
+
+
+def test_complex_construction_and_get_set_cuda() -> None:
+    m = create_complex_matrix_cuda(SparseMatrix[complex, Cuda], 3, 3, [(0, 0, 1 + 2j), (1, 1, 3 - 1j), (2, 2, -2 + 0.5j)])
+    assert m.getElement(0, 0) == 1 + 2j  # type: ignore[attr-defined]
+    assert m.getElement(1, 1) == 3 - 1j  # type: ignore[attr-defined]
+    assert m.getElement(2, 2) == -2 + 0.5j  # type: ignore[attr-defined]
+    assert m.getElement(0, 1) == 0j  # type: ignore[attr-defined]
+
+
+def test_complex_same_device_copy_cuda() -> None:
+    m = create_complex_matrix_cuda(SparseMatrix[complex, Cuda], 3, 3, [(0, 0, 1 + 2j), (1, 1, 3 - 1j)])
+    m_e = SparseMatrix[complex, Cuda, formats.Ellpack]()
+    copySparseMatrix(m_e, m)
+    assert m_e.getElement(0, 0) == 1 + 2j  # type: ignore[attr-defined]
+    assert m_e.getElement(1, 1) == 3 - 1j  # type: ignore[attr-defined]
+    assert m_e.getElement(0, 1) == 0j  # type: ignore[attr-defined]
+
+
+def test_complex_view_get_set_cuda() -> None:
+    m = create_complex_matrix_cuda(SparseMatrix[complex, Cuda], 2, 2, [(0, 0, 1 + 2j), (1, 1, 3 - 1j)])
+    view = m.getView()  # type: ignore[attr-defined]
+    assert view.getElement(0, 0) == 1 + 2j  # type: ignore[attr-defined]
+    view.setElement(1, 1, 5 + 0j)  # type: ignore[attr-defined]
+    assert m.getElement(1, 1) == 5 + 0j  # type: ignore[attr-defined]
+
+
+def test_complex_const_view_cuda() -> None:
+    m = create_complex_matrix_cuda(SparseMatrix[complex, Cuda], 2, 2, [(0, 0, 1 + 2j)])
+    cview = m.getConstView()  # type: ignore[attr-defined]
+    assert cview.getElement(0, 0) == 1 + 2j  # type: ignore[attr-defined]
+
+
+def test_complex_cross_device_copy_raises() -> None:
+    m_host = SparseMatrix[complex, Host]()
+    m_host.setDimensions(2, 2)
+    caps_h = Vector[int](2)
+    caps_h.setValue(1)
+    m_host.setRowCapacities(caps_h)
+    m_host.setElement(0, 0, 1 + 2j)
+
+    m_cuda = SparseMatrix[complex, Cuda]()
+    m_cuda.setDimensions(2, 2)
+    caps_c = _containers_cuda.Vector_int(2)
+    caps_c.setValue(1)
+    m_cuda.setRowCapacities(caps_c)
+    m_cuda.setElement(0, 0, 1 + 2j)
+
+    with pytest.raises(NotImplementedError, match="Cross-device"):
+        copySparseMatrix(m_cuda, m_host)
+
+    with pytest.raises(NotImplementedError, match="Cross-device"):
+        copySparseMatrix(m_host, m_cuda)

@@ -192,10 +192,56 @@ def demo_copy_sparse_matrix() -> None:
     print()
 
 
+def demo_complex_matrix() -> None:
+    """Demonstrate sparse matrix with complex values."""
+    print("--- Complex sparse matrix ---\n")
+
+    m = SparseMatrix[complex]()
+    m.setDimensions(3, 3)
+    caps = Vector[int](3)
+    caps.setValue(1)
+    m.setRowCapacities(caps)
+    m.setElement(0, 0, 1 + 2j)
+    m.setElement(1, 1, 3 - 1j)
+    m.setElement(2, 2, -2 + 0.5j)
+
+    print(f"Matrix:\n{m}")
+    print(f"getElement(0,0) = {m.getElement(0, 0)}")
+    print(f"getElement(1,1) = {m.getElement(1, 1)}")
+
+    m_e = SparseMatrix[complex, Host, formats.Ellpack]()
+    copySparseMatrix(m_e, m)
+    print("\nAfter CSR -> Ellpack copy:")
+    print(f"getElement(0,0) = {m_e.getElement(0, 0)}")
+    print(f"getElement(1,1) = {m_e.getElement(1, 1)}")
+
+    if find_spec("pytnl._matrices_cuda") is None:
+        print("\n(CUDA module not available — skipping Cuda)")
+        return
+
+    m_cuda = SparseMatrix[complex, Cuda]()
+    m_cuda.setDimensions(3, 3)
+    caps_cuda = Vector[int, Cuda](3)
+    caps_cuda.setValue(1)
+    m_cuda.setRowCapacities(caps_cuda)
+    m_cuda.setElement(0, 0, 1 + 2j)
+    m_cuda.setElement(1, 1, 3 - 1j)
+    print(f"\nCuda complex getElement(0,0) = {m_cuda.getElement(0, 0)}")
+    print(f"Cuda complex getElement(1,1) = {m_cuda.getElement(1, 1)}")
+
+    m_e_cuda = SparseMatrix[complex, Cuda, formats.Ellpack]()
+    copySparseMatrix(m_e_cuda, m_cuda)
+    print(f"Cuda complex copy getElement(0,0) = {m_e_cuda.getElement(0, 0)}")
+    print(f"Cuda complex copy getElement(1,1) = {m_e_cuda.getElement(1, 1)}")
+
+    print()
+
+
 def main() -> None:
     demo_coordinate_construction()
     demo_save_load_equality()
     demo_copy_sparse_matrix()
+    demo_complex_matrix()
 
 
 if __name__ == "__main__":

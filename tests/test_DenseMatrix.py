@@ -8,9 +8,10 @@ from hypothesis import strategies as st
 
 import pytnl._matrices
 from pytnl._containers import Vector_int
+from pytnl._matrices import DenseMatrixRowView_float_RowMajor
 from pytnl.containers import Vector
 from pytnl.devices import Host
-from pytnl.matrices import DenseMatrix, DenseMatrixRowView, DenseMatrixView, ElementsOrganization
+from pytnl.matrices import DenseMatrix, DenseMatrixView, ElementsOrganization
 
 # ---------------------------------------------------------------------------
 # Single host matrix type (no format parameter — only value_type + device_type)
@@ -68,8 +69,8 @@ def test_subscript_default_device() -> None:
 
 
 def test_subscript_invalid_value_type() -> None:
-    """Non-float value types must raise TypeError."""
-    for bad_type in (int, complex, bool):
+    """Unsupported value types must raise TypeError."""
+    for bad_type in (int, bool):
         with pytest.raises(TypeError):
             DenseMatrix[bad_type]  # type: ignore[index, unused-ignore]
 
@@ -202,7 +203,7 @@ def test_rowview_basics() -> None:
     m = create_matrix(2, 3, [(0, 1, 4.0), (0, 2, 5.0), (1, 0, 6.0)])
 
     row0 = m.getRow(0)
-    assert isinstance(row0, DenseMatrixRowView)
+    assert isinstance(row0, DenseMatrixRowView_float_RowMajor)
     assert row0.getRowIndex() == 0
     # For dense, getSize() == number of columns
     assert row0.getSize() == 3
@@ -685,8 +686,8 @@ def test_view_subscript_returns_correct_class() -> None:
 
 
 def test_view_subscript_invalid_value_type() -> None:
-    """Non-float value types must raise TypeError."""
-    for bad_type in (int, complex, bool):
+    """Unsupported value types must raise TypeError."""
+    for bad_type in (int, bool):
         with pytest.raises(TypeError):
             DenseMatrixView[bad_type]  # type: ignore[index, unused-ignore]
 
@@ -836,7 +837,7 @@ def test_view_getRow_returns_rowview() -> None:
     view = m.getView()
     row = view.getRow(0)
 
-    assert isinstance(row, DenseMatrixRowView)
+    assert isinstance(row, DenseMatrixRowView_float_RowMajor)
     assert row.getRowIndex() == 0
     assert row.getSize() == 3
     assert row.getValue(0) == 0.0
@@ -1032,3 +1033,74 @@ def test_view_organization_subscript_returns_correct_class() -> None:
     """DenseMatrixView subscript with organization resolves to correct C++ class."""
     assert DenseMatrixView[float, Host, ElementsOrganization.RowMajorOrder] is DV
     assert DenseMatrixView[float, Host, ElementsOrganization.ColumnMajorOrder] is pytnl._matrices.DenseMatrixView_float_ColumnMajor
+
+
+# ---------------------------------------------------------------------------
+# Complex value type
+# ---------------------------------------------------------------------------
+
+DM_c = pytnl._matrices.DenseMatrix_complex_RowMajor
+DV_c = pytnl._matrices.DenseMatrixView_complex_RowMajor
+DV_c_const = pytnl._matrices.DenseMatrixView_complex_RowMajor_const
+
+
+def test_complex_subscript_returns_correct_class() -> None:
+    """Complex value type resolves to the correct C++ class."""
+    assert DenseMatrix[complex] is DM_c
+    assert DenseMatrix[complex, Host] is DM_c
+    assert DenseMatrix[complex, Host, ElementsOrganization.RowMajorOrder] is DM_c
+    assert DenseMatrix[complex, Host, ElementsOrganization.ColumnMajorOrder] is pytnl._matrices.DenseMatrix_complex_ColumnMajor
+
+
+def test_complex_construction_and_get_set() -> None:
+    """Complex DenseMatrix supports setElement/getElement with complex values."""
+    m = DenseMatrix[complex](3, 3)
+    m.setElement(0, 0, 1 + 2j)
+    m.setElement(1, 1, 3 - 1j)
+    m.setElement(2, 2, -2 + 0.5j)
+    assert m.getElement(0, 0) == 1 + 2j
+    assert m.getElement(1, 1) == 3 - 1j
+    assert m.getElement(2, 2) == -2 + 0.5j
+    assert m.getElement(0, 1) == 0j
+
+
+def test_complex_dlpack() -> None:
+    """Complex DenseMatrix exports complex128 array via DLPack."""
+    m = DenseMatrix[complex](2, 2)
+    m.setElement(0, 0, 1 + 2j)
+    m.setElement(1, 1, 3 - 1j)
+    arr = np.from_dlpack(m)
+    assert arr.dtype == np.complex128
+    assert arr.shape == (2, 2)
+    assert arr[0, 0] == 1 + 2j
+    assert arr[1, 1] == 3 - 1j
+    assert arr[0, 1] == 0j
+
+
+def test_complex_view_get_set() -> None:
+    """Complex DenseMatrixView supports setElement/getElement."""
+    m = DenseMatrix[complex](2, 2)
+    m.setElement(0, 0, 1 + 2j)
+    view = m.getView()
+    assert view.getElement(0, 0) == 1 + 2j
+    view.setElement(1, 1, 3 - 1j)
+    assert m.getElement(1, 1) == 3 - 1j
+
+
+def test_complex_const_view() -> None:
+    """Complex const view returns correct values."""
+    m = DenseMatrix[complex](2, 2)
+    m.setElement(0, 0, 1 + 2j)
+    cview = m.getConstView()
+    assert cview.getElement(0, 0) == 1 + 2j
+
+
+def test_complex_row_view() -> None:
+    """Complex DenseMatrixRowView returns correct values."""
+    m = DenseMatrix[complex](2, 2)
+    m.setElement(0, 0, 1 + 2j)
+    m.setElement(0, 1, 3 - 1j)
+    row = m.getRow(0)
+    assert row.getValue(0) == 1 + 2j
+    assert row.getValue(1) == 3 - 1j
+    assert row.getSize() == 2

@@ -292,8 +292,6 @@ export_Matrix( nb::module_& m, const char* name )
                     // operator== calls getConstView() which exists only on owning matrices
                     .def( nb::self == nb::self, nb::sig( "def __eq__(self, arg: object, /) -> bool" ) )
                     .def( nb::self != nb::self, nb::sig( "def __ne__(self, arg: object, /) -> bool" ) );
-
-   export_Segments< typename Matrix::SegmentsType >( matrix, "Segments" );
 }
 
 template< typename ViewType, typename BaseType >

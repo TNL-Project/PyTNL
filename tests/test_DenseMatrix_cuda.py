@@ -815,3 +815,46 @@ def test_view_organization_subscript_cuda() -> None:
         DenseMatrixView[float, Cuda, ElementsOrganization.RowMajorOrder]  # type: ignore[index]
         is _matrices_cuda.DenseMatrixView_float_RowMajor
     )
+
+
+# Complex value type
+
+
+def test_complex_subscript_cuda() -> None:
+    assert DenseMatrix[complex, Cuda] is _matrices_cuda.DenseMatrix_complex_ColumnMajor  # type: ignore[attr-defined]
+
+
+def test_complex_construction_and_get_set_cuda() -> None:
+    m = DenseMatrix[complex, Cuda](3, 3)  # type: ignore[call-arg]
+    m.setElement(0, 0, 1 + 2j)
+    m.setElement(1, 1, 3 - 1j)
+    m.setElement(2, 2, -2 + 0.5j)
+    assert m.getElement(0, 0) == 1 + 2j  # type: ignore[attr-defined]
+    assert m.getElement(1, 1) == 3 - 1j  # type: ignore[attr-defined]
+    assert m.getElement(2, 2) == -2 + 0.5j  # type: ignore[attr-defined]
+
+
+def test_complex_dlpack_cuda() -> None:
+    m = DenseMatrix[complex, Cuda](2, 2)  # type: ignore[call-arg]
+    m.setElement(0, 0, 1 + 2j)
+    m.setElement(1, 1, 3 - 1j)
+    arr = cp.from_dlpack(m)
+    assert arr.dtype == np.complex128
+    assert arr[0, 0] == 1 + 2j
+    assert arr[1, 1] == 3 - 1j
+
+
+def test_complex_view_get_set_cuda() -> None:
+    m = DenseMatrix[complex, Cuda](2, 2)  # type: ignore[call-arg]
+    m.setElement(0, 0, 1 + 2j)
+    view = m.getView()  # type: ignore[attr-defined]
+    assert view.getElement(0, 0) == 1 + 2j  # type: ignore[attr-defined]
+    view.setElement(1, 1, 3 - 1j)  # type: ignore[attr-defined]
+    assert m.getElement(1, 1) == 3 - 1j  # type: ignore[attr-defined]
+
+
+def test_complex_const_view_cuda() -> None:
+    m = DenseMatrix[complex, Cuda](2, 2)  # type: ignore[call-arg]
+    m.setElement(0, 0, 1 + 2j)
+    cview = m.getConstView()  # type: ignore[attr-defined]
+    assert cview.getElement(0, 0) == 1 + 2j  # type: ignore[attr-defined]

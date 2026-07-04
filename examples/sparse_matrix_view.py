@@ -1,12 +1,13 @@
+from pytnl._matrices import SparseMatrixRowView_float
 from pytnl.containers import Vector
 from pytnl.devices import Host
-from pytnl.matrices import SparseMatrix, SparseMatrixRowView, formats
+from pytnl.matrices import SparseMatrix, formats
 
 ROWS = 5
 COLS = 5
 
 
-def print_row(row: SparseMatrixRowView) -> None:
+def print_row(row: SparseMatrixRowView_float) -> None:
     """Print the stored entries of a sparse row view."""
     print(f"  Row {row.getRowIndex()} has {row.getSize()} allocated slot(s):")
     for i in range(row.getSize()):
