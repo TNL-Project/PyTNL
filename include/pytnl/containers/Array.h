@@ -244,6 +244,68 @@ export_Array( nb::module_& m, const char* name )
          "the returned dict does not keep this array alive and read_only is advisory." );
    }
 
+   if constexpr( ! std::is_same_v< DeviceType, TNL::Devices::GPU > ) {
+      array
+         .def(
+            "forElements",
+            []( ArrayType& self, IndexType begin, IndexType end, const nb::callable& f )
+            {
+               check_array_range( self.getSize(), begin, end );
+               if( end == 0 )
+                  end = self.getSize();
+               for( IndexType i = begin; i < end; ++i )
+                  f( i );
+            },
+            nb::arg( "begin" ),
+            nb::arg( "end" ),
+            nb::arg( "f" ),
+            "Evaluates the function ``f`` for elements with indices in [begin, end). "
+            "The function is called as ``f(i)`` where *i* is the element index. "
+            "If *end* is 0, it defaults to the array size." )
+         .def(
+            "forAllElements",
+            []( ArrayType& self, const nb::callable& f )
+            {
+               nb::object self_py = nb::find( self );
+               if( ! self_py )
+                  self_py = nb::cast( &self, nb::rv_policy::reference );
+               self_py.attr( "forElements" )( 0, 0, f );
+            },
+            nb::arg( "f" ),
+            "Evaluates the function ``f`` for all elements of the array. "
+            "The function is called as ``f(i)`` where *i* is the element index." );
+   }
+   if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > ) {
+      array
+         .def(
+            "forElements",
+            []( ArrayType& self, IndexType begin, IndexType end, nb::object kernel )
+            {
+               nb::object self_py = nb::find( self );
+               if( ! self_py )
+                  self_py = nb::cast( &self, nb::rv_policy::reference );
+               nb::object launch = nb::module_::import_( "pytnl.cuda_kernels" ).attr( "launch_array_for_elements" );
+               launch( self_py, begin, end, kernel );
+            },
+            nb::arg( "begin" ),
+            nb::arg( "end" ),
+            nb::arg( "kernel" ),
+            "Evaluates the function ``kernel`` for elements with indices in [begin, end). "
+            "Accepts a CompiledDeviceFunc (from @compile_device_func) or a raw @cuda.jit kernel." )
+         .def(
+            "forAllElements",
+            []( ArrayType& self, nb::object kernel )
+            {
+               nb::object self_py = nb::find( self );
+               if( ! self_py )
+                  self_py = nb::cast( &self, nb::rv_policy::reference );
+               self_py.attr( "forElements" )( 0, 0, kernel );
+            },
+            nb::arg( "kernel" ),
+            "Evaluates the function ``kernel`` for all elements of the array. "
+            "Accepts a CompiledDeviceFunc (from @compile_device_func) or a raw @cuda.jit kernel." );
+   }
+
    def_indexing< ArrayType >( array );
 
    if constexpr( TNL::IsViewType< ArrayType >::value ) {

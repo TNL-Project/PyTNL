@@ -696,3 +696,78 @@ def test_dlpack(array_type: type[A], data: st.DataObject) -> None:
     assert const_view_np.shape == dims, f"Expected shape {dims}, got {const_view_np.shape}"
     assert const_view_np.dtype == array_np.dtype
     assert np.all(const_view_np == list(array)), "Data mismatch in NumPy array from const view"
+
+
+# ----------------------
+# forElements
+# ----------------------
+
+
+@pytest.mark.parametrize("array_type", array_types)
+@given(data=st.data())
+def test_forElements(array_type: type[A], data: st.DataObject) -> None:
+    elements = data.draw(st.lists(element_strategy(array_type), min_size=1, max_size=20))
+    if array_type.ValueType is int:
+        assume(all(v < 2**63 - 1 for v in elements))  # type: ignore[operator]
+    array = create_array(elements, array_type)
+
+    def setter(i: int) -> None:
+        array[i] = array[i] + 1  # pyright: ignore[reportArgumentType, reportCallIssue]
+
+    array.forElements(0, len(elements), setter)  # type: ignore[no-untyped-call]
+
+    for i, val in enumerate(elements):
+        assert array[i] == val + 1
+
+
+@pytest.mark.parametrize("array_type", array_types)
+@given(data=st.data())
+def test_forElements_range(array_type: type[A], data: st.DataObject) -> None:
+    elements = data.draw(st.lists(element_strategy(array_type), min_size=4, max_size=20))
+    array = create_array(elements, array_type)
+
+    begin = 1
+    end = len(elements) - 1
+
+    def setter(i: int) -> None:
+        array[i] = 42  # pyright: ignore[reportArgumentType, reportCallIssue]
+
+    array.forElements(begin, end, setter)  # type: ignore[no-untyped-call]
+
+    for i, val in enumerate(elements):
+        if begin <= i < end:
+            assert array[i] == 42
+        else:
+            assert array[i] == val
+
+
+@pytest.mark.parametrize("array_type", array_types)
+@given(data=st.data())
+def test_forElements_end_zero(array_type: type[A], data: st.DataObject) -> None:
+    elements = data.draw(st.lists(element_strategy(array_type), min_size=1, max_size=20))
+    array = create_array(elements, array_type)
+
+    def setter(i: int) -> None:
+        array[i] = 1  # pyright: ignore[reportArgumentType, reportCallIssue]
+
+    array.forElements(0, 0, setter)  # type: ignore[no-untyped-call]
+
+    for i in range(len(elements)):
+        assert array[i] == 1
+
+
+@pytest.mark.parametrize("array_type", array_types)
+@given(data=st.data())
+def test_forAllElements(array_type: type[A], data: st.DataObject) -> None:
+    elements = data.draw(st.lists(element_strategy(array_type), min_size=1, max_size=20))
+    if array_type.ValueType is int:
+        assume(all(v < 2**63 - 1 for v in elements))  # type: ignore[operator]
+    array = create_array(elements, array_type)
+
+    def setter(i: int) -> None:
+        array[i] = array[i] + 1  # pyright: ignore[reportArgumentType, reportCallIssue]
+
+    array.forAllElements(setter)  # type: ignore[no-untyped-call]
+
+    for i, val in enumerate(elements):
+        assert array[i] == val + 1

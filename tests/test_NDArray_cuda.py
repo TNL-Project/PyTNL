@@ -1,6 +1,7 @@
-# mypy: disable-error-code="import-not-found, no-any-unimported, no-untyped-call, unused-ignore"
+# mypy: disable-error-code="import-not-found, no-any-unimported, unused-ignore, attr-defined, operator, misc, arg-type"
 # pyright: standard
 # pyright: reportMissingImports=information
+# pyright: reportAttributeAccessIssue=none
 
 import copy
 from collections.abc import Callable
@@ -205,9 +206,11 @@ def test_equality(shape: tuple[int, ...]) -> None:
     assert a == b, "Arrays with the same shape and value should be equal"
 
 
-@pytest.mark.skip(reason="NDArray.forAll is not available on CUDA arrays")
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
 def test_forAll(shape: tuple[int, ...]) -> None:
+    pytest.importorskip("numba_cuda_mlir.cuda")
+    from pytnl.cuda_kernels import compile_device_func  # noqa: PLC0415
+
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
@@ -216,19 +219,21 @@ def test_forAll(shape: tuple[int, ...]) -> None:
     a.setSizes(*shape)
     a.setValue(0)
 
+    @compile_device_func
     def setter(*idx: int) -> None:
         a[idx] += 1
 
-    a.forAll(setter)  # pyright: ignore
+    a.forAll(setter)
 
-    assert all(value == 1 for value in a.getStorageArrayView())
     for idx in np.ndindex(shape):
         assert a[idx] == 1
 
 
-@pytest.mark.skip(reason="NDArray.forInterior is not available on CUDA arrays")
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
 def test_forInterior(shape: tuple[int, ...]) -> None:
+    pytest.importorskip("numba_cuda_mlir.cuda")
+    from pytnl.cuda_kernels import compile_device_func  # noqa: PLC0415
+
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
@@ -237,13 +242,13 @@ def test_forInterior(shape: tuple[int, ...]) -> None:
     a.setSizes(*shape)
     a.setValue(0)
 
+    @compile_device_func
     def setter(*idx: int) -> None:
         a[idx] += 1
 
-    a.forInterior(setter)  # pyright: ignore
+    a.forInterior(setter)
 
     for idx in np.ndindex(shape):
-        # Check if interior
         is_interior = all(1 <= i < s - 1 for i, s in zip(idx, shape))
         if is_interior:
             assert a[idx] == 1
@@ -251,9 +256,11 @@ def test_forInterior(shape: tuple[int, ...]) -> None:
             assert a[idx] == 0
 
 
-@pytest.mark.skip(reason="NDArray.forBoundary is not available on CUDA arrays")
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)
 def test_forBoundary(shape: tuple[int, ...]) -> None:
+    pytest.importorskip("numba_cuda_mlir.cuda")
+    from pytnl.cuda_kernels import compile_device_func  # noqa: PLC0415
+
     dim = len(shape)
     # dim needs to be narrowed down to a literal for type-checking
     assert is_dim_guard(dim)
@@ -262,10 +269,11 @@ def test_forBoundary(shape: tuple[int, ...]) -> None:
     a.setSizes(*shape)
     a.setValue(0)
 
+    @compile_device_func
     def setter(*idx: int) -> None:
         a[idx] += 1
 
-    a.forBoundary(setter)  # pyright: ignore
+    a.forBoundary(setter)
 
     for idx in np.ndindex(shape):
         is_boundary = any(i == 0 or i == s - 1 for i, s in zip(idx, shape))
@@ -273,6 +281,94 @@ def test_forBoundary(shape: tuple[int, ...]) -> None:
             assert a[idx] == 1
         else:
             assert a[idx] == 0
+
+
+def _make_raw_kernel_all(nb_cuda: Any, dim: int, value: int) -> Any:  # noqa: ANN401
+    """Build a raw @cuda.jit kernel with signature (storage, sizes, strides).
+
+    The kernel writes ``value`` into every element by computing the flat
+    storage index from grid coordinates.
+    """
+    if dim == 1:
+
+        @nb_cuda.jit  # type: ignore[misc]
+        def kernel(storage: Any, sizes: Any, strides: Any) -> None:  # noqa: ANN401
+            i = nb_cuda.grid(1)  # type: ignore[attr-defined]
+            if i < sizes[0]:
+                storage[i] = value  # type: ignore[index]
+
+    elif dim == 2:
+
+        @nb_cuda.jit  # type: ignore[misc]
+        def kernel(storage: Any, sizes: Any, strides: Any) -> None:  # noqa: ANN401
+            i, j = nb_cuda.grid(2)  # type: ignore[attr-defined]
+            if i < sizes[0] and j < sizes[1]:
+                storage[i * strides[0] + j * strides[1]] = value  # type: ignore[index]
+
+    else:
+
+        @nb_cuda.jit  # type: ignore[misc]
+        def kernel(storage: Any, sizes: Any, strides: Any) -> None:  # noqa: ANN401
+            i, j, k = nb_cuda.grid(3)  # type: ignore[attr-defined]
+            if i < sizes[0] and j < sizes[1] and k < sizes[2]:
+                storage[i * strides[0] + j * strides[1] + k * strides[2]] = value  # type: ignore[index]
+
+    return kernel
+
+
+@pytest.mark.parametrize("shape", SHAPE_PARAMS)
+def test_forAll_raw_kernel(shape: tuple[int, ...]) -> None:
+    pytest.importorskip("numba_cuda_mlir.cuda")
+    from numba_cuda_mlir import cuda as nb_cuda  # noqa: PLC0415
+
+    dim = len(shape)
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
+    a.setSizes(*shape)
+    a.setValue(0)
+
+    kernel = _make_raw_kernel_all(nb_cuda, dim, 7)
+    a.forAll(kernel)
+
+    for idx in np.ndindex(shape):
+        assert a[idx] == 7
+
+
+@pytest.mark.parametrize("shape", SHAPE_PARAMS)
+def test_forInterior_raw_kernel_raises(shape: tuple[int, ...]) -> None:
+    pytest.importorskip("numba_cuda_mlir.cuda")
+    from numba_cuda_mlir import cuda as nb_cuda  # noqa: PLC0415
+
+    dim = len(shape)
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
+    a.setSizes(*shape)
+    a.setValue(0)
+
+    kernel = _make_raw_kernel_all(nb_cuda, dim, 9)
+
+    with pytest.raises(TypeError, match="forInterior requires a CompiledDeviceFunc"):
+        a.forInterior(kernel)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("shape", SHAPE_PARAMS)
+def test_forBoundary_raw_kernel_raises(shape: tuple[int, ...]) -> None:
+    pytest.importorskip("numba_cuda_mlir.cuda")
+    from numba_cuda_mlir import cuda as nb_cuda  # noqa: PLC0415
+
+    dim = len(shape)
+    assert is_dim_guard(dim)
+
+    a = NDArray[dim, int, Cuda]()  # type: ignore[index]
+    a.setSizes(*shape)
+    a.setValue(0)
+
+    kernel = _make_raw_kernel_all(nb_cuda, dim, 5)
+
+    with pytest.raises(TypeError, match="forBoundary requires a CompiledDeviceFunc"):
+        a.forBoundary(kernel)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("shape", SHAPE_PARAMS)

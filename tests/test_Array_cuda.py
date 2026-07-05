@@ -6,13 +6,14 @@ import copy
 import os
 import tempfile
 from collections.abc import Collection
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 import pytnl.containers
+from pytnl.cuda_kernels import compile_device_func
 from pytnl.devices import Cuda
 
 if TYPE_CHECKING:
@@ -705,3 +706,98 @@ def test_dlpack(array_type: type[A], data: st.DataObject) -> None:
     assert const_view_cupy.shape == dims, f"Expected shape {dims}, got {const_view_cupy.shape}"
     assert const_view_cupy.dtype == array_cupy.dtype
     assert all(const_view_cupy[i] == array[i] for i in range(len(array))), "Data mismatch in CuPy array from const view"
+
+
+# ----------------------
+# forElements
+# ----------------------
+
+
+@pytest.mark.parametrize("array_type", array_types)
+@given(data=st.data())
+@settings(deadline=5000)
+def test_forElements(array_type: type[A], data: st.DataObject) -> None:
+    elements = data.draw(st.lists(element_strategy(array_type), min_size=1, max_size=20))
+    if array_type.ValueType is int:
+        assume(all(v < 2**63 - 1 for v in elements))  # type: ignore[operator]
+    array = create_array(elements, array_type)
+
+    @compile_device_func
+    def setter(i: int) -> None:
+        array[i] = array[i] + 1  # type: ignore[operator]
+
+    array.forElements(0, len(elements), setter)  # type: ignore[attr-defined]
+
+    for i, val in enumerate(elements):
+        assert array[i] == val + 1
+
+
+@pytest.mark.parametrize("array_type", array_types)
+@given(data=st.data())
+@settings(deadline=5000)
+def test_forElements_range(array_type: type[A], data: st.DataObject) -> None:
+    elements = data.draw(st.lists(element_strategy(array_type), min_size=4, max_size=20))
+    array = create_array(elements, array_type)
+
+    begin = 1
+    end = len(elements) - 1
+
+    @compile_device_func
+    def setter(i: int) -> None:
+        array[i] = 42  # type: ignore[operator]
+
+    array.forElements(begin, end, setter)  # type: ignore[attr-defined]
+
+    for i, val in enumerate(elements):
+        if begin <= i < end:
+            assert array[i] == 42
+        else:
+            assert array[i] == val
+
+
+@pytest.mark.parametrize("array_type", array_types)
+@given(data=st.data())
+@settings(deadline=5000)
+def test_forAllElements(array_type: type[A], data: st.DataObject) -> None:
+    elements = data.draw(st.lists(element_strategy(array_type), min_size=1, max_size=20))
+    if array_type.ValueType is int:
+        assume(all(v < 2**63 - 1 for v in elements))  # type: ignore[operator]
+    array = create_array(elements, array_type)
+
+    @compile_device_func
+    def setter(i: int) -> None:
+        array[i] = array[i] + 1  # type: ignore[operator]
+
+    array.forAllElements(setter)  # type: ignore[attr-defined]
+
+    for i, val in enumerate(elements):
+        assert array[i] == val + 1
+
+
+def test_forElements_raw_kernel() -> None:
+    """forElements with a raw @cuda.jit kernel (not CompiledDeviceFunc).
+
+    The kernel receives (array, begin, end) and must compute the index itself.
+    """
+    from numba_cuda_mlir import cuda as nb_cuda  # noqa: PLC0415
+
+    array_type = _containers_cuda.Array_int
+    elements = [10, 20, 30, 40, 50]
+    array = create_array(elements, array_type)
+
+    begin = 1
+    end = 4
+
+    @nb_cuda.jit  # type: ignore[misc]
+    def kernel(arr: Any, begin: int, end: int) -> None:  # noqa: ANN401
+        i = begin + nb_cuda.grid(1)  # type: ignore[attr-defined]
+        if i < end:
+            arr[i] = arr[i] + 100  # type: ignore[index, operator]
+
+    array.forElements(begin, end, kernel)  # type: ignore[attr-defined]
+
+    for i, val in enumerate(elements):
+        if begin <= i < end:
+            assert array[i] == val + 100
+        else:
+            assert array[i] == val

@@ -296,6 +296,17 @@ export_NDArrayIndexer( nb::module_& m, const char* name )
 
 template< typename ArrayType >
 void
+cuda_ndarray_launch( ArrayType& self_cpp, nb::object kernel, const char* launcher_name )
+{
+   nb::object self_py = nb::find( self_cpp );
+   if( ! self_py )
+      self_py = nb::cast( &self_cpp, nb::rv_policy::reference );
+   nb::object launch = nb::module_::import_( "pytnl.cuda_kernels" ).attr( launcher_name );
+   launch( self_py, kernel );
+}
+
+template< typename ArrayType >
+void
 export_NDArray( nb::module_& m, const char* name )
 {
    using IndexerType = typename ArrayType::IndexerType;
@@ -514,6 +525,43 @@ export_NDArray( nb::module_& m, const char* name )
 
    ndarray_indexing( array );
    ndarray_iteration( array );
+
+   // CUDA NDArrays lack forAll/forInterior/forBoundary in C++ (calling Python
+   // callbacks from a CUDA kernel does not work). Bind these methods to Python
+   // helpers that JIT-compile the callback via numba-cuda-mlir and launch the
+   // resulting kernel. The compiled kernel receives captured CUDA arrays as
+   // parameters (not globals) to avoid numba Global IR nodes that would keep
+   // nanobind instances alive past interpreter shutdown.
+   if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > ) {
+      array
+         .def(
+            "forAll",
+            []( ArrayType& self, nb::object kernel )
+            {
+               cuda_ndarray_launch( self, kernel, "launch_ndarray_for_all" );
+            },
+            nb::arg( "kernel" ),
+            "Evaluates the function `kernel` for all elements of the array. "
+            "Accepts a CompiledDeviceFunc (from @compile_device_func) or a raw @cuda.jit kernel." )
+         .def(
+            "forInterior",
+            []( ArrayType& self, nb::object kernel )
+            {
+               cuda_ndarray_launch( self, kernel, "launch_ndarray_for_interior" );
+            },
+            nb::arg( "kernel" ),
+            "Evaluates the function `kernel` for all interior elements of the array. "
+            "Requires a CompiledDeviceFunc (from @compile_device_func)." )
+         .def(
+            "forBoundary",
+            []( ArrayType& self, nb::object kernel )
+            {
+               cuda_ndarray_launch( self, kernel, "launch_ndarray_for_boundary" );
+            },
+            nb::arg( "kernel" ),
+            "Evaluates the function `kernel` for all boundary elements of the array. "
+            "Requires a CompiledDeviceFunc (from @compile_device_func)." );
+   }
 
    if constexpr( TNL::IsViewType< ArrayType >::value ) {
       array  //
