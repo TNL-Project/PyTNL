@@ -4,8 +4,7 @@
 
 #include <TNL/String.h>
 
-namespace nanobind {
-namespace detail {
+namespace nanobind::detail {
 
 template<>
 struct type_caster< TNL::String >
@@ -26,7 +25,7 @@ public:
       if( ! _caster.from_python( src, flags, cleanup ) )
          return false;
       const std::string& str = static_cast< std::string& >( _caster );
-      value = TNL::String( str.c_str() );
+      value = TNL::String( str );
       return true;
    }
 
@@ -41,5 +40,4 @@ public:
    }
 };
 
-}  // namespace detail
-}  // namespace nanobind
+}  // namespace nanobind::detail

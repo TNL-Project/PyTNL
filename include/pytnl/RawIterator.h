@@ -22,7 +22,7 @@ public:
       m_ptr = ptr;
    }
    RawIterator( const RawIterator< DataType >& rawIterator ) = default;
-   ~RawIterator() {}
+   ~RawIterator() = default;
 
    RawIterator< DataType >&
    operator=( const RawIterator< DataType >& rawIterator ) = default;
@@ -35,10 +35,7 @@ public:
 
    operator bool() const
    {
-      if( m_ptr )
-         return true;
-      else
-         return false;
+      return static_cast< bool >( m_ptr );
    }
 
    bool
@@ -131,12 +128,12 @@ public:
       return m_ptr;
    }
 
-   DataType*
+   [[nodiscard]] DataType*
    getPtr() const
    {
       return m_ptr;
    }
-   const DataType*
+   [[nodiscard]] const DataType*
    getConstPtr() const
    {
       return m_ptr;

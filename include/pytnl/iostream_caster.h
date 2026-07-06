@@ -4,8 +4,7 @@
 
 #include <pytnl/3rdparty/cctbx/pystreambuf.h>
 
-namespace nanobind {
-namespace detail {
+namespace nanobind::detail {
 
 template<>
 struct type_caster< std::istream >
@@ -50,7 +49,7 @@ public:
       }
 
       obj = borrow( src );
-      value = std::unique_ptr< pystreambuf::istream >( new pystreambuf::istream( obj, 0 ) );
+      value = std::make_unique< pystreambuf::istream >( obj, 0 );
 
       return true;
    }
@@ -64,13 +63,13 @@ public:
    explicit
    operator std::istream&()
    {
-      return *value.get();
+      return *value;
    }
 
    explicit
    operator std::istream&&()
    {
-      return (std::istream&&) *value.get();
+      return static_cast< std::istream&& >( *value );
    }
 };
 
@@ -117,7 +116,7 @@ public:
       }
 
       obj = borrow( src );
-      value = std::unique_ptr< pystreambuf::ostream >( new pystreambuf::ostream( obj, 0 ) );
+      value = std::make_unique< pystreambuf::ostream >( obj, 0 );
 
       return true;
    }
@@ -131,15 +130,14 @@ public:
    explicit
    operator std::ostream&()
    {
-      return *value.get();
+      return *value;
    }
 
    explicit
    operator std::ostream&&()
    {
-      return (std::ostream&&) *value.get();
+      return static_cast< std::ostream&& >( *value );
    }
 };
 
-}  // namespace detail
-}  // namespace nanobind
+}  // namespace nanobind::detail

@@ -62,7 +62,7 @@ pybuffer_format()
 inline bool
 checked_cast_to_py_ssize( std::size_t value, Py_ssize_t& out )
 {
-   constexpr std::size_t max_py = static_cast< std::size_t >( std::numeric_limits< Py_ssize_t >::max() );
+   constexpr auto max_py = static_cast< std::size_t >( std::numeric_limits< Py_ssize_t >::max() );
    if( value > max_py )
       return false;
    out = static_cast< Py_ssize_t >( value );
@@ -114,7 +114,7 @@ array_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
    }
 
    ArrayType* obj = nb::inst_ptr< ArrayType >( nb::handle( exporter ) );
-   BufferInfo* info = new( std::nothrow ) BufferInfo( 1 );
+   auto* info = new( std::nothrow ) BufferInfo( 1 );
    if( info == nullptr ) {
       PyErr_NoMemory();
       return -1;
@@ -186,12 +186,12 @@ ndarray_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
       return -1;
    }
 
-   NDArrayType* obj = nb::inst_ptr< NDArrayType >( nb::handle( exporter ) );
+   auto* obj = nb::inst_ptr< NDArrayType >( nb::handle( exporter ) );
 
    constexpr int ndim = static_cast< int >( NDArrayType::getDimension() );
    static_assert( ndim > 0, "NDArray dimension must be positive" );
 
-   BufferInfo* info = new( std::nothrow ) BufferInfo( ndim );
+   auto* info = new( std::nothrow ) BufferInfo( ndim );
    if( info == nullptr ) {
       PyErr_NoMemory();
       return -1;
@@ -279,8 +279,8 @@ static_vector_getbuffer( PyObject* exporter, Py_buffer* view, int flags )
       return -1;
    }
 
-   StaticVectorType* obj = nb::inst_ptr< StaticVectorType >( nb::handle( exporter ) );
-   BufferInfo* info = new( std::nothrow ) BufferInfo( 1 );
+   auto* obj = nb::inst_ptr< StaticVectorType >( nb::handle( exporter ) );
+   auto* info = new( std::nothrow ) BufferInfo( 1 );
    if( info == nullptr ) {
       PyErr_NoMemory();
       return -1;

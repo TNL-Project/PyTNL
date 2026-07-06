@@ -95,8 +95,9 @@ def_indexing( Scope& scope )
       "__setitem__",
       []( Array& a, Index i, const Value& e )
       {
-         if constexpr( std::is_const_v< typename Array::ValueType > )
+         if constexpr( std::is_const_v< typename Array::ValueType > ) {
             throw nb::type_error( "Cannot set element of a read-only array" );
+         }
          else {
             check_array_index( a.getSize(), i );
             // setElement is equivalent to operator[] on host but works on cuda
@@ -134,7 +135,7 @@ def_slice_indexing( Scope& scope )
       {
          auto [ start, stop, step, slicelength ] = slice.compute( a.getSize() );
 
-         if( slicelength != (std::size_t) value.getSize() )
+         if( slicelength != static_cast< std::size_t >( value.getSize() ) )
             throw std::runtime_error( "Left and right hand size of slice assignment have different sizes!" );
 
          for( std::size_t i = 0; i < slicelength; ++i ) {
