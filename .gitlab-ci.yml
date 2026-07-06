@@ -62,6 +62,15 @@ typos:
   script:
     - typos --color always --sort
 
+clang-tidy:
+  stage: lint
+  image: "quay.io/archlinux/archlinux:base-devel"
+  before_script:
+    - pacman -Syu --needed --noconfirm just clang git cmake ninja python openmp openmpi
+  script:
+    - *env_setup
+    - just check-clang-tidy
+
 Arch_cmake:
   stage: build
   image: "quay.io/archlinux/archlinux:base-devel"
