@@ -134,18 +134,18 @@ namespace pystreambuf {
 class streambuf : public std::basic_streambuf< char >
 {
 private:
-   typedef std::basic_streambuf< char > base_t;
+   using base_t = std::basic_streambuf< char >;
 
 public:
    /* The syntax
        using base_t::char_type;
       would be nicer but Visual Studio C++ 8 chokes on it
    */
-   typedef base_t::char_type char_type;
-   typedef base_t::int_type int_type;
-   typedef base_t::pos_type pos_type;
-   typedef base_t::off_type off_type;
-   typedef base_t::traits_type traits_type;
+   using char_type = base_t::char_type;
+   using int_type = base_t::int_type;
+   using pos_type = base_t::pos_type;
+   using off_type = base_t::off_type;
+   using traits_type = base_t::traits_type;
 
    /// The default size of the read and write buffer.
    /** They are respectively used to buffer data read from and data written to
@@ -162,10 +162,7 @@ public:
      py_seek( getattr( python_file_obj, "seek", nanobind::none() ) ),
      py_tell( getattr( python_file_obj, "tell", nanobind::none() ) ),
      buffer_size( buffer_size_ != 0 ? buffer_size_ : default_buffer_size ),
-     write_buffer( 0 ),
-     pos_of_read_buffer_end_in_py_file( 0 ),
-     pos_of_write_buffer_end_in_py_file( buffer_size ),
-     farthest_pptr( 0 )
+     pos_of_write_buffer_end_in_py_file( buffer_size )
    {
       assert( buffer_size != 0 );
       /* Some Python file objects (e.g. sys.stdout and sys.stdin)
@@ -194,7 +191,7 @@ public:
       else {
          // The first attempt at output will result in a call to overflow
          // spellchecker:disable-next-line
-         setp( 0, 0 );
+         setp( nullptr, nullptr );
       }
 
       if( ! py_tell.is_none() ) {
@@ -205,18 +202,17 @@ public:
    }
 
    /// Mundane destructor freeing the allocated resources
-   virtual ~streambuf()
+   ~streambuf() override
    {
-      if( write_buffer )
-         delete[] write_buffer;
+      delete[] write_buffer;
    }
 
    /// C.f. C++ standard section 27.5.2.4.3
    /** It is essential to override this virtual function for the stream
        member function readsome to work correctly (c.f. 27.6.1.3, alinea 30)
     */
-   virtual std::streamsize
-   showmanyc()
+   std::streamsize
+   showmanyc() override
    {
       int_type const failure = traits_type::eof();
       int_type status = underflow();
@@ -226,8 +222,8 @@ public:
    }
 
    /// C.f. C++ standard section 27.5.2.4.3
-   virtual int_type
-   underflow()
+   int_type
+   underflow() override
    {
       int_type const failure = traits_type::eof();
       if( py_read.is_none() ) {
@@ -237,10 +233,10 @@ public:
       char* read_buffer_data;
       nanobind::ssize_t py_n_read;
       if( PyBytes_AsStringAndSize( read_buffer.ptr(), &read_buffer_data, &py_n_read ) == -1 ) {
-         setg( 0, 0, 0 );
+         setg( nullptr, nullptr, nullptr );
          throw std::invalid_argument( "The method 'read' of the Python file object did not return a string." );
       }
-      off_type n_read = (off_type) py_n_read;
+      off_type n_read = static_cast< off_type >( py_n_read );
       pos_of_read_buffer_end_in_py_file += n_read;
       setg( read_buffer_data, read_buffer_data, read_buffer_data + n_read );
       // ^^^27.5.2.3.1 (4)
@@ -250,14 +246,14 @@ public:
    }
 
    /// C.f. C++ standard section 27.5.2.4.5
-   virtual int_type
-   overflow( int_type c = traits_type::eof() )
+   int_type
+   overflow( int_type c = traits_type::eof() ) override
    {
       if( py_write.is_none() ) {
          throw std::invalid_argument( "That Python file object has no 'write' attribute" );
       }
       farthest_pptr = std::max( farthest_pptr, pptr() );
-      off_type n_written = (off_type) ( farthest_pptr - pbase() );
+      off_type n_written = static_cast< off_type >( farthest_pptr - pbase() );
       if( ! traits_type::eq_int_type( c, traits_type::eof() ) ) {
          // add the overflown character to the end of the buffer
          // (we have one extra byte just for that)
@@ -265,7 +261,7 @@ public:
       }
       nanobind::bytes chunk( pbase(), n_written );
       py_write( chunk );
-      if( n_written ) {
+      if( n_written != 0 ) {
          pos_of_write_buffer_end_in_py_file += n_written;
          // spellchecker:disable-next-line
          setp( pbase(), epptr() );
@@ -282,12 +278,12 @@ public:
        read buffer, set the Python file object seek position to the
        seek position in that read buffer.
    */
-   virtual int
-   sync()
+   int
+   sync() override
    {
       int result = 0;
       farthest_pptr = std::max( farthest_pptr, pptr() );
-      if( farthest_pptr && farthest_pptr > pbase() ) {
+      if( ( farthest_pptr != nullptr ) && farthest_pptr > pbase() ) {
          off_type delta = pptr() - farthest_pptr;
          int_type status = overflow();
          if( traits_type::eq_int_type( status, traits_type::eof() ) )
@@ -295,7 +291,7 @@ public:
          if( ! py_seek.is_none() )
             py_seek( delta, 1 );
       }
-      else if( gptr() && gptr() < egptr() ) {
+      else if( ( gptr() != nullptr ) && gptr() < egptr() ) {
          if( ! py_seek.is_none() )
             py_seek( gptr() - egptr(), 1 );
       }
@@ -309,22 +305,23 @@ public:
        is avoided as much as possible (e.g. parsers which may do a lot of
        backtracking)
    */
-   virtual pos_type
+   pos_type
    seekoff( off_type off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out )
+      override
    {
       /* In practice, "which" is either std::ios_base::in or out
          since we end up here because either seekp or seekg was called
          on the stream using this buffer. That simplifies the code
          in a few places.
       */
-      int const failure = off_type( -1 );
+      int const failure = static_cast< off_type >( -1 );
 
       if( py_seek.is_none() ) {
          throw std::invalid_argument( "That Python file object has no 'seek' attribute" );
       }
 
       // we need the read buffer to contain something!
-      if( which == std::ios_base::in && ! gptr() ) {
+      if( which == std::ios_base::in && ( gptr() == nullptr ) ) {
          if( traits_type::eq_int_type( underflow(), traits_type::eof() ) ) {
             return failure;
          }
@@ -359,7 +356,7 @@ public:
                off += pptr() - pbase();
          }
          py_seek( off, whence );
-         result = off_type( nanobind::cast< off_type >( py_tell() ) );
+         result = static_cast< off_type >( nanobind::cast< off_type >( py_tell() ) );
          if( which == std::ios_base::in )
             underflow();
       }
@@ -367,8 +364,8 @@ public:
    }
 
    /// C.f. C++ standard section 27.5.2.4.2
-   virtual pos_type
-   seekpos( pos_type sp, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out )
+   pos_type
+   seekpos( pos_type sp, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out ) override
    {
       return streambuf::seekoff( sp, std::ios_base::beg, which );
    }
@@ -386,18 +383,22 @@ private:
    /* A mere array of char's allocated on the heap at construction time and
       de-allocated only at destruction time.
    */
-   char* write_buffer;
+   char* write_buffer = nullptr;
 
-   off_type pos_of_read_buffer_end_in_py_file, pos_of_write_buffer_end_in_py_file;
+   off_type pos_of_read_buffer_end_in_py_file = 0;
+   off_type pos_of_write_buffer_end_in_py_file;
 
    // the farthest place the buffer has been written into
-   char* farthest_pptr;
+   char* farthest_pptr = nullptr;
 
    bool
    seekoff_without_calling_python( off_type off, std::ios_base::seekdir way, std::ios_base::openmode which, off_type& result )
    {
       // Buffer range and current position
-      off_type buf_begin, buf_end, buf_cur, upper_bound;
+      off_type buf_begin;
+      off_type buf_end;
+      off_type buf_cur;
+      off_type upper_bound;
       off_type pos_of_buffer_end_in_py_file;
       if( which == std::ios_base::in ) {
          pos_of_buffer_end_in_py_file = pos_of_read_buffer_end_in_py_file;
@@ -457,7 +458,7 @@ public:
          exceptions( std::ios_base::badbit | std::ios_base::failbit );
       }
 
-      ~istream()
+      ~istream() override
       {
          if( this->good() )
             this->sync();
@@ -473,7 +474,7 @@ public:
          exceptions( std::ios_base::badbit | std::ios_base::failbit );
       }
 
-      ~ostream()
+      ~ostream() override
       {
          if( this->good() )
             this->flush();
@@ -497,7 +498,7 @@ struct ostream : private streambuf_capsule, streambuf::ostream
      streambuf::ostream( python_streambuf )
    {}
 
-   ~ostream()
+   ~ostream() override
    {
       if( this->good() ) {
          this->flush();
@@ -512,7 +513,7 @@ struct istream : private streambuf_capsule, streambuf::istream
      streambuf::istream( python_streambuf )
    {}
 
-   ~istream()
+   ~istream() override
    {
       if( this->good() ) {
          this->sync();
