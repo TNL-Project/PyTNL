@@ -208,6 +208,15 @@ export_Array( nb::module_& m, const char* name )
 
    // Interoperability via CUDA Array Interface (CAI) version 3
    // https://nvidia.github.io/numba-cuda/user/cuda_array_interface.html
+   //
+   // WARNING: this exposes the raw GPU device pointer as a Python integer in
+   // iface["data"][0]. The returned dict does NOT keep the source array alive;
+   // consumers must hold a reference to the TNL array for as long as they use
+   // the pointer. The read_only flag (iface["data"][1]) is advisory only -- CAI
+   // consumers such as CuPy or numba are not required to enforce it, so a
+   // ConstArrayView / ConstVectorView can still be mutated through a writable
+   // view created from the same pointer. Prefer DLPack (`__dlpack__`) for
+   // interop that preserves lifetime and const semantics.
    if constexpr( std::is_same_v< DeviceType, TNL::Devices::Cuda > ) {
       array.def_prop_ro(
          "__cuda_array_interface__",
@@ -230,7 +239,9 @@ export_Array( nb::module_& m, const char* name )
             // consumers may enqueue operations on any stream immediately.
             iface[ "stream" ] = nb::none();
             return iface;
-         } );
+         },
+         "CUDA Array Interface v3 dict. WARNING: exposes a raw device pointer; "
+         "the returned dict does not keep this array alive and read_only is advisory." );
    }
 
    def_indexing< ArrayType >( array );
