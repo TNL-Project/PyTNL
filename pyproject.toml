@@ -104,6 +104,14 @@ ignore = [
 # https://docs.astral.sh/ruff/faq/#how-does-ruff-determine-which-of-my-imports-are-first-party-third-party-etc
 known-first-party = ["pytnl"]
 
+[tool.ruff.format]
+# ruff 0.16+ formats Python code blocks in markdown files by default, which destroys the
+# pymdown-extensions' snippets notation used in the documentation:
+# https://facelessuser.github.io/pymdown-extensions/extensions/snippets/#snippets-notation
+# Unlike the top-level exclude/extend-exclude, format.exclude only matches individual files,
+# so the directory name "docs" alone would silently have no effect.
+exclude = ["docs/**/*.md"]
+
 # Configuration for mypy / basedmypy
 # https://kotlinisland.github.io/basedmypy/config_file.html
 # https://kotlinisland.github.io/basedmypy/config_file.html#example-pyproject-toml
