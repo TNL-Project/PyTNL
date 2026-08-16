@@ -134,7 +134,11 @@ foreach(target IN ITEMS ${modules})
     #
     # We also set OpenMPI environment variables to suppress GPU accelerator
     # detection, which can fail at build time and cause MPI_Init to abort.
-    set(_stubgen_args -q -r -m ${target})
+    # The module name must be fully qualified: since nanobind 2.15, stubgen
+    # writes submodule self-imports in absolute form, so `-m _solvers` would
+    # produce an unresolvable `from _solvers import ode_methods` instead of
+    # `from pytnl._solvers import ode_methods` in the stub packages.
+    set(_stubgen_args -q -r -m pytnl.${target})
     foreach(_py_path $<TARGET_FILE_DIR:${target}> $<TARGET_FILE_DIR:${target}>/..)
         list(APPEND _stubgen_args -i "${_py_path}")
     endforeach()
