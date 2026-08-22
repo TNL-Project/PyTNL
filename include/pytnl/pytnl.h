@@ -47,7 +47,7 @@ struct my_init : nb::def_visitor< my_init< Args... > >
    friend class nb::class_;
 
    NB_INLINE
-   my_init() {}
+   my_init() = default;
 
 private:
    template< typename Class, typename... Extra >
@@ -62,11 +62,11 @@ private:
          {
             if constexpr( ! std::is_same_v< Type, Alias > && std::is_constructible_v< Type, Args... > ) {
                if( ! nb::detail::nb_inst_python_derived( v.h.ptr() ) ) {
-                  new( v.p ) Type( (nb::detail::forward_t< Args >) args... );
+                  new( v.p ) Type( static_cast< nb::detail::forward_t< Args > >( args )... );
                   return;
                }
             }
-            new( (void*) v.p ) Alias( (nb::detail::forward_t< Args >) args... );
+            new( static_cast< void* >( v.p ) ) Alias( static_cast< nb::detail::forward_t< Args > >( args )... );
          },
          extra... );
    }

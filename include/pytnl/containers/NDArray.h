@@ -34,7 +34,7 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
 
    array.def(
       "__getitem__",
-      [ dim ]( ArrayType& self, nb::object indices ) -> ValueType
+      []( ArrayType& self, nb::object indices ) -> ValueType
       {
          nb::tuple tuple_indices;
 
@@ -71,10 +71,11 @@ ndarray_indexing( nb::class_< ArrayType, Args... >& array )
 
    array.def(
       "__setitem__",
-      [ dim ]( ArrayType& self, nb::object indices, ValueType value )
+      []( ArrayType& self, nb::object indices, ValueType value )
       {
-         if constexpr( std::is_const_v< ValueType > )
+         if constexpr( std::is_const_v< ValueType > ) {
             throw nb::type_error( "Cannot set element of a read-only array" );
+         }
          else {
             nb::tuple tuple_indices;
 

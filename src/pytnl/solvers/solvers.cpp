@@ -25,7 +25,7 @@
 #include <TNL/Solvers/ODE/Methods/VanDerHouwenWray.h>
 
 using Vector = TNL::Containers::Vector< RealType, TNL::Devices::Host, IndexType >;
-using VectorView = typename Vector::ViewType;
+using VectorView = Vector::ViewType;
 using BogackiShampin = TNL::Solvers::ODE::Methods::BogackiShampin< RealType >;
 using CashKarp = TNL::Solvers::ODE::Methods::CashKarp< RealType >;
 using DormandPrince = TNL::Solvers::ODE::Methods::DormandPrince< RealType >;

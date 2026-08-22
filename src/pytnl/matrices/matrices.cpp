@@ -135,9 +135,9 @@ export_organizations( nb::module_& m )
 void
 export_segments_types( nb::module_& m )
 {
-   export_Segments< typename Sparse_CSR< RealType >::SegmentsType >( m, "Segments_CSR" );
-   export_Segments< typename Sparse_Ell< RealType >::SegmentsType >( m, "Segments_Ellpack" );
-   export_Segments< typename Sparse_SE< RealType >::SegmentsType >( m, "Segments_SlicedEllpack" );
+   export_Segments< Sparse_CSR< RealType >::SegmentsType >( m, "Segments_CSR" );
+   export_Segments< Sparse_Ell< RealType >::SegmentsType >( m, "Segments_Ellpack" );
+   export_Segments< Sparse_SE< RealType >::SegmentsType >( m, "Segments_SlicedEllpack" );
 }
 
 // Exports all matrix bindings (base classes, matrices, views, row views, and same-device copy functions)

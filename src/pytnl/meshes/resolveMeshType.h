@@ -36,10 +36,12 @@ resolveMeshType( const std::string& file_name, const std::string& file_format = 
       return true;
    };
 
-   if( reader->getMeshType() == "Meshes::Grid" || reader->getMeshType() == "Meshes::DistributedGrid" )
+   if( reader->getMeshType() == "Meshes::Grid" || reader->getMeshType() == "Meshes::DistributedGrid" ) {
       TNL::Meshes::GridTypeResolver< PyTNLConfigTag, Device >::run( *reader, wrapper );
-   else if( reader->getMeshType() == "Meshes::Mesh" || reader->getMeshType() == "Meshes::DistributedMesh" )
+   }
+   else if( reader->getMeshType() == "Meshes::Mesh" || reader->getMeshType() == "Meshes::DistributedMesh" ) {
       TNL::Meshes::MeshTypeResolver< PyTNLConfigTag, Device >::run( *reader, wrapper );
+   }
    else {
       throw std::runtime_error( "The mesh type " + reader->getMeshType() + " is not supported." );
    }

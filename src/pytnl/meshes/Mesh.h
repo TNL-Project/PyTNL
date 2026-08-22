@@ -185,7 +185,7 @@ export_Mesh( nb::module_& m, const char* name )
    export_MeshEntity< typename Mesh::Cell >( mesh, "Cell" );
    auto Vertex = export_MeshEntity< typename Mesh::Vertex >( mesh, "Vertex" );
    // avoid duplicate conversion if the type is the same
-   if constexpr( std::is_same< typename Mesh::Face, typename Mesh::Vertex >::value )
+   if constexpr( std::is_same_v< typename Mesh::Face, typename Mesh::Vertex > )
       mesh.attr( "Face" ) = Vertex;
    else
       export_MeshEntity< typename Mesh::Face >( mesh, "Face" );

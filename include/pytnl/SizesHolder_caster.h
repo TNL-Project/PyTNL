@@ -4,8 +4,7 @@
 
 #include <TNL/Containers/ndarray/SizesHolder.h>
 
-namespace nanobind {
-namespace detail {
+namespace nanobind::detail {
 
 template< typename Index, std::size_t... sizes >
 struct type_caster< TNL::Containers::SizesHolder< Index, sizes... > >
@@ -99,5 +98,4 @@ private:
    }
 };
 
-}  // namespace detail
-}  // namespace nanobind
+}  // namespace nanobind::detail

@@ -1,14 +1,19 @@
+# NB_SUPPRESS_WARNINGS passes AS_SYSINCLUDE to nanobind_build_library,
+# which adds nanobind's and Python's include directories via -isystem instead of -I.
+# NB_SUPPRESS_WARNINGS disables compiler warnings as well as clang-tidy diagnostics for nanobind headers.
+# This is needed because nanobind targets are created lazily by the nanobind_add_module function,
+# so FetchContent_Declare(nanobind ... SYSTEM) has no target to act on.
 set(src_containers containers/ArrayVector.cpp containers/StaticVector.cpp containers/NDArray.cpp containers/containers.cpp)
-nanobind_add_module(_containers ${src_containers})
+nanobind_add_module(_containers NB_SUPPRESS_WARNINGS ${src_containers})
 set(src_containers_cuda containers/ArrayVector.cu containers/NDArray.cu containers/containers.cu)
 if(PyTNL_BUILD_CUDA)
-    nanobind_add_module(_containers_cuda ${src_containers_cuda})
+    nanobind_add_module(_containers_cuda NB_SUPPRESS_WARNINGS ${src_containers_cuda})
 endif()
 set(src_matrices matrices/matrices.cpp)
-nanobind_add_module(_matrices ${src_matrices})
+nanobind_add_module(_matrices NB_SUPPRESS_WARNINGS ${src_matrices})
 set(src_matrices_cuda matrices/matrices.cu)
 if(PyTNL_BUILD_CUDA)
-    nanobind_add_module(_matrices_cuda ${src_matrices_cuda})
+    nanobind_add_module(_matrices_cuda NB_SUPPRESS_WARNINGS ${src_matrices_cuda})
 endif()
 set(src_meshes
     meshes/topologies.cpp
@@ -41,12 +46,12 @@ set(src_meshes_cuda
     # distributeSubentities is host-only
     meshes/meshes.cu
 )
-nanobind_add_module(_meshes ${src_meshes})
+nanobind_add_module(_meshes NB_SUPPRESS_WARNINGS ${src_meshes})
 set(src_solvers solvers/ode_methods.cpp solvers/solvers.cpp)
-nanobind_add_module(_solvers ${src_solvers})
+nanobind_add_module(_solvers NB_SUPPRESS_WARNINGS ${src_solvers})
 set(src_solvers_cuda solvers/solvers.cu)
 if(PyTNL_BUILD_CUDA)
-    nanobind_add_module(_solvers_cuda ${src_solvers_cuda})
+    nanobind_add_module(_solvers_cuda NB_SUPPRESS_WARNINGS ${src_solvers_cuda})
 endif()
 
 # add dependencies
@@ -54,7 +59,7 @@ target_compile_definitions(_meshes PUBLIC "-DHAVE_ZLIB -DHAVE_TINYXML2")
 target_link_libraries(_meshes PUBLIC ZLIB::ZLIB tinyxml2::tinyxml2)
 
 if(PyTNL_BUILD_CUDA)
-    nanobind_add_module(_meshes_cuda ${src_meshes_cuda})
+    nanobind_add_module(_meshes_cuda NB_SUPPRESS_WARNINGS ${src_meshes_cuda})
 
     # add dependencies
     target_compile_definitions(_meshes_cuda PUBLIC "-DHAVE_ZLIB -DHAVE_TINYXML2")

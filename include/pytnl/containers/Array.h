@@ -104,9 +104,9 @@ export_Array( nb::module_& m, const char* name )
             "setElement",
             []( ArrayType& array, IndexType i, ValueType value )
             {
-               if constexpr( std::is_const_v< ValueType > )
+               if constexpr( std::is_const_v< ValueType > ) {
                   throw nb::type_error( "Cannot set element of a constant array" );
-               else {
+               } else {
                   check_array_index( array.getSize(), i );
                   array.setElement( i, value );
                }
@@ -141,9 +141,9 @@ export_Array( nb::module_& m, const char* name )
             "setValue",
             []( ArrayType& array, typename ArrayType::ValueType value, IndexType begin = 0, IndexType end = 0 )
             {
-               if constexpr( std::is_const_v< ValueType > )
+               if constexpr( std::is_const_v< ValueType > ) {
                   throw nb::type_error( "Cannot set value of constant array" );
-               else {
+               } else {
                   check_array_range( array.getSize(), begin, end );
                   array.setValue( value, begin, end );
                }
