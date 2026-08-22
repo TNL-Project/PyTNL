@@ -131,7 +131,7 @@ FetchContent_Declare(TNL GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git G
 set(TNL_EXPORT_INTERFACE_TARGETS ON) # needed for adding to the interface target
 FetchContent_MakeAvailable(TNL)
 
-FetchContent_Declare(nanobind GIT_REPOSITORY https://github.com/wjakob/nanobind.git GIT_TAG v2.15.0 SYSTEM FIND_PACKAGE_ARGS)
+FetchContent_Declare(nanobind GIT_REPOSITORY https://github.com/wjakob/nanobind.git GIT_TAG v3.0.0 SYSTEM FIND_PACKAGE_ARGS)
 FetchContent_MakeAvailable(nanobind)
 
 FetchContent_Declare(
