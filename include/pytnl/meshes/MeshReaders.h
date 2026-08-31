@@ -11,7 +11,7 @@ class PyMeshReader : public TNL::Meshes::Readers::MeshReader
    using Parent = TNL::Meshes::Readers::MeshReader;
 
 public:
-   NB_TRAMPOLINE( Parent, 2 );
+   NB_TRAMPOLINE( Parent );
 
    // trampolines (one for each virtual method)
    void
@@ -32,7 +32,7 @@ class PyXMLVTK : public TNL::Meshes::Readers::XMLVTK
    using Parent = TNL::Meshes::Readers::XMLVTK;
 
 public:
-   NB_TRAMPOLINE( Parent, 2 );
+   NB_TRAMPOLINE( Parent );
 
    // trampolines (one for each virtual method)
    void

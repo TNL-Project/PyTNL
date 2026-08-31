@@ -42,7 +42,7 @@ public:
    }
 
    bool
-   from_python( handle src, std::uint8_t flags, cleanup_list* cleanup )
+   from_python( handle src, std::uint32_t flags, cleanup_list* cleanup )
    {
       if( getattr( src, "read", none() ).is_none() ) {
          return false;
@@ -109,7 +109,7 @@ public:
    }
 
    bool
-   from_python( handle src, std::uint8_t flags, cleanup_list* cleanup )
+   from_python( handle src, std::uint32_t flags, cleanup_list* cleanup )
    {
       if( getattr( src, "write", none() ).is_none() ) {
          return false;
