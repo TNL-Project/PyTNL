@@ -23,7 +23,7 @@ public:
     * instance or return false upon failure.
     */
    bool
-   from_python( handle src, std::uint8_t flags, cleanup_list* cleanup )
+   from_python( handle src, std::uint32_t flags, cleanup_list* cleanup )
    {
       if( ! _caster.from_python( src, flags, cleanup ) )
          return false;

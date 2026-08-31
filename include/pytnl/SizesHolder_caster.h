@@ -19,7 +19,7 @@ public:
 
    // Conversion from Python to C++
    bool
-   from_python( handle src, std::uint8_t flags, cleanup_list* cleanup )
+   from_python( handle src, std::uint32_t flags, cleanup_list* cleanup )
    {
       if( ! isinstance< nanobind::tuple >( src ) ) {
          return false;
