@@ -546,7 +546,5 @@ export_NDArray( nb::module_& m, const char* name )
                return ArrayType( self );
             },
             nb::arg( "memo" ) );
-      //
-      ;
    }
 }

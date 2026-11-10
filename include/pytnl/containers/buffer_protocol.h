@@ -336,9 +336,11 @@ template< typename ArrayType >
 inline PyType_Slot*
 array_buffer_slots()
 {
-   static PyType_Slot slots[] = { { Py_bf_getbuffer, reinterpret_cast< void* >( &array_getbuffer< ArrayType > ) },
-                                  { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
-                                  { 0, nullptr } };
+   static PyType_Slot slots[] = {
+      { Py_bf_getbuffer, reinterpret_cast< void* >( &array_getbuffer< ArrayType > ) },
+      { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
+      { 0, nullptr },
+   };
    return slots;
 }
 
@@ -346,9 +348,11 @@ template< typename NDArrayType >
 inline PyType_Slot*
 ndarray_buffer_slots()
 {
-   static PyType_Slot slots[] = { { Py_bf_getbuffer, reinterpret_cast< void* >( &ndarray_getbuffer< NDArrayType > ) },
-                                  { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
-                                  { 0, nullptr } };
+   static PyType_Slot slots[] = {
+      { Py_bf_getbuffer, reinterpret_cast< void* >( &ndarray_getbuffer< NDArrayType > ) },
+      { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
+      { 0, nullptr },
+   };
    return slots;
 }
 
@@ -356,10 +360,14 @@ template< typename StaticVectorType >
 inline PyType_Slot*
 static_vector_buffer_slots()
 {
-   static PyType_Slot slots[] = { { Py_bf_getbuffer,
-                                    reinterpret_cast< void* >( &static_vector_getbuffer< StaticVectorType > ) },
-                                  { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
-                                  { 0, nullptr } };
+   static PyType_Slot slots[] = {
+      {
+         Py_bf_getbuffer,
+         reinterpret_cast< void* >( &static_vector_getbuffer< StaticVectorType > ),
+      },
+      { Py_bf_releasebuffer, reinterpret_cast< void* >( &releasebuffer ) },
+      { 0, nullptr },
+   };
    return slots;
 }
 

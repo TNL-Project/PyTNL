@@ -114,9 +114,9 @@ using DenseBase_ColumnMajor_cuda =
 void
 export_segments_types( nb::module_& m )
 {
-   export_Segments< typename Sparse_CSR_cuda< RealType >::SegmentsType >( m, "Segments_CSR" );
-   export_Segments< typename Sparse_Ell_cuda< RealType >::SegmentsType >( m, "Segments_Ellpack" );
-   export_Segments< typename Sparse_SE_cuda< RealType >::SegmentsType >( m, "Segments_SlicedEllpack" );
+   export_Segments< Sparse_CSR_cuda< RealType >::SegmentsType >( m, "Segments_CSR" );
+   export_Segments< Sparse_Ell_cuda< RealType >::SegmentsType >( m, "Segments_Ellpack" );
+   export_Segments< Sparse_SE_cuda< RealType >::SegmentsType >( m, "Segments_SlicedEllpack" );
 }
 
 // Exports all CUDA matrix bindings (base classes, matrices, views, row views,

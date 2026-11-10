@@ -83,6 +83,11 @@ else()
     message(STATUS "PyTNL: CUDA support disabled (PyTNL_USE_CUDA=OFF)")
 endif()
 
+# Export compile_commands.json so it can be used by clangd and clangd-tidy.
+# This must happen before add_subdirectory(src), where the header-only target
+# for clangd is conditionally created.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+
 # make cache variable so it can be used in downstream projects
 set(PyTNL_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/include" CACHE INTERNAL "Directories where PyTNL headers are located")
 

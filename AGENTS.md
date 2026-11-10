@@ -127,8 +127,8 @@ the sources in `src/pytnl/matrices/`.
 - **Stub generation**: Custom `add_custom_command` invokes nanobind's `stubgen.py` directly (not `nanobind_add_stub()`).
   Key flags: `-S` (bypass `site.py`, so the editable-install `.pth` finder cannot redirect imports to stale `.so` files), fully-qualified `-m pytnl.<target>` (nanobind >= 2.15 writes absolute self-imports), `-O` output directory (recursive mode may emit multiple `.pyi` files for `def_submodule`s), `PYTHONPATH` override, and `OMPI_MCA_accelerator=null`.
   Module-to-stub mapping lives in `src/pytnl/CMakeLists.txt` (e.g. `_matrices` → `_matrices/__init__.pyi` + `_matrices/formats.pyi`).
-- **`NB_SUPPRESS_WARNINGS`**: Passed to every `nanobind_add_module` call. It adds nanobind/Python includes via `-isystem` and disables compiler + clang-tidy diagnostics for nanobind headers (needed because nanobind targets are created lazily, so `FetchContent_Declare(... SYSTEM)` cannot act on them).
-- **clang-tidy**: Configured in `.clang-tidy` (readability/modernize/performance/mpi checks; several readability checks disabled). `just check-clang-tidy` only runs on a **Debug build with `PyTNL_USE_CUDA=OFF`** and requires `build/compile_commands.json`; otherwise the recipe prints a skip message and exits 0.
+- **`NB_SUPPRESS_WARNINGS`**: Passed to every `nanobind_add_module` call. It adds nanobind/Python includes via `-isystem` and disables compiler diagnostics for nanobind headers (needed because nanobind targets are created lazily, so `FetchContent_Declare(... SYSTEM)` cannot act on them).
+- **clangd-tidy**: C++ linting is configured in `.clangd` (the same file used by the clangd language server) and run by `just check-clangd-tidy`, which lints every library header and source in batches via `build/compile_commands.json` (the recipe configures a build if needed). CUDA sources are parsed in CUDA mode using `/opt/cuda`. Header compile commands come from the `pytnl_clangd_headers` OBJECT library in `src/pytnl/CMakeLists.txt`.
 - **Complex value types**: Matrices support `float` (C++ `double`) and `complex`. Host uses `std::complex<double>`, CUDA uses `TNL::Arithmetics::Complex<double>` — distinct C++ types, so cross-device `copySparseMatrix` is **not** available for complex matrices.
 - **Sparse format tags**: `SparseMatrix` takes `formats.CSR` (default), `formats.Ellpack`, or `formats.SlicedEllpack` as a third subscript argument. The two-argument form is always `(value_type, device_type)`. Format tags are empty C++ classes exported into the `formats` submodule.
 - **Build isolation broken**: `build-dir = "build"` enables incremental builds but breaks PEP 517 isolation.
@@ -146,7 +146,6 @@ the sources in `src/pytnl/matrices/`.
 - DO NOT run CUDA tests without `-m cuda -n 0` flag combination
 - DO NOT import CUDA modules unconditionally — use lazy import or `TYPE_CHECKING` guard
 - DO NOT use `nanobind_add_stub()` — it breaks on the submodule layout; use the custom stubgen command
-- DO NOT run `check-clang-tidy` against a CUDA or non-Debug build — reconfigure with `-DPyTNL_USE_CUDA=OFF -DCMAKE_BUILD_TYPE=Debug`
 - DO NOT put `# type: ignore` and `# pyright: ignore` on the same line (the pyright one becomes a no-op)
 - DO NOT copy complex matrices across devices (incompatible C++ complex types)
 - DO NOT use `Signed-off-by` for AI contributions — use `Assisted-by`
@@ -159,7 +158,7 @@ the sources in `src/pytnl/matrices/`.
 - `basedmypy` + `basedpyright` dual type checking (non-standard mypy/pyright forks)
 - `just` task runner instead of Makefile
 - gersemi for CMake formatting (`.gersemirc`)
-- clang-tidy for C++ linting (`.clang-tidy`), shellcheck for inline justfile recipes
+- clangd-tidy for C++ linting (`.clangd`), shellcheck for inline justfile recipes
 - GitLab CI (not GitHub Actions)
 
 ## Commands
@@ -169,13 +168,13 @@ the sources in `src/pytnl/matrices/`.
 just install                        # with CUDA support (default), installs [dev,cuda]
 just install host                   # CPU-only build (PyTNL_USE_CUDA=OFF, skips CUDA modules)
 
-# All checks (format + ruff + clang-tidy + typing + typos + shellcheck)
+# All checks (format + ruff + clangd-tidy + typing + typos + shellcheck)
 just check
 
 # Individual checks
 just check-code                     # ruff check (system ruff)
 just check-format                   # just --fmt --check + clang-format --dry-run + gersemi --diff + ruff format --diff
-just check-clang-tidy               # run-clang-tidy (Debug build, PyTNL_USE_CUDA=OFF required)
+just check-clangd-tidy              # clangd-tidy (headers + sources via compile_commands.json, including CUDA)
 just check-typing                   # basedpyright + mypy (venv)
 just check-typos                    # typos --sort
 just check-recipes                  # shellcheck on inline bash in justfile recipes

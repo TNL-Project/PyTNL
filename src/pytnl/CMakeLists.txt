@@ -1,6 +1,6 @@
 # NB_SUPPRESS_WARNINGS passes AS_SYSINCLUDE to nanobind_build_library,
 # which adds nanobind's and Python's include directories via -isystem instead of -I.
-# NB_SUPPRESS_WARNINGS disables compiler warnings as well as clang-tidy diagnostics for nanobind headers.
+# NB_SUPPRESS_WARNINGS disables compiler warnings as well as clangd diagnostics for nanobind headers.
 # This is needed because nanobind targets are created lazily by the nanobind_add_module function,
 # so FetchContent_Declare(nanobind ... SYSTEM) has no target to act on.
 set(src_containers containers/ArrayVector.cpp containers/StaticVector.cpp containers/NDArray.cpp containers/containers.cpp)
@@ -64,6 +64,30 @@ if(PyTNL_BUILD_CUDA)
     # add dependencies
     target_compile_definitions(_meshes_cuda PUBLIC "-DHAVE_ZLIB -DHAVE_TINYXML2")
     target_link_libraries(_meshes_cuda PUBLIC ZLIB::ZLIB tinyxml2::tinyxml2)
+endif()
+
+# clangd support: compile_commands.json only lists translation units, so clangd
+# would infer a bogus compile command for every library header (wrong include
+# paths, wrong C++ standard). Emit a real entry per header via an OBJECT library
+# that is never built.
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    file(
+        GLOB_RECURSE pytnl_clangd_headers
+        CONFIGURE_DEPENDS
+        "${PROJECT_SOURCE_DIR}/include/pytnl/*.h"
+        "${PROJECT_SOURCE_DIR}/include/pytnl/*.hpp"
+        "${PROJECT_SOURCE_DIR}/src/pytnl/*.h"
+        "${PROJECT_SOURCE_DIR}/src/pytnl/*.hpp"
+    )
+    # skip vendored code
+    list(FILTER pytnl_clangd_headers EXCLUDE REGEX "/3rdparty/")
+    if(pytnl_clangd_headers)
+        add_library(pytnl_clangd_headers OBJECT EXCLUDE_FROM_ALL ${pytnl_clangd_headers})
+        set_source_files_properties(${pytnl_clangd_headers} PROPERTIES LANGUAGE CXX)
+        target_link_libraries(pytnl_clangd_headers PRIVATE PyTNL::PyTNL MPI::MPI_CXX ZLIB::ZLIB tinyxml2::tinyxml2)
+        target_compile_definitions(pytnl_clangd_headers PRIVATE HAVE_MPI HAVE_ZLIB HAVE_TINYXML2)
+        target_include_directories(pytnl_clangd_headers SYSTEM PRIVATE "${NB_DIR}/include" ${Python_INCLUDE_DIRS})
+    endif()
 endif()
 
 # define a list of modules

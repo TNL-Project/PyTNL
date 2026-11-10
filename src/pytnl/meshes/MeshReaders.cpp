@@ -14,8 +14,8 @@ ends_with( const std::string& value, const std::string& ending )
 void
 export_MeshReaders( nb::module_& m )
 {
-   using MeshReader = TNL::Meshes::Readers::MeshReader;
-   using XMLVTK = TNL::Meshes::Readers::XMLVTK;
+   using TNL::Meshes::Readers::MeshReader;
+   using TNL::Meshes::Readers::XMLVTK;
 
    // bindings for the MeshReader::loadMesh method are in the module itself
    // to make it easily extensible by overloading

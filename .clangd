@@ -6,9 +6,11 @@ CompileFlags:
   Add:
     - "-DHAVE_OPENMP"
     - "-DHAVE_MPI"
-    # FIXME: clangd 21 and cuda 13 do not work together
-    #- "-xcu"
-    - "-xc++"
+    # do not truncate diagnostic cascades ("Too many errors emitted")
+    - "-ferror-limit=0"
+    # enable compiler warnings that are not part of -Wall
+    - "-Wextra-semi"
+    - "-Wextra-semi-stmt"
   Remove:
     # remove all nvcc-specific flags that may appear in the compile_commands.json file
     - "-Xcompiler"
@@ -57,9 +59,13 @@ Diagnostics:
       readability-magic-numbers.IgnorePowersOf2IntegerValues: true
       modernize-use-default-member-init.UseAssignment: true
       modernize-use-auto.MinTypeNameLength: 10
-      performance-unnecessary-value-param.AllowedTypes: "std::shared_ptr;std::unique_ptr"
+      # nanobind object wrappers are cheap refcounted handles, so allow all
+      # top-level nanobind:: types (incl. typed<...>), but not detail::*.
+      performance-unnecessary-value-param.AllowedTypes: "std::shared_ptr;std::unique_ptr;nanobind::[A-Za-z_][A-Za-z0-9_]*(<.*>)?$"
       cppcoreguidelines-pro-type-member-init.UseAssignment: true
 
+  # NOLINT comments are NOT honored by the unused-includes check
+  # (intended includes must be marked with "// IWYU pragma: keep")
   UnusedIncludes: Strict
   MissingIncludes: None  # TODO: switch to Strict?
 
@@ -69,6 +75,18 @@ Completion:
 Style:
   AngledHeaders:
     - "TNL/.*"
+
+---
+# CUDA sources are parsed in CUDA mode so that the device code is checked
+# (clangd rejects nvcc-specific syntax such as kernel launches in host mode).
+If:
+  PathMatch:
+    - .*\.cu$
+CompileFlags:
+  Add:
+    - "-xcu"
+    - "--cuda-path=/opt/cuda"
+    - "-isystem/opt/cuda/include/cccl"
 
 ...
 # vim: ft=yaml

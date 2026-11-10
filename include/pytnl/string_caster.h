@@ -13,7 +13,7 @@ struct type_caster< TNL::String >
    StdStringCaster _caster;
 
 public:
-   NB_TYPE_CASTER( TNL::String, const_name( "str" ) );
+   NB_TYPE_CASTER( TNL::String, const_name( "str" ) )
 
    /**
     * Conversion from Python to C++: convert a PyObject into a TNL::String

@@ -1,8 +1,6 @@
 #include <pytnl/exceptions.h>
 #include <pytnl/pytnl.h>
 
-#include "IterativeSolver.h"
-#include "ExplicitSolver.h"
 #include "ODESolver.h"
 
 #include <TNL/Solvers/ODE/Methods/BogackiShampin.h>
@@ -25,7 +23,6 @@
 #include <TNL/Solvers/ODE/Methods/VanDerHouwenWray.h>
 
 using Vector = TNL::Containers::Vector< RealType, TNL::Devices::Cuda, IndexType >;
-using VectorView = typename Vector::ViewType;
 using BogackiShampin = TNL::Solvers::ODE::Methods::BogackiShampin< RealType >;
 using CashKarp = TNL::Solvers::ODE::Methods::CashKarp< RealType >;
 using DormandPrince = TNL::Solvers::ODE::Methods::DormandPrince< RealType >;
