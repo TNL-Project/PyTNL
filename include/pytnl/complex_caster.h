@@ -5,8 +5,7 @@
 
 #include <TNL/Arithmetics/Complex.h>
 
-namespace nanobind {
-namespace detail {
+namespace nanobind::detail {
 
 template< typename T >
 class type_caster< TNL::Arithmetics::Complex< T > >
@@ -47,5 +46,4 @@ template< typename T >
 struct dtype_traits< TNL::Arithmetics::Complex< T > > : public dtype_traits< std::complex< T > >
 {};
 
-}  // namespace detail
-}  // namespace nanobind
+}  // namespace nanobind::detail
