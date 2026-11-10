@@ -4,6 +4,8 @@
 void
 export_ArrayVector( nb::module_& m );
 void
+export_DistributedArrayVector( nb::module_& m );
+void
 export_StaticVector( nb::module_& m );
 void
 export_NDArray( nb::module_& m );
@@ -14,6 +16,7 @@ NB_MODULE( _containers, m )
    register_exceptions( m );
 
    export_ArrayVector( m );
+   export_DistributedArrayVector( m );
    export_StaticVector( m );
    export_NDArray( m );
 }
