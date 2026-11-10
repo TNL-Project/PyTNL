@@ -15,7 +15,9 @@ if TYPE_CHECKING:
 __all__ = [
     "Array",
     "ArrayView",
+    "DistributedArray",
     "DistributedNDArray",
+    "DistributedVector",
     "NDArray",
     "NDArrayIndexer",
     "NDArrayView",
@@ -492,6 +494,180 @@ class VectorView(metaclass=_VectorViewMeta):
     - `VectorView[int]` → `_containers.VectorView_int`
     - `VectorView[float, devices.Cuda]` → `_containers_cuda.VectorView_float`
     - `VectorView[complex, devices.Host]` → `_containers.VectorView_complex`
+    """
+
+
+class _DistributedArrayMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "DistributedArray"
+    _template_parameters = (
+        ("value_type", type),
+        ("device_type", type),
+    )
+    _device_parameter = "device_type"
+
+    # NOTE: Python's typing `float` type accepts even `int` so the overloads
+    # "overlap" and `float` must be carefully ordered last so that pyright
+    # selects the first overload in a tie.
+    # https://stackoverflow.com/a/62734976
+
+    @overload
+    def __getitem__(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        key: type[int] | tuple[type[int], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedArray_int]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[float] | tuple[type[float], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedArray_float]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[complex] | tuple[type[complex], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedArray_complex]: ...
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[int], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedArray_int]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[float], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedArray_float]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[complex], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedArray_complex]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    def __getitem__(
+        self,
+        key: type[VT] | tuple[type[VT], type[DT]],
+        /,
+    ) -> type[Any]:
+        if isinstance(key, tuple):
+            items = key
+        else:
+            # make a tuple of arguments, use host as the default device
+            items = (key, pytnl.devices.Host)
+        return self._get_cpp_class(items)
+
+
+class DistributedArray(metaclass=_DistributedArrayMeta):
+    """
+    Allows `DistributedArray[value_type, device_type]` syntax to resolve to
+    the appropriate C++ `DistributedArray` class.
+
+    This class provides a Python interface to C++ distributed arrays (1D arrays
+    split across MPI ranks) of a specific value type and device type.
+
+    The `device_type` argument is optional and defaults to `pytnl.devices.Host`.
+
+    Examples:
+    - `DistributedArray[int]` → `_containers.DistributedArray_int`
+    - `DistributedArray[float, devices.Cuda]` → `_containers_cuda.DistributedArray_float`
+    - `DistributedArray[complex, devices.Host]` → `_containers.DistributedArray_complex`
+    """
+
+
+class _DistributedVectorMeta(pytnl._meta.CPPClassTemplate):
+    _cpp_module = pytnl._containers
+    _class_prefix = "DistributedVector"
+    _template_parameters = (
+        ("value_type", type),
+        ("device_type", type),
+    )
+    _device_parameter = "device_type"
+
+    # NOTE: Python's typing `float` type accepts even `int` so the overloads
+    # "overlap" and `float` must be carefully ordered last so that pyright
+    # selects the first overload in a tie.
+    # https://stackoverflow.com/a/62734976
+
+    @overload
+    def __getitem__(  # pyright: ignore[reportOverlappingOverload]
+        self,
+        key: type[int] | tuple[type[int], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedVector_int]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[float] | tuple[type[float], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedVector_float]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: type[complex] | tuple[type[complex], type[pytnl.devices.Host]],
+        /,
+    ) -> type[pytnl._containers.DistributedVector_complex]: ...
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[int], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedVector_int]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[float], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedVector_float]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    @overload
+    def __getitem__(  # type: ignore[no-any-unimported, unused-ignore]
+        self,
+        key: tuple[type[complex], type[pytnl.devices.Cuda]],
+        /,
+    ) -> type[_containers_cuda.DistributedVector_complex]: ...  # pyright: ignore[reportUnknownMemberType]
+
+    def __getitem__(
+        self,
+        key: type[VT] | tuple[type[VT], type[DT]],
+        /,
+    ) -> type[Any]:
+        if isinstance(key, tuple):
+            items = key
+        else:
+            # make a tuple of arguments, use host as the default device
+            items = (key, pytnl.devices.Host)
+        return self._get_cpp_class(items)
+
+
+class DistributedVector(metaclass=_DistributedVectorMeta):
+    """
+    Allows `DistributedVector[value_type, device_type]` syntax to resolve to
+    the appropriate C++ `DistributedVector` class.
+
+    This class provides a Python interface to C++ distributed vectors (1D
+    vectors split across MPI ranks) of a specific value type and device type.
+    In addition to the `DistributedArray` interface, it supports in-place
+    arithmetic operators (`+=`, `-=`, `*=`, `/=`, and `%=` for integral types).
+
+    The `device_type` argument is optional and defaults to `pytnl.devices.Host`.
+
+    Examples:
+    - `DistributedVector[int]` → `_containers.DistributedVector_int`
+    - `DistributedVector[float, devices.Cuda]` → `_containers_cuda.DistributedVector_float`
+    - `DistributedVector[complex, devices.Host]` → `_containers.DistributedVector_complex`
     """
 
 
