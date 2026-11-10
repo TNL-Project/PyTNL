@@ -62,14 +62,16 @@ typos:
   script:
     - typos --color always --sort
 
-clang-tidy:
+clangd-tidy:
   stage: lint
-  image: "quay.io/archlinux/archlinux:base-devel"
+  image: "registry.gitlab.com/tnl-project/container-images/archlinux-cuda:latest"
   before_script:
-    - pacman -Syu --needed --noconfirm just clang git cmake ninja python openmp openmpi
+    - pacman -Syu --needed --noconfirm just clang clangd-tidy git cmake ninja python openmp openmpi
   script:
     - *env_setup
-    - just check-clang-tidy
+    - just check-clangd-tidy
+  variables:
+    FORCE_COLOR: 1
 
 Arch_cmake:
   stage: build
