@@ -90,7 +90,7 @@ check-clang-tidy +target_paths="src/pytnl/.*":
 check-format:
     just --unstable --fmt --check
     just _ensure-command clang-format
-    # Note that find -exec always exists with 0 exit code, whereas xargs runs
+    # Note that find -exec always exits with 0 exit code, whereas xargs runs
     # clang-format only once and preserves its exit code.
     find ./include/ ./src/ \
          \( -name '*.h' \
@@ -103,11 +103,11 @@ check-format:
     just _ensure-command ruff
     ruff format --diff
 
-# Reformats supported files using clang-format and ruff
+# Reformats supported files using clang-format, gersemi, and ruff
 format:
     just --unstable --fmt
     just _ensure-command clang-format
-    # Note that find -exec always exists with 0 exit code, whereas xargs runs
+    # Note that find -exec always exits with 0 exit code, whereas xargs runs
     # clang-format only once and preserves its exit code.
     find ./include/ ./src/ \
          \( -name '*.h' \
@@ -132,19 +132,19 @@ check-typos:
     typos {{ color_always }} --sort
 
 # Checks justfile recipe for shell issues using shellcheck
-check-recipe recipe:
+_check-recipe recipe:
     just _ensure-command grep shellcheck
     just -vv -n {{ recipe }} 2>&1 | grep -iv '===> Running recipe' | shellcheck -
 
 # Checks all justfile recipes with inline bash for shell issues using shellcheck
 check-recipes:
-    just check-recipe 'install'
-    just check-recipe '_ensure-command command'
-    just check-recipe '_ensure-venv'
-    just check-recipe '_ensure-compile-commands-json'
-    just check-recipe 'check-clang-tidy'
-    just check-recipe 'create-pypi-release'
-    just check-recipe 'release'
+    just _check-recipe 'install'
+    just _check-recipe '_ensure-command command'
+    just _check-recipe '_ensure-venv'
+    just _check-recipe '_ensure-compile-commands-json'
+    just _check-recipe 'check-clang-tidy'
+    just _check-recipe 'create-pypi-release'
+    just _check-recipe 'release'
 
 # Runs all tests (extra args are forwarded to pytest, e.g. just test -m cuda -n 0)
 test *args:
