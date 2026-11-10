@@ -15,7 +15,7 @@ class type_caster< TNL::Arithmetics::Complex< T > >
    StdComplexCaster _caster;
 
 public:
-   NB_TYPE_CASTER( ComplexType, const_name( "complex" ) );
+   NB_TYPE_CASTER( ComplexType, const_name( "complex" ) )
 
    /**
     * Conversion from Python to C++: convert a PyObject into a TNL::Arithmetics::Complex
