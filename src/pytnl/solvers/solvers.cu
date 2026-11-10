@@ -1,8 +1,6 @@
 #include <pytnl/exceptions.h>
 #include <pytnl/pytnl.h>
 
-#include "IterativeSolver.h"
-#include "ExplicitSolver.h"
 #include "ODESolver.h"
 
 #include <TNL/Solvers/ODE/Methods/BogackiShampin.h>
