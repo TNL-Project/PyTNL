@@ -4,7 +4,7 @@
 void
 export_MeshReaders( nb::module_& m )
 {
-   using MeshReader = TNL::Meshes::Readers::MeshReader;
+   using TNL::Meshes::Readers::MeshReader;
 
    // bindings for the MeshReader::loadMesh method are in the module itself
    // to make it easily extensible by overloading

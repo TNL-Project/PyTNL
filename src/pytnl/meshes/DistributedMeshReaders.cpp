@@ -5,7 +5,7 @@
 void
 export_DistributedMeshReaders( nb::module_& m )
 {
-   using PVTUReader = TNL::Meshes::Readers::PVTUReader;
+   using TNL::Meshes::Readers::PVTUReader;
 
    // bindings for the MeshReader::loadMesh method are in the module itself
    // to make it easily extensible by overloading

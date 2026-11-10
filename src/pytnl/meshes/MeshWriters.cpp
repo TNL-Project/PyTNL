@@ -4,7 +4,7 @@ void
 export_MeshWriters( nb::module_& m )
 {
    using namespace TNL::Meshes::Writers;
-   using FileFormat = TNL::Meshes::VTK::FileFormat;
+   using TNL::Meshes::VTK::FileFormat;
 
    export_MeshWriter< VTKWriter< Grid_1_host >, FileFormat::binary >( m, "VTKWriter_Grid_1" );
    export_MeshWriter< VTUWriter< Grid_1_host >, FileFormat::zlib_compressed >( m, "VTUWriter_Grid_1" );
