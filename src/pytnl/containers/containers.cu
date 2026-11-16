@@ -4,6 +4,8 @@
 void
 export_ArrayVector( nb::module_& m );
 void
+export_DistributedArrayVector( nb::module_& m );
+void
 export_NDArray( nb::module_& m );
 
 // Python module definition
@@ -15,5 +17,6 @@ NB_MODULE( _containers_cuda, m )
    nb::module_::import_( "pytnl._containers" );
 
    export_ArrayVector( m );
+   export_DistributedArrayVector( m );
    export_NDArray( m );
 }

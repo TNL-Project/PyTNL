@@ -132,7 +132,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Find or fetch dependencies
 include(FetchContent)
-FetchContent_Declare(TNL GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git GIT_TAG 0.4.3 SYSTEM EXCLUDE_FROM_ALL)
+# TODO: bump to the TNL release that contains the ghost-synchronization fix (!504)
+# Pin: tip of JK/fix-distributed-array-synchronizer
+FetchContent_Declare(
+    TNL
+    GIT_REPOSITORY https://gitlab.com/tnl-project/tnl.git
+    GIT_TAG 9487163d258be834ca9bfe116221fcb6320a8c32
+    SYSTEM
+    EXCLUDE_FROM_ALL
+)
 set(TNL_EXPORT_INTERFACE_TARGETS ON) # needed for adding to the interface target
 FetchContent_MakeAvailable(TNL)
 

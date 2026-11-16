@@ -3,9 +3,20 @@
 # NB_SUPPRESS_WARNINGS disables compiler warnings as well as clangd diagnostics for nanobind headers.
 # This is needed because nanobind targets are created lazily by the nanobind_add_module function,
 # so FetchContent_Declare(nanobind ... SYSTEM) has no target to act on.
-set(src_containers containers/ArrayVector.cpp containers/StaticVector.cpp containers/NDArray.cpp containers/containers.cpp)
+set(src_containers
+    containers/ArrayVector.cpp
+    containers/DistributedArrayVector.cpp
+    containers/StaticVector.cpp
+    containers/NDArray.cpp
+    containers/containers.cpp
+)
 nanobind_add_module(_containers NB_SUPPRESS_WARNINGS ${src_containers})
-set(src_containers_cuda containers/ArrayVector.cu containers/NDArray.cu containers/containers.cu)
+set(src_containers_cuda
+    containers/ArrayVector.cu
+    containers/DistributedArrayVector.cu
+    containers/NDArray.cu
+    containers/containers.cu
+)
 if(PyTNL_BUILD_CUDA)
     nanobind_add_module(_containers_cuda NB_SUPPRESS_WARNINGS ${src_containers_cuda})
 endif()
